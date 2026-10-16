@@ -23,7 +23,7 @@ jobs:
         run: |
           if [ -n "$KEY" ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "::notice title=Security Review::Skipped – repository secret ANTHROPIC_API_KEY is not set."; fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.key.outputs.present == 'true'
         with:
           ref: ${{ github.event.pull_request.head.sha }}
