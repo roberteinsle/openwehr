@@ -1,6 +1,10 @@
-FROM serversideup/php:8.4-fpm-nginx-alpine
+# Pinned to the patch release: PHP 8.4.27 fixes CVE-2026-109618/-109619 (remote code execution via PHP-FPM)
+FROM serversideup/php:8.4.27-fpm-nginx-alpine
 
 USER root
+
+# Never build on a PHP older than the security fix, whatever the tag above resolves to
+RUN php -r 'exit(version_compare(PHP_VERSION, "8.4.27", "<") ? 1 : 0);' || (echo "PHP $(php -r 'echo PHP_VERSION;') is too old, 8.4.27 or newer is required" && exit 1)
 
 # Defaults for production; can be overridden in Coolify.
 # LOG_CHANNEL=stderr makes Laravel errors visible in the container runtime logs.
