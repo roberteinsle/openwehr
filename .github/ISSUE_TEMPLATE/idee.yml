@@ -1,0 +1,37 @@
+name: Idee
+description: Eine neue Funktion oder ein Modul vorschlagen
+labels: [idee]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für deine Idee! Den Code schreibt und pflegt der Maintainer selbst – am meisten hilft eine Beschreibung aus der Praxis. Bitte keine echten Namen, Adressen oder Daten deiner Wehr (Beispiel: „FF Musterstadt“).
+  - type: textarea
+    id: what
+    attributes:
+      label: Was soll gehen?
+      description: Was möchtest du mit openwehr tun können?
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: Wie läuft es heute in eurer Wehr?
+      description: Papier, Excel, Messenger, andere Software … und was daran stört.
+    validations:
+      required: true
+  - type: input
+    id: who
+    attributes:
+      label: Wer nutzt es?
+      description: z. B. alle Kameraden, Wehrführung, Gerätewart, Jugendwart
+  - type: input
+    id: module
+    attributes:
+      label: Welches Modul betrifft es?
+      description: z. B. Einsatzbericht, Kalender – oder „neues Modul“
+  - type: textarea
+    id: more
+    attributes:
+      label: Sonst noch etwas?
+      description: Beispiele, Vorlagen, Vorschriften (z. B. FwDV, DGUV), Skizzen

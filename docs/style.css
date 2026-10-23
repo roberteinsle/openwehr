@@ -150,7 +150,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 .tech dt { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 .tech dd { margin: 2px 0 0; font-weight: 600; }
 
-#open-source .button.secondary { color: var(--text); border-color: var(--line); background: var(--surface); }
+#open-source .button.secondary, #ausblick .button.secondary { color: var(--text); border-color: var(--line); background: var(--surface); }
 
 @media (max-width: 960px) {
   .features, .modules { grid-template-columns: repeat(2, 1fr); }

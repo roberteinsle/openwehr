@@ -837,6 +837,28 @@ Wie openwehr gegen Lücken abgesichert wird und wie man eine meldet, steht in [S
 - **In der App:** Security-Header auf jeder Antwort (`X-Content-Type-Options`, `X-Frame-Options` – außer dem öffentlichen Kalender zum Einbetten –, `Referrer-Policy`, `Permissions-Policy`, HSTS unter HTTPS und eine Content-Security-Policy, vorerst im Beobachtungsmodus „Report-Only“). Hochgeladene Dateien werden mit festem Dateityp ausgeliefert, nur PDFs und Fotos öffnen im Browser, alles andere wird heruntergeladen. CSV-Exporte entschärfen Zellen, die in Excel als Formel laufen würden. Externe Kalender lassen sich nur von öffentlichen Adressen abrufen. Links in Mails nehmen ihre Adresse immer aus `APP_URL`. Session-Cookies sind unter HTTPS automatisch `Secure`.
 - **Einladungslinks:** Den Login-Link als QR-Code oder zum Kopieren zeigt die Personalverwaltung nur für Kameraden, die sich noch nie angemeldet haben (Admins für jeden); alle anderen bekommen die Einladung per Mail an ihre eigene Adresse. Mails mit Login- oder Aktionslinks werden im Mail-Protokoll ohne Inhalt gespeichert.
 
+## Ideen und Weiterentwicklung
+
+Ideen, Wünsche und Fehler sind willkommen – am besten als [Issue auf GitHub](https://github.com/roberteinsle/openwehr/issues/new/choose) (Vorlage „Idee“ oder „Fehler“), gern mit dem Ablauf, wie ihn eure Wehr heute erlebt. Neue Ideen tragen das Label `idee`; nach der Entscheidung `geplant`, `parkplatz` oder `wontfix` (bewusst nicht). Den Code schreibt und pflegt der Maintainer selbst; Pull Requests mit Code werden deshalb nicht übernommen, Beschreibungen, Beispiele und Erfahrungen aus der Praxis umso lieber.
+
+**Geplant** (Reihenfolge noch offen):
+
+- **Gefahrstoffe nachschlagen:** Gefahrenmatrix (AAAA-C-EEEE) und Tabelle der Gefahrnummern und UN-Nummern, auch ohne Netz lesbar. Vorher zu klären: eine Datenquelle, die frei weitergegeben werden darf. ([#13](https://github.com/roberteinsle/openwehr/issues/13))
+- **Offline im Einsatz:** Nachschlagedaten (Gefahrstoffe, Wasserkarte) ohne Netz lesbar wie heute schon die Objektpläne; danach einzelne Eingaben, die ohne Netz gesammelt und später übertragen werden (z. B. Lagemeldungen). ([#14](https://github.com/roberteinsle/openwehr/issues/14))
+- **Anmeldung über einen Identity Provider** (OpenID Connect, z. B. Keycloak oder Authentik) als Zusatz zum Login-Link per E-Mail – für Wehren, die mehrere Anwendungen mit einer Benutzerverwaltung betreiben. ([#15](https://github.com/roberteinsle/openwehr/issues/15))
+- **Anwesenheit nach dem Übungsdienst** per Mail an die Wehrführung, z. B. zum Übertragen in die Verwaltungssoftware der Kommune. ([#16](https://github.com/roberteinsle/openwehr/issues/16))
+- **Funkrufnamen auf einen Blick:** eine kompakte Liste aller Fahrzeuge mit Funkrufnamen. ([#17](https://github.com/roberteinsle/openwehr/issues/17))
+- **Externe Ansprechpartner** (Leitstelle, Behörden, Bürgermeister, Kreisbrandmeister …) als eigene Gruppe neben den Abteilungen. ([#18](https://github.com/roberteinsle/openwehr/issues/18))
+- **Screenshots** im README und auf der Projektseite, automatisch aus den Beispieldaten erzeugt. ([#19](https://github.com/roberteinsle/openwehr/issues/19))
+
+**Ideen-Parkplatz** (gute Idee, aber noch nicht entschieden):
+
+- **Standorte:** mehrere Ortswehren einer Gemeindefeuerwehr in einer Installation, mit Rechten je Ort (Wehrführung Ort X) und für das Ganze (Gemeindewehrführung). Das berührt jedes Modul; heute ist eine Installation eine Wehr, nur die Personalverwaltung lässt sich auf Abteilungen beschränken. ([#20](https://github.com/roberteinsle/openwehr/issues/20))
+
+**Bewusst nicht:**
+
+- **Eigene Dateiablage oder Office-Integration** (Online-Laufwerk, OnlyOffice, SharePoint-Ersatz). openwehr soll Abläufe digital machen, statt Dokumente in Ordnern zu sammeln; wo Dateien dazugehören, hängen sie am Vorgang (Belege, Nachweise, Objektpläne, Fahrzeugakte, Anhänge von Mitteilungen). Für eine allgemeine Ablage gibt es Nextcloud & Co.
+
 ## Lizenz
 
 openwehr ist freie Software unter der [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0). Jede Wehr darf openwehr kostenlos nutzen, anpassen und weitergeben. Wer eine veränderte Version betreibt und anderen über das Netz zur Verfügung stellt, muss deren Quelltext ebenfalls unter der AGPL-3.0 offenlegen.

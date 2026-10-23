@@ -42,6 +42,13 @@
 - Ansprechpartner der Wehr mit Telefon zum direkten Anrufen
 - Erziehungsberechtigte je Kamerad, z. B. für die Jugendfeuerwehr
 
+## Ausblick
+
+- Geplant: Gefahrenmatrix und Gefahrstoffnummern (auch offline), Offline-Nutzung im Einsatz, Anmeldung über OpenID Connect (Keycloak, Authentik), Anwesenheit nach dem Übungsdienst an die Wehrführung, Funkrufnamen-Liste, externe Ansprechpartner, Screenshots
+- Ideen-Parkplatz: mehrere Ortswehren einer Gemeinde in einer Installation mit Rechten je Ort
+- Bewusst nicht: eigene Dateiablage oder Office-Integration
+- Ideen und Fehler als Issue: https://github.com/roberteinsle/openwehr/issues (Code wird vom Maintainer gepflegt, keine Code-Pull-Requests)
+
 ## Technik
 
 Laravel 12 (PHP 8.4), Livewire 4, Filament 5, Tailwind 4, PostgreSQL 18, OpenStreetMap-Karten. Betrieb als Docker-Image, z. B. mit Coolify.

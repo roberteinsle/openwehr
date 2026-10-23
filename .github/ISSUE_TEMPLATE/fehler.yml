@@ -1,0 +1,35 @@
+name: Fehler
+description: Etwas funktioniert nicht wie erwartet
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Sicherheitslücken bitte **nicht** hier melden, sondern wie in [SECURITY.md](https://github.com/roberteinsle/openwehr/blob/main/SECURITY.md) beschrieben. Bitte keine echten Namen, Adressen oder Daten deiner Wehr.
+  - type: textarea
+    id: what
+    attributes:
+      label: Was ist passiert?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Wie lässt es sich nachstellen?
+      description: Schritt für Schritt, mit der Seite (Adresse ohne Domain, z. B. `/fahrzeugbuchung/kalender`).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Was hättest du erwartet?
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: steht im Admin-Bereich oben neben dem Titel, z. B. V.0.9.5.5
+  - type: input
+    id: device
+    attributes:
+      label: Gerät und Browser
+      description: z. B. iPhone/Safari, Android/Chrome, Windows/Edge
