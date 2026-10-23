@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\CredentialRegistry;
 use App\Services\HoursRegistry;
 use App\Services\Impersonation;
+use App\Services\MagicLinkService;
 use App\Services\OrganizationSettings;
 use App\Support\HoursCsv;
 use Illuminate\Support\Facades\Route;
@@ -29,9 +30,11 @@ Route::name('auth.')->group(function () {
     Route::post('/anmelden', [MagicLinkController::class, 'sendLink'])->name('magic-link.send');
     Route::get('/anmelden/gesendet', [MagicLinkController::class, 'linkSent'])->name('magic-link.sent');
 
-    // Two-step: GET shows confirmation button, POST consumes the token
-    Route::get('/anmelden/{token}', [MagicLinkController::class, 'showConfirm'])->name('magic-link.confirm');
-    Route::post('/anmelden/{token}', [MagicLinkController::class, 'consumeToken'])->name('magic-link.consume');
+    // Two-step: GET shows confirmation button, POST consumes the token; a token of the wrong shape is a 404
+    Route::middleware('throttle:20,1')->group(function () {
+        Route::get('/anmelden/{token}', [MagicLinkController::class, 'showConfirm'])->where('token', MagicLinkService::TOKEN_PATTERN)->name('magic-link.confirm');
+        Route::post('/anmelden/{token}', [MagicLinkController::class, 'consumeToken'])->where('token', MagicLinkService::TOKEN_PATTERN)->name('magic-link.consume');
+    });
 
     // Double opt-in for a Kamerad's new e-mail address; the same two steps, so mail scanners cannot confirm it
     Route::middleware('throttle:10,1')->group(function () {

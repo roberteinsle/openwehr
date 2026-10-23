@@ -14,11 +14,13 @@ class LoginForm extends Component
 
     public function submit(MagicLinkService $service): void
     {
+        // Livewire skips the TrimStrings middleware
+        $this->email = trim($this->email);
         $this->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'max:254', 'email'],
         ], [
             'email.required' => 'Bitte gib deine E-Mail-Adresse ein.',
-            'email.email' => 'Bitte gib eine gültige E-Mail-Adresse ein.',
+            'email.*' => 'Bitte gib eine gültige E-Mail-Adresse ein.',
         ]);
 
         try {

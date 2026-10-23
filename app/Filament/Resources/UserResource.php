@@ -402,7 +402,7 @@ class UserResource extends Resource
                     ->iconButton()
                     ->tooltip('Als Kamerad ansehen'),
 
-                // Einladung: QR code to scan in the Wache, or the link by mail (valid for some days, once)
+                // Einladung: QR code to scan in the Wache, or the link by mail (valid for a short while, once)
                 Actions\Action::make('invite')
                     ->label('Einladung')
                     ->icon('heroicon-o-qr-code')

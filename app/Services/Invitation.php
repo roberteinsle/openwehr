@@ -10,16 +10,30 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Einladung for a (new) Kamerad: a login link that is valid for some days and only once – as QR code to
- * scan in the Wache or by mail. It is an ordinary magic link (GET shows a button, the POST logs in), so
- * mail scanners can't use it up; the first login leads to the Willkommen page.
+ * Einladung for a (new) Kamerad: a login link that works only once – as QR code to scan in the Wache
+ * (valid for SCREEN_MINUTES, it is scanned right away) or by mail (valid for MAIL_HOURS; afterwards the
+ * Kamerad simply asks for a login link). It is an ordinary magic link (GET shows a button, the POST logs
+ * in), so mail scanners can't use it up; the first login leads to the Willkommen page and ends every
+ * other open link of the Kamerad.
  */
 class Invitation
 {
-    public const DAYS = 7;
+    public const SCREEN_MINUTES = 30;
+
+    public const MAIL_HOURS = 48;
+
+    /**
+     * The link for the screen (QR code, copy)
+     *
+     * @return array{url: string, expires_at: Carbon}
+     */
+    public function create(User $member): array
+    {
+        return $this->issue($member, now()->addMinutes(self::SCREEN_MINUTES));
+    }
 
     /** @return array{url: string, expires_at: Carbon} */
-    public function create(User $member): array
+    private function issue(User $member, Carbon $expires): array
     {
         if (! $member->is_active) {
             throw ValidationException::withMessages(['invite' => 'Nur aktive Kameraden lassen sich einladen.']);
@@ -28,7 +42,6 @@ class Invitation
             throw ValidationException::withMessages(['invite' => $member->name.' ist ohne E-Mail-Adresse angelegt und hat keinen Login. Für eine Einladung zuerst eine Adresse eintragen.']);
         }
         $raw = Str::random(64);
-        $expires = now()->addDays(self::DAYS);
         LoginToken::create(['user_id' => $member->id, 'token_hash' => hash('sha256', $raw), 'expires_at' => $expires, 'created_at' => now()]);
 
         return ['url' => route('auth.magic-link.confirm', $raw), 'expires_at' => $expires];
@@ -52,7 +65,7 @@ class Invitation
 
     public function send(User $member, User $by): Carbon
     {
-        $invite = $this->create($member);
+        $invite = $this->issue($member, now()->addHours(self::MAIL_HOURS));
         $member->notify(new InvitationNotification($invite['url'], $invite['expires_at'], $by->name));
 
         return $invite['expires_at'];

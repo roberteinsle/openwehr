@@ -22,17 +22,13 @@ class MagicLinkController extends Controller
     public function sendLink(Request $request): RedirectResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string', 'max:254', 'email'],
         ], [
             'email.required' => 'Bitte gib deine E-Mail-Adresse ein.',
-            'email.email' => 'Bitte gib eine gültige E-Mail-Adresse ein.',
+            'email.*' => 'Bitte gib eine gültige E-Mail-Adresse ein.',
         ]);
 
-        try {
-            $this->magicLinkService->sendLink($request->input('email'), $request);
-        } catch (ValidationException $e) {
-            throw $e;
-        }
+        $this->magicLinkService->sendLink($request->input('email'), $request);
 
         return redirect()->route('auth.magic-link.sent');
     }

@@ -114,7 +114,7 @@ class MemberFile extends Component
         $this->run(fn () => $personnel->deleteGuardian(auth()->user(), $this->member->guardians()->findOrFail($id)), 'Erziehungsberechtigte(n) entfernt.');
     }
 
-    /** Einladung: a one-time login link for some days, as QR code to scan or by mail */
+    /** Einladung: a one-time login link, as QR code to scan or by mail */
     public ?array $invite = null;
 
     public function invite(Invitation $invitation): void
