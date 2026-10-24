@@ -2,10 +2,12 @@
 
 use App\Livewire\Dashboard\Home;
 use App\Models\Module;
+use App\Models\Place;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Modules\Kalender\src\Livewire\CalendarView;
 use Modules\Kalender\src\Livewire\EventDetail;
@@ -137,6 +139,16 @@ test('the next event appears on the start page', function () {
     Livewire::actingAs($this->member)->test(Home::class)
         ->assertSee('Nächster Termin')->assertSee('Übungsdienst Brandschutz')->assertSee('Bitte Rückmeldung geben')
         ->assertDontSee('Später');
+});
+
+test('the next event card keeps the Navigation link inside the card, never a link in a link', function () {
+    $place = Place::create(['name' => 'Wache', 'address' => 'Hauptstraße 1, 12345 Musterstadt']);
+    kalenderEvent('2027-06-15 19:00', attributes: ['title' => 'Übungsdienst Brandschutz', 'place_id' => $place->id, 'location' => 'Wache']);
+
+    $card = Str::between(Livewire::actingAs($this->member)->test(Home::class)->html(), 'Nächster Termin', 'Kleidung');
+    // The title links to the Termin; an <a> opened before it is closed would be cut off by the browser
+    expect($card)->toContain('Navigation')->toContain('Übungsdienst Brandschutz</a>')
+        ->and(preg_match('/<a [^>]*>(?:(?!<\/a>).)*<a /s', $card))->toBe(0);
 });
 
 test('an external calendar is added and pulled in at once', function () {
