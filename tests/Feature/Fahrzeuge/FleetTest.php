@@ -190,6 +190,9 @@ test('the pages open and the start page shows the fleet', function () {
 });
 
 test('Funkrufnamen at a glance: every vehicle in service with its call sign, searchable', function () {
+    // In the order of the vehicle list (the factory picks a random one)
+    $this->mtw->update(['sort_order' => 1]);
+    $this->hlf->update(['sort_order' => 2]);
     Profile::create(['vehicle_id' => $this->hlf->id, 'call_sign' => 'Florian Musterstadt 42/1', 'license_plate' => 'MU-FW 421', 'crew' => '1/8']);
     Profile::create(['vehicle_id' => $this->mtw->id, 'call_sign' => 'Florian Musterstadt 19/1']);
     $old = Vehicle::factory()->create(['name' => 'LF 8 alt', 'is_active' => false]);
