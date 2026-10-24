@@ -14,13 +14,14 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Modules\Uebungsdienste\src\Console\Commands\SyncCalendar;
 use Modules\Uebungsdienste\src\Livewire\Planner;
+use Modules\Uebungsdienste\src\Livewire\Planners;
 use Modules\Uebungsdienste\src\Livewire\ServiceForm;
 use Modules\Uebungsdienste\src\Models\Service;
 use Modules\Uebungsdienste\src\Services\ServicePlan;
 
 /**
- * Übungsdienstplaner: who runs which Übungsdienst with which topic. Only the Vorstand gets access,
- * so members don't just come to the "exciting" Dienste.
+ * Übungsdienstplaner: who runs which Übungsdienst with which topic. Meant for the Vorstand and the
+ * Übungsdienstplaner of the Abteilungen, so members don't just come to the "exciting" Dienste.
  */
 class UebungsdiensteServiceProvider extends ServiceProvider
 {
@@ -51,16 +52,20 @@ class UebungsdiensteServiceProvider extends ServiceProvider
         Livewire::component('uebungsdienste.planner', Planner::class);
         Livewire::component('uebungsdienste.service-form', ServiceForm::class);
 
-        Gate::define('plan-uebungsdienste', fn (User $user) => $user->is_admin);
+        Livewire::component('uebungsdienste.planners', Planners::class);
+
+        // Create, change, delete Dienste: admins and Übungsdienstplaner (within their Abteilungen, see ServicePlan)
+        Gate::define('plan-uebungsdienste', fn (User $user) => ServicePlan::canPlan($user));
 
         app(ModuleRegistry::class)->register(
             'uebungsdienste',
             'Übungsdienstplaner',
-            'Wer welchen Übungsdienst mit welchem Thema übernimmt – nur für den Vorstand',
+            'Wer welchen Übungsdienst mit welchem Thema übernimmt – für Vorstand und Übungsdienstplaner der Abteilungen, mit Tausch und Fahrzeugbuchung',
+            roles: [ServicePlan::ROLE],
             provider: self::class,
             route: 'uebungsdienste.index',
             // Vorstand incl. its sub-functions, and admins; anyone else only after a confirmation
-            audience: fn (User $user) => $user->isVorstand(),
+            audience: fn (User $user) => $user->isVorstand() || $user->hasModuleRole('uebungsdienste', ServicePlan::ROLE),
             audienceLabel: 'Vorstand',
         );
 
@@ -68,7 +73,7 @@ class UebungsdiensteServiceProvider extends ServiceProvider
         // every other Kamerad of the target group date, time and place – like the Kalender, never the topic
         app(DashboardRegistry::class)->register('uebungsdienste', 'next', function (User $user) {
             $planner = $user->canUseModule('uebungsdienste');
-            $next = $planner ? app(ServicePlan::class)->next() : app(ServicePlan::class)->nextFor($user);
+            $next = $planner ? app(ServicePlan::class)->next($user) : app(ServicePlan::class)->nextFor($user);
 
             return $next ? view('uebungsdienste::cards.next', ['service' => $next, 'planner' => $planner])->render() : null;
         }, everyone: true);
@@ -86,6 +91,7 @@ class UebungsdiensteServiceProvider extends ServiceProvider
             'tabs' => [
                 ModuleNav::tab('Übungsdienste', 'uebungsdienste.index', ['uebungsdienste.edit', 'uebungsdienste.create']),
                 $u->can('plan-uebungsdienste') ? ModuleNav::tab('Orte & Kleidung', 'uebungsdienste.places') : null,
+                $u->is_admin ? ModuleNav::tab('Planer & Abteilungen', 'uebungsdienste.planners') : null,
             ],
         ]);
     }

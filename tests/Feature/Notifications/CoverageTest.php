@@ -144,7 +144,7 @@ test('a booking changed by an admin or Entscheider reaches its owner, own change
 test('whoever is made responsible for a coming Übungsdienst hears about it', function () {
     Notification::fake();
     $board = User::factory()->create(['name' => 'Vera Vorstand']);
-    $board->moduleAccess()->create(['module' => 'uebungsdienste']);
+    $board->moduleAccess()->create(['module' => 'uebungsdienste', 'role' => 'übungsdienstplaner']);
     $plan = app(ServicePlan::class);
     $service = $plan->add($this->admin, '2027-06-08', '19:00', 'Gerätehaus');
     $plan->setTopic($service, 'Knoten und Stiche');

@@ -31,7 +31,7 @@ beforeEach(function () {
 
     $this->youth = Group::create(['name' => 'Jugendfeuerwehr', 'sort_order' => 1]);
     $this->planer = User::factory()->create(['name' => 'Paul Planer']);
-    $this->planer->moduleAccess()->create(['module' => 'schichtplan', 'role' => 'planer']);
+    $this->planer->moduleAccess()->create(['module' => 'schichtplan', 'role' => 'schichtplaner']);
     foreach (['hanna' => 'Hanna Hydrant', 'bernd' => 'Bernd Blaulicht', 'lead' => 'Lena Leitung', 'otto' => 'Otto Ortsbrand'] as $key => $name) {
         $this->{$key} = User::factory()->create(['name' => $name]);
         $this->{$key}->moduleAccess()->create(['module' => 'schichtplan']);

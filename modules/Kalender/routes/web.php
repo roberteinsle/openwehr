@@ -1,7 +1,10 @@
 <?php
 
+use App\Models\Contact;
+use App\Models\Group;
 use App\Models\Guardian;
 use App\Services\ModuleRegistry;
+use App\Services\OrganizationSettings;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Modules\Kalender\src\Http\Controllers\FeedController;
@@ -9,6 +12,7 @@ use Modules\Kalender\src\Http\Controllers\PublicCalendarController;
 use Modules\Kalender\src\Models\Event;
 use Modules\Kalender\src\Models\Poll;
 use Modules\Kalender\src\Services\EventService;
+use Modules\Kalender\src\Support\Roster;
 
 // Subscription feed for phone calendars; the token in the URL replaces the login
 Route::get('/kalender/abo/{token}.ics', FeedController::class)
@@ -49,6 +53,29 @@ Route::prefix('kalender')->name('kalender.')
     ->middleware(['auth', 'active', 'module:kalender'])
     ->group(function () {
         Route::get('/', fn () => view('kalender::pages.index'))->name('index');
+
+        // The Dienstplan of a year or half-year to print or save as PDF (what the Kamerad may see)
+        Route::get('/dienstplan', function () {
+            $request = request();
+            $year = $request->integer('jahr') ?: (int) now('Europe/Berlin')->year;
+            $period = array_key_exists((string) $request->query('zeitraum'), Roster::PERIODS) ? (string) $request->query('zeitraum') : 'jahr';
+            $groups = Group::orderBy('sort_order')->orderBy('name')->pluck('name', 'id');
+            $groupId = $groups->has($request->integer('abteilung')) ? $request->integer('abteilung') : null;
+            $types = array_values(array_intersect((array) $request->query('arten', []), array_keys(Event::TYPES))) ?: array_keys(Event::TYPES);
+            $text = fn (string $key, string $default, int $max) => mb_substr(trim((string) ($request->query($key) ?? $default)), 0, $max);
+
+            return view('kalender::pages.roster', [
+                'year' => $year, 'period' => $period, 'groupId' => $groupId, 'groups' => $groups, 'selectedTypes' => $types,
+                'years' => range((int) now('Europe/Berlin')->year - 1, (int) now('Europe/Berlin')->year + 1),
+                'rows' => Roster::rows(auth()->user(), $year, $period, $groupId, $types),
+                'heading' => $text('titel', app(OrganizationSettings::class)->name().' – Dienstplan '.$year.($period === 'jahr' ? '' : ' ('.Roster::PERIODS[$period].')'), 120),
+                'subheading' => $text('unterzeile', $groupId ? $groups[$groupId] : 'Alle Mitglieder', 120),
+                'hint' => $text('hinweis', '', 600),
+                'showContacts' => $request->boolean('kontakte'),
+                'contacts' => Contact::orderBy('sort_order')->orderBy('name')->get(),
+                'logo' => app(OrganizationSettings::class)->logoUrl(),
+            ]);
+        })->name('roster');
 
         Route::get('/termine/neu', fn () => view('kalender::pages.form', ['event' => null]))
             ->middleware('can:manage,'.Event::class)->name('create');

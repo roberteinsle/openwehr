@@ -80,7 +80,7 @@ class ModuleMembers extends Page implements HasTable
     {
         $key = $this->module;
         $roles = $this->definition()['roles'] ?? [];
-        $roleOptions = $roles ? array_combine($roles, array_map('ucfirst', $roles)) : [];
+        $roleOptions = $roles ? array_combine($roles, array_map('mb_ucfirst', $roles)) : [];
         $access = fn ($query) => $query->from('module_user')->whereColumn('module_user.user_id', 'users.id')->where('module_user.module', $key);
         $registry = app(ModuleRegistry::class);
         $restricted = $registry->isRestricted($key);

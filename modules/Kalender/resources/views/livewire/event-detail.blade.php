@@ -10,6 +10,7 @@
                 <p class="text-sm text-gray-600">{{ $event->timeLabel() }}</p>
                 <x-place-info :place="$event->place" :location="$event->location" />
                 @if($event->partners)<p class="text-sm text-gray-600">Gemeinsam mit {{ $event->partners }}</p>@endif
+                @if($event->organizer)<p class="text-sm text-gray-600">Ausführend: {{ $event->organizer }}</p>@endif
                 <x-dress-codes :ids="$event->dress_code_ids" />
                 @if($event->managed_by && isset(\Modules\Kalender\src\Models\Event::MANAGED_BY[$event->managed_by]))
                     <p class="mt-1 text-xs text-gray-500">Kommt aus dem {{ \Modules\Kalender\src\Models\Event::MANAGED_BY[$event->managed_by] }} – Zeit, Ort, Kleidung und Zielgruppe werden dort gepflegt und hier übernommen.</p>

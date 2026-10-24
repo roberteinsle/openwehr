@@ -170,12 +170,12 @@ class User extends Authenticatable implements FilamentUser
             || ($this->is_active && $this->canUseModule('lehrgaenge') && $this->hasModuleRole('lehrgaenge', 'wehrführung'));
     }
 
-    /** Admins and Planer create and distribute shift plans; other members see the plans they are on */
+    /** Admins and Schichtplaner create and distribute shift plans; other members see the plans they are on */
     public function canManageSchichtplan(): bool
     {
         return $this->is_active
             && $this->canUseModule('schichtplan')
-            && ($this->is_admin || $this->hasModuleRole('schichtplan', 'planer'));
+            && ($this->is_admin || $this->hasModuleRole('schichtplan', 'schichtplaner'));
     }
 
     public function canAccessPanel(Panel $panel): bool

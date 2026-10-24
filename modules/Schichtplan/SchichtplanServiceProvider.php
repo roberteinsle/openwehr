@@ -69,7 +69,7 @@ class SchichtplanServiceProvider extends ServiceProvider
             'schichtplan',
             'Schichtplan',
             'Arbeitsdienste, Feste und Stände: Schichten einteilen oder Mitglieder selbst eintragen lassen',
-            roles: ['planer'],
+            roles: ['schichtplaner'],
             provider: self::class,
             route: 'schichtplan.index',
         );

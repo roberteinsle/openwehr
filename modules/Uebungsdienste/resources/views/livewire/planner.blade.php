@@ -5,11 +5,11 @@
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
             <h1 class="text-xl font-bold text-gray-900">Übungsdienstplaner</h1>
-            <p class="text-sm text-gray-500">Thema und Verantwortliche kann jedes Vorstandsmitglied ändern{{ $admin ? '.' : '; Datum, Uhrzeit und Ort legen die Admins fest.' }}</p>
+            <p class="text-sm text-gray-500">{{ $planner ? 'Dienste anlegen, ändern und löschen, Thema und Verantwortliche eintragen.' : 'Thema und Verantwortliche tragen die Übungsdienstplaner ein. Für deinen eigenen Dienst kannst du einen Tausch anfragen – der andere muss zustimmen.' }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('uebungsdienste.print', ['jahr' => $year]) }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Drucken / PDF</a>
-            @if($admin)
+            @if($planner)
                 <x-page-action :href="route('uebungsdienste.create')">Übungsdienst anlegen</x-page-action>
             @endif
         </div>
@@ -17,6 +17,26 @@
 
     @if($flash)<p class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{{ $flash }}</p>@endif
     @error('plan')<p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{{ $message }}</p>@enderror
+
+    {{-- Swaps waiting for an answer: everyone sees them, the asked Kamerad answers, the requester can take it back --}}
+    @if($swaps->isNotEmpty())
+        <section class="space-y-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
+            <p class="text-sm font-semibold text-amber-900">Tausch angefragt</p>
+            @foreach($swaps as $swap)
+                <div class="flex flex-wrap items-center justify-between gap-2 text-sm text-amber-900" wire:key="swap-{{ $swap->id }}">
+                    <span><strong>{{ $swap->requester->name }}</strong> ({{ $swap->service->dateLabel() }}) ⇄ <strong>{{ $swap->targetUser->name }}</strong> ({{ $swap->targetService->dateLabel() }}) – wartet auf {{ $swap->targetUser->name }}</span>
+                    <span class="flex flex-wrap gap-2">
+                        @if($swap->target_user_id === auth()->id())
+                            <button type="button" wire:click="answerSwap({{ $swap->id }}, true)" class="rounded-lg bg-green-600 px-3 py-1.5 font-semibold text-white hover:bg-green-700">Zustimmen</button>
+                            <button type="button" wire:click="answerSwap({{ $swap->id }}, false)" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-semibold text-gray-700">Ablehnen</button>
+                        @elseif($swap->requester_id === auth()->id())
+                            <button type="button" wire:click="withdrawSwap({{ $swap->id }})" class="text-gray-600 underline">Zurückziehen</button>
+                        @endif
+                    </span>
+                </div>
+            @endforeach
+        </section>
+    @endif
 
     {{-- The next Dienst, always on top --}}
     @if($next)
@@ -53,33 +73,56 @@
                     {{-- Date, time, place: one line on phones, own columns on wide screens --}}
                     <div class="flex items-start justify-between gap-2 md:block">
                         <p class="font-semibold text-gray-900">{{ $service->dateLabel() }}<span class="font-normal text-gray-600 md:hidden">{{ $service->timeLabel() ? ' · '.$service->timeLabel() : '' }}{{ $service->location ? ' · '.$service->location : '' }}</span></p>
-                        @if($admin)<a href="{{ route('uebungsdienste.edit', $service) }}" class="shrink-0 text-sm text-fw-navy underline md:mt-1 md:inline-block md:text-xs">Ändern</a>@endif
-                        @php($extras = array_filter([\App\Models\DressCode::names($service->dress_code_ids) ? 'Kleidung: '.implode(', ', \App\Models\DressCode::names($service->dress_code_ids)) : null, $service->audienceLabel() ? 'Für: '.$service->audienceLabel() : null]))
+                        @php($canEdit = in_array($service->id, $editable, true))
+                        @if($canEdit)<a href="{{ route('uebungsdienste.edit', $service) }}" class="shrink-0 text-sm text-fw-navy underline md:mt-1 md:inline-block md:text-xs">Ändern</a>@endif
+                        @php($extras = array_filter([$service->ownerGroup ? 'Abteilung: '.$service->ownerGroup->name : null, $service->organizer ? 'Ausführend: '.$service->organizer : null,
+                            \App\Models\DressCode::names($service->dress_code_ids) ? 'Kleidung: '.implode(', ', \App\Models\DressCode::names($service->dress_code_ids)) : null, $service->audienceLabel() ? 'Für: '.$service->audienceLabel() : null,
+                            $service->vehicles->isNotEmpty() ? 'Fahrzeuge: '.$service->vehicles->map(fn ($v) => ($vehicleNames[$v->vehicle_id] ?? 'Fahrzeug').($v->booking_id ? '' : ' (nicht gebucht)'))->implode(', ') : null]))
                         @if($extras)<p class="text-xs text-gray-500">{{ implode(' · ', $extras) }}</p>@endif
                     </div>
                     <p class="hidden md:block text-gray-700">{{ $service->timeLabel() ?? '–' }}</p>
                     <div class="mt-2 md:mt-0">
-                        <label class="sr-only" for="topic-{{ $service->id }}">Thema</label>
-                        <textarea id="topic-{{ $service->id }}" rows="2" wire:change="saveTopic({{ $service->id }}, $event.target.value)" maxlength="1000" placeholder="Thema eintragen …"
-                                  class="{{ $input }} w-full resize-y">{{ $service->topic }}</textarea>
+                        @if($canEdit)
+                            <label class="sr-only" for="topic-{{ $service->id }}">Thema</label>
+                            <textarea id="topic-{{ $service->id }}" rows="2" wire:change="saveTopic({{ $service->id }}, $event.target.value)" maxlength="1000" placeholder="Thema eintragen …"
+                                      class="{{ $input }} w-full resize-y">{{ $service->topic }}</textarea>
+                        @else
+                            <p class="whitespace-pre-line text-gray-900">{{ $service->topic ?: 'Thema noch offen' }}</p>
+                        @endif
                     </div>
                     <p class="hidden md:block text-gray-700">{{ $service->location ?: '–' }}</p>
                     <div class="mt-2 md:mt-0">
                         <p class="mb-1 text-xs text-gray-500 md:hidden">Verantwortlich</p>
                         <div class="flex flex-wrap items-center gap-1.5">
                             @foreach($service->responsible as $person)
-                                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 py-1 pl-2.5 pr-1 text-sm text-gray-800" wire:key="r-{{ $service->id }}-{{ $person->id }}">
+                                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 py-1 pl-2.5 {{ $canEdit ? 'pr-1' : 'pr-2.5' }} text-sm text-gray-800" wire:key="r-{{ $service->id }}-{{ $person->id }}">
                                     {{ $person->name }}
-                                    <button type="button" wire:click="removeResponsible({{ $service->id }}, {{ $person->id }})" class="inline-flex h-6 w-6 items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-red-600" aria-label="{{ $person->name }} entfernen">×</button>
+                                    @if($canEdit)<button type="button" wire:click="removeResponsible({{ $service->id }}, {{ $person->id }})" class="inline-flex h-6 w-6 items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 hover:text-red-600" aria-label="{{ $person->name }} entfernen">×</button>@endif
                                 </span>
                             @endforeach
+                            @if(! $canEdit && $service->responsible->isEmpty())<span class="text-sm text-gray-500">noch niemand</span>@endif
+                            @if($canEdit)
                             <select wire:change="addResponsible({{ $service->id }}, $event.target.value)" wire:key="add-{{ $service->id }}-{{ $service->responsible->pluck('id')->implode('-') }}" class="{{ $input }} py-1 max-w-full" aria-label="Verantwortliche hinzufügen">
                                 <option value="">+ hinzufügen</option>
                                 @foreach($people as $id => $name)
                                     @unless($service->responsible->contains('id', $id))<option value="{{ $id }}">{{ $name }}</option>@endunless
                                 @endforeach
                             </select>
+                            @endif
                         </div>
+                        {{-- Own coming Dienst: ask someone else to swap --}}
+                        @if(! $past && $service->responsible->contains('id', auth()->id()))
+                            <button type="button" wire:click="startSwap({{ $service->id }})" class="mt-1 text-sm text-fw-navy underline">{{ $swapFrom === $service->id ? 'Tauschen abbrechen' : 'Tauschen' }}</button>
+                            @if($swapFrom === $service->id)
+                                <form wire:submit="requestSwap" class="mt-2 space-y-2">
+                                    <select wire:model="swapWith" class="{{ $input }} w-full" aria-label="Tauschen mit">
+                                        <option value="">Tauschen mit …</option>
+                                        @foreach($swapOptions as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
+                                    </select>
+                                    <button type="submit" class="rounded-lg bg-fw-navy px-3 py-1.5 text-sm font-semibold text-white">Tausch anfragen</button>
+                                </form>
+                            @endif
+                        @endif
                     </div>
                 </div>
             @empty
@@ -87,7 +130,7 @@
                     @if($pastCount > 0 && ! $showPast)
                         Für {{ $year }} stehen keine Dienste mehr an.
                     @else
-                        Für {{ $year }} sind noch keine Dienste geplant.{{ $admin ? ' Mit „Dienst anlegen“ oben anlegen.' : '' }}
+                        Für {{ $year }} sind noch keine Dienste geplant.{{ $planner ? ' Mit „Übungsdienst anlegen“ oben anlegen.' : '' }}
                     @endif
                 </p>
             @endforelse

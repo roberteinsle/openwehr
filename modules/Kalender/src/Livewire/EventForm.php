@@ -49,6 +49,9 @@ class EventForm extends Component
     /** Gemeinsam mit: other Wehren or organisations taking part */
     public string $partners = '';
 
+    /** Who runs it ("Ausführend" in the Dienstplan) */
+    public string $organizer = '';
+
     /** A saved place (shared list); its name becomes the Ort */
     public string $placeId = '';
 
@@ -104,6 +107,7 @@ class EventForm extends Component
             $this->endDate = ($event->all_day ? $end->copy()->subSecond() : $end)->format('Y-m-d');
             $this->location = (string) $event->location;
             $this->partners = (string) $event->partners;
+            $this->organizer = (string) $event->getAttribute('organizer');
             $this->placeId = (string) ($event->place_id ?? '');
             $this->dressCodeIds = array_map('strval', $event->dress_code_ids ?? []);
             $this->description = (string) $event->description;
@@ -177,7 +181,7 @@ class EventForm extends Component
 
         $this->fill([
             'title' => $d['title'] ?? $this->title, 'type' => $d['type'] ?? $this->type, 'allDay' => (bool) ($d['all_day'] ?? false),
-            'location' => (string) ($d['location'] ?? ''), 'partners' => (string) ($d['partners'] ?? ''), 'description' => (string) ($d['description'] ?? ''), 'rsvp' => (bool) ($d['rsvp'] ?? false),
+            'location' => (string) ($d['location'] ?? ''), 'partners' => (string) ($d['partners'] ?? ''), 'organizer' => (string) data_get($d, 'organizer', ''), 'description' => (string) ($d['description'] ?? ''), 'rsvp' => (bool) ($d['rsvp'] ?? false),
             'minParticipants' => (string) ($d['min_participants'] ?? ''), 'isPublic' => (bool) ($d['is_public'] ?? false),
             'groupIds' => array_map('strval', $d['group_ids'] ?? []), 'functionIds' => array_map('strval', $d['function_ids'] ?? []),
             'placeId' => isset($d['place_id']) && Place::whereKey($d['place_id'])->exists() ? (string) $d['place_id'] : '',
@@ -204,7 +208,7 @@ class EventForm extends Component
             'title' => trim($this->title), 'type' => $this->type, 'all_day' => $this->allDay,
             'start_time' => $start?->format('H:i'), 'minutes' => $start && $end && $end->gt($start) ? (int) $start->diffInMinutes($end) : self::DEFAULT_MINUTES,
             'days' => $this->allDay && $this->startDate && $this->endDate ? Carbon::parse($this->startDate)->diffInDays(Carbon::parse($this->endDate)) + 1 : 1,
-            'location' => trim($this->location), 'partners' => trim($this->partners), 'description' => trim($this->description), 'rsvp' => $this->rsvp,
+            'location' => trim($this->location), 'partners' => trim($this->partners), 'organizer' => trim($this->organizer), 'description' => trim($this->description), 'rsvp' => $this->rsvp,
             'rsvp_days' => $this->rsvp && $this->rsvpDeadline && $day ? (int) Carbon::parse($this->rsvpDeadline)->diffInDays(Carbon::parse($day)) : null,
             'min_participants' => filled($this->minParticipants) ? (int) $this->minParticipants : null, 'is_public' => $this->isPublic,
             'group_ids' => array_map('intval', $this->groupIds), 'function_ids' => array_map('intval', $this->functionIds),
@@ -237,6 +241,7 @@ class EventForm extends Component
             'endDate' => [$this->allDay ? 'required' : 'nullable', 'date_format:Y-m-d'],
             'location' => ['nullable', 'string', 'max:150'],
             'partners' => ['nullable', 'string', 'max:300'],
+            'organizer' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:5000'],
             'groupIds.*' => ['exists:groups,id'],
             'inviteeIds.*' => ['exists:users,id'],
@@ -266,6 +271,7 @@ class EventForm extends Component
             'all_day' => $this->allDay,
             'location' => trim($this->location) ?: null,
             'partners' => trim($this->partners) ?: null,
+            'organizer' => trim($this->organizer) ?: null,
             'place_id' => filled($this->placeId) ? (int) $this->placeId : null,
             'dress_code_ids' => array_map('intval', $this->dressCodeIds) ?: null,
             'description' => trim($this->description) ?: null,

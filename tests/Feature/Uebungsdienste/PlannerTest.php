@@ -43,7 +43,12 @@ test('the table shows date with weekday, start, place, and marks the next Dienst
         ->assertSee('Nächster Übungsdienst');
 });
 
-test('every Vorstand member sets the topic and several responsible people', function () {
+test('Übungsdienstplaner set the topic and several responsible people; others only see them', function () {
+    Livewire::actingAs($this->board)->test(Planner::class)
+        ->call('saveTopic', $this->next->id, 'Nur angucken')->assertHasErrors('plan');
+    expect($this->next->refresh()->topic)->toBeNull();
+
+    $this->board->moduleAccess()->update(['role' => 'übungsdienstplaner']);
     Livewire::actingAs($this->board)->test(Planner::class)
         ->call('saveTopic', $this->next->id, 'Technische Hilfe: Einsatz an der Bahn')
         ->call('addResponsible', $this->next->id, $this->member->id)

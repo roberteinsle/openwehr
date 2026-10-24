@@ -268,7 +268,7 @@ class UserResource extends Resource
                         }
 
                         if (! empty($def['roles'])) {
-                            $roleOptions = array_combine($def['roles'], array_map('ucfirst', $def['roles']));
+                            $roleOptions = array_combine($def['roles'], array_map('mb_ucfirst', $def['roles']));
                             $fields[] = Forms\Components\Select::make("module_role_{$key}")
                                 ->label('Rolle in '.$def['name'])
                                 ->options($roleOptions)
@@ -656,7 +656,7 @@ class UserResource extends Resource
                     if (! empty($def['roles'])) {
                         $fields[] = Forms\Components\Select::make("role_{$key}")
                             ->label('Rolle in „'.$def['name'].'“')
-                            ->options(array_combine($def['roles'], array_map('ucfirst', $def['roles'])))
+                            ->options(array_combine($def['roles'], array_map('mb_ucfirst', $def['roles'])))
                             ->placeholder('Ohne Rolle')
                             ->visible(fn (Get $get) => in_array($key, (array) $get('modules'), true));
                     }

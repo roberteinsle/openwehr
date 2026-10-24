@@ -138,6 +138,7 @@ class KalenderServiceProvider extends ServiceProvider
             'tabs' => [
                 ModuleNav::tab('Kalender', 'kalender.index', ['kalender.show', 'kalender.edit', 'kalender.create']),
                 ModuleNav::tab('Terminabfragen', 'kalender.polls', ['kalender.polls.*']),
+                ModuleNav::tab('Dienstplan', 'kalender.roster'),
                 $u->canManageKalender() ? ModuleNav::tab('Orte & Kleidung', 'kalender.places') : null,
                 $u->canManageKalender() ? ModuleNav::tab('Externe Kalender', 'kalender.sources') : null,
             ],

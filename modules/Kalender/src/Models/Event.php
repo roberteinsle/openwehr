@@ -41,7 +41,7 @@ class Event extends Model
     protected $fillable = [
         'title', 'type', 'starts_at', 'ends_at', 'all_day', 'location', 'partners', 'description', 'rsvp', 'rsvp_deadline',
         'min_participants', 'is_public', 'reminder_sent_at', 'series_id', 'source_id', 'external_uid', 'cancelled_at', 'created_by',
-        'place_id', 'dress_code_ids', 'managed_by',
+        'place_id', 'dress_code_ids', 'managed_by', 'organizer',
     ];
 
     /** Modules that keep events in sync, and where to change them */

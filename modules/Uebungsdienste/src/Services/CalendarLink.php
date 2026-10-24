@@ -31,20 +31,12 @@ class CalendarLink
         }
         $service->loadMissing('place');
         $day = Carbon::createFromFormat('!Y-m-d', $service->date->toDateString(), 'Europe/Berlin');
-        if ($service->starts_at) {
-            $start = Carbon::createFromFormat('Y-m-d H:i', $day->toDateString().' '.$service->starts_at, 'Europe/Berlin');
-            $end = $service->ends_at ? Carbon::createFromFormat('Y-m-d H:i', $day->toDateString().' '.$service->ends_at, 'Europe/Berlin') : $start->copy()->addMinutes(Service::DEFAULT_MINUTES);
-            if ($end->lte($start)) {
-                $end->addDay();   // until after midnight
-            }
-        } else {
-            [$start, $end] = [$day, $day->copy()->addDay()];
-        }
+        [$start, $end] = $service->period() ?? [$day, $day->copy()->addDay()];
 
         $data = [
             'title' => self::TITLE, 'type' => 'uebung', 'starts_at' => $start, 'ends_at' => $end, 'all_day' => ! $service->starts_at,
             'location' => $service->place?->name ?? $service->location, 'place_id' => $service->place_id,
-            'dress_code_ids' => $service->dress_code_ids ?: null, 'description' => null, 'managed_by' => 'uebungsdienste',
+            'dress_code_ids' => $service->dress_code_ids ?: null, 'description' => null, 'managed_by' => 'uebungsdienste', 'organizer' => $service->organizer,
         ];
         $groups = array_map('intval', $service->group_ids ?? []);
         $functions = array_map('intval', $service->function_ids ?? []);

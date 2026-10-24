@@ -7,30 +7,127 @@ use App\Models\Group;
 use App\Models\MemberFunction;
 use App\Models\Place;
 use App\Models\User;
+use App\Services\VehicleBookingRegistry;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Uebungsdienste\src\Models\Service;
+use Modules\Uebungsdienste\src\Models\ServiceVehicle;
+use Modules\Uebungsdienste\src\Models\Swap;
 use Modules\Uebungsdienste\src\Notifications\ResponsibleNotification;
+use Modules\Uebungsdienste\src\Notifications\SwapAnsweredNotification;
+use Modules\Uebungsdienste\src\Notifications\SwapRequestedNotification;
 use Throwable;
 
 /**
- * Changes to the Übungsdienstplan. Date, time and place are planned at the start of the year and
- * only admins change them; topic and responsible people every Vorstand member.
+ * Changes to the Übungsdienstplan. Admins and Übungsdienstplaner (role, optionally limited to
+ * Abteilungen in ud_scopes) create, change and delete Dienste, set topic and responsible people and
+ * book the vehicles a Dienst needs. Everyone else with access swaps Dienste: the other responsible
+ * Kamerad is asked and agrees or declines.
  */
 class ServicePlan
 {
+    public const MODULE = 'uebungsdienste';
+
+    public const ROLE = 'übungsdienstplaner';
+
     public const MAX_SERIES = 60;
+
+    /** Vehicles are booked this long before the start and after the end */
+    public const VEHICLE_BUFFER_MINUTES = 30;
+
+    /** @var list<string> what went wrong with the vehicle bookings of the last change */
+    private array $warnings = [];
+
+    // ─── who may do what ─────────────────────────────────────────────────────
+
+    /** Admins and Übungsdienstplaner */
+    public static function canPlan(User $user): bool
+    {
+        return $user->is_active && ($user->is_admin || ($user->canUseModule(self::MODULE) && $user->hasModuleRole(self::MODULE, self::ROLE)));
+    }
+
+    /** The Abteilungen an Übungsdienstplaner plans for; [] = all (and the whole Wehr) */
+    public static function scopeOf(User $user): array
+    {
+        return $user->is_admin ? [] : DB::table('ud_scopes')->where('user_id', $user->id)->pluck('group_id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    /** Admins: which Abteilungen an Übungsdienstplaner plans for (none = all) */
+    public function setScope(User $by, User $planner, array $groupIds): void
+    {
+        if (! $by->is_admin) {
+            throw ValidationException::withMessages(['scope' => 'Das dürfen nur Admins.']);
+        }
+        DB::transaction(function () use ($planner, $groupIds) {
+            DB::table('ud_scopes')->where('user_id', $planner->id)->delete();
+            DB::table('ud_scopes')->insert(Group::whereIn('id', array_map('intval', $groupIds))->pluck('id')
+                ->map(fn ($id) => ['user_id' => $planner->id, 'group_id' => $id])->all());
+        });
+    }
+
+    /**
+     * For whom $user may plan: [null => 'Ganze Wehr', groupId => name …]. Admins and planners without
+     * Abteilungen plan for everyone, the others for their Abteilungen only.
+     *
+     * @return array<int|string, string>
+     */
+    public static function ownerOptions(User $user): array
+    {
+        if (! self::canPlan($user)) {
+            return [];
+        }
+        $scope = self::scopeOf($user);
+        $groups = Group::orderBy('sort_order')->orderBy('name')->when($scope !== [], fn ($q) => $q->whereIn('id', $scope))->pluck('name', 'id')->all();
+
+        return $scope === [] ? ['' => 'Ganze Wehr'] + $groups : $groups;
+    }
+
+    /** Change, delete, topic and responsible people: planners for the Dienste of their Abteilungen */
+    public static function mayEdit(User $user, Service $service): bool
+    {
+        if (! self::canPlan($user)) {
+            return false;
+        }
+        $scope = self::scopeOf($user);
+
+        return $scope === [] || ($service->owner_group_id && in_array((int) $service->owner_group_id, $scope, true));
+    }
+
+    /**
+     * The Dienste $user sees in the plan: everything for admins and planners without Abteilungen,
+     * otherwise those of the whole Wehr and of the own Abteilungen (member or planner).
+     */
+    /** @return Builder<Service> */
+    public static function visibleTo(User $user): Builder
+    {
+        $query = Service::query();
+        if ($user->is_admin || (self::canPlan($user) && self::scopeOf($user) === [])) {
+            return $query;
+        }
+        $groups = array_values(array_unique([...$user->groups()->pluck('groups.id')->map(fn ($id) => (int) $id)->all(), ...self::scopeOf($user)]));
+
+        return $query->where(fn ($q) => $q->whereNull('owner_group_id')->orWhereIn('owner_group_id', $groups));
+    }
+
+    /** @return list<string> */
+    public function warnings(): array
+    {
+        return $this->warnings;
+    }
 
     public static function today(): Carbon
     {
         return Carbon::parse(now('Europe/Berlin')->toDateString());
     }
 
-    /** The next Dienst from today on */
-    public function next(): ?Service
+    /** The next Dienst from today on, of those $user sees in the plan */
+    public function next(?User $user = null): ?Service
     {
-        return Service::with('responsible')->whereDate('date', '>=', self::today())->orderBy('date')->orderBy('starts_at')->first();
+        return ($user ? self::visibleTo($user) : Service::query())->with('responsible')
+            ->whereDate('date', '>=', self::today())->orderBy('date')->orderBy('starts_at')->first();
     }
 
     /** The next Übungsdienst for a Kamerad: one without target group, or of their Abteilung or Funktion (with sub-functions) */
@@ -49,13 +146,16 @@ class ServicePlan
     }
 
     /**
-     * @param  array{ends_at?: ?string, place_id?: ?int, dress_code_ids?: list<int>, group_ids?: list<int>, function_ids?: list<int>}  $details
+     * @param  array{ends_at?: ?string, place_id?: ?int, dress_code_ids?: list<int>, group_ids?: list<int>, function_ids?: list<int>, owner_group_id?: ?int, organizer?: ?string, vehicle_ids?: list<int|string>}  $details
      */
     public function add(User $by, string $date, ?string $time, ?string $location, array $details = []): Service
     {
-        $this->assertAdmin($by);
-        $service = Service::create($this->schedule($date, $time, $location, $details));
+        $this->warnings = [];
+        $data = $this->schedule($date, $time, $location, $details);
+        $this->assertMayPlanFor($by, $data['owner_group_id']);
+        $service = Service::create($data);
         app(CalendarLink::class)->sync($service, $by);
+        $this->bookVehicles($service, $details['vehicle_ids'] ?? [], $by);
 
         return $service;
     }
@@ -63,7 +163,8 @@ class ServicePlan
     /** Every $weeks weeks from $from to $until, e.g. every second Tuesday */
     public function addSeries(User $by, string $from, string $until, int $weeks, ?string $time, ?string $location, array $details = []): Collection
     {
-        $this->assertAdmin($by);
+        $this->warnings = [];
+        $this->assertMayPlanFor($by, $this->schedule($from, $time, $location, $details)['owner_group_id']);
         $start = $this->date($from);
         $end = $this->date($until);
 
@@ -75,30 +176,103 @@ class ServicePlan
         for ($day = $start->copy(); $day->lte($end) && $created->count() < self::MAX_SERIES; $day->addWeeks($weeks)) {
             $created->push(Service::create($this->schedule($day->toDateString(), $time, $location, $details)));
         }
-        $created->each(fn (Service $service) => app(CalendarLink::class)->sync($service, $by));
+        $created->each(function (Service $service) use ($by, $details) {
+            app(CalendarLink::class)->sync($service, $by);
+            $this->bookVehicles($service, $details['vehicle_ids'] ?? [], $by);
+        });
 
         return $created;
     }
 
     public function reschedule(User $by, Service $service, string $date, ?string $time, ?string $location, ?array $details = null): void
     {
-        $this->assertAdmin($by);
+        $this->warnings = [];
+        $this->assertMayEdit($by, $service);
         // Callers that don't know the details keep them
         $details ??= ['ends_at' => $service->ends_at, 'place_id' => $service->place_id, 'dress_code_ids' => $service->dress_code_ids ?? [],
-            'group_ids' => $service->group_ids ?? [], 'function_ids' => $service->function_ids ?? []];
-        $service->update($this->schedule($date, $time, $location, $details));
+            'group_ids' => $service->group_ids ?? [], 'function_ids' => $service->function_ids ?? [],
+            'owner_group_id' => $service->owner_group_id, 'organizer' => $service->organizer, 'vehicle_ids' => $service->vehicles()->pluck('vehicle_id')->all()];
+        $data = $this->schedule($date, $time, $location, $details);
+        $this->assertMayPlanFor($by, $data['owner_group_id']);
+        $service->update($data);
         app(CalendarLink::class)->sync($service->refresh(), $by);
+        // The time may have moved: book the vehicles anew
+        $this->releaseVehicles($service);
+        $this->bookVehicles($service, $details['vehicle_ids'] ?? [], $by);
     }
 
     public function delete(User $by, Service $service): void
     {
-        $this->assertAdmin($by);
+        $this->assertMayEdit($by, $service);
         app(CalendarLink::class)->remove($service);
+        $this->releaseVehicles($service);
         $service->delete();
     }
 
-    public function setTopic(Service $service, ?string $topic): void
+    // ─── vehicles ────────────────────────────────────────────────────────────
+
+    /**
+     * Books the vehicles for the Dienst, from VEHICLE_BUFFER_MINUTES before the start until as long after
+     * the end, through the core VehicleBookingRegistry (Fahrzeugbuchung). A vehicle that can't be booked
+     * (already booked, Werkstatt …) stays on the Dienst with the reason and becomes a warning.
+     *
+     * @param  list<int|string>  $vehicleIds
+     */
+    private function bookVehicles(Service $service, array $vehicleIds, User $by): void
     {
+        $bookings = app(VehicleBookingRegistry::class);
+        $vehicleIds = array_values(array_unique(array_map('intval', array_filter($vehicleIds))));
+        if ($vehicleIds === [] || ! $bookings->available()) {
+            return;
+        }
+        $names = $bookings->vehicles();
+        $period = $service->period();
+        foreach ($vehicleIds as $vehicleId) {
+            if (! $names->has($vehicleId)) {
+                continue;
+            }
+            $bookingId = null;
+            $note = null;
+            if (! $period) {
+                $note = 'nicht gebucht: der Dienst hat keine Uhrzeit';
+            } else {
+                try {
+                    $bookingId = $bookings->book($vehicleId, $period[0]->copy()->subMinutes(self::VEHICLE_BUFFER_MINUTES),
+                        $period[1]->copy()->addMinutes(self::VEHICLE_BUFFER_MINUTES), 'Übungsdienst'.($service->ownerGroup ? ' '.$service->ownerGroup->name : ''), $by);
+                } catch (ValidationException $e) {
+                    $note = 'nicht gebucht: '.collect($e->errors())->flatten()->first();
+                }
+            }
+            ServiceVehicle::updateOrCreate(['service_id' => $service->id, 'vehicle_id' => $vehicleId], ['booking_id' => $bookingId, 'note' => $note]);
+            if ($note) {
+                $this->warnings[] = $names[$vehicleId].' am '.$service->dateLabel().' '.$note;
+            }
+        }
+    }
+
+    /** Cancels the vehicle bookings of the Dienst and forgets the vehicles */
+    private function releaseVehicles(Service $service): void
+    {
+        $bookings = app(VehicleBookingRegistry::class);
+        $service->vehicles()->get()->each(function (ServiceVehicle $v) use ($bookings) {
+            if ($v->booking_id) {
+                try {
+                    $bookings->cancel((int) $v->booking_id);
+                } catch (Throwable $e) {
+                    report($e);
+                }
+            }
+            $v->delete();
+        });
+    }
+
+    // ─── topic, responsible people, swaps ────────────────────────────────────
+
+    public function setTopic(Service $service, ?string $topic, ?User $by = null): void
+    {
+        if ($by) {
+            $this->assertMayEdit($by, $service);
+        }
         $topic = trim((string) $topic);
 
         if (mb_strlen($topic) > 1000) {
@@ -111,6 +285,9 @@ class ServicePlan
     /** Whoever is added to a coming Übungsdienst hears about it, unless they added themselves */
     public function addResponsible(Service $service, User $user, ?User $by = null): void
     {
+        if ($by) {
+            $this->assertMayEdit($by, $service);
+        }
         if (! $user->is_active) {
             throw ValidationException::withMessages(['responsible' => 'Nur aktive Kameraden können verantwortlich sein.']);
         }
@@ -126,9 +303,83 @@ class ServicePlan
         }
     }
 
-    public function removeResponsible(Service $service, int $userId): void
+    public function removeResponsible(Service $service, int $userId, ?User $by = null): void
     {
+        if ($by) {
+            $this->assertMayEdit($by, $service);
+        }
         $service->responsible()->detach($userId);
+    }
+
+    /**
+     * $by, responsible for $service, asks $target (responsible for $other) to swap. Both Dienste must lie
+     * ahead and not wait for another swap; the target gets a notification and a mail.
+     */
+    public function requestSwap(User $by, Service $service, Service $other, User $target): Swap
+    {
+        $errors = match (true) {
+            ! $by->canUseModule(self::MODULE) => 'Tauschen können alle mit Zugang zum Übungsdienstplaner.',
+            ! $service->responsible()->whereKey($by->id)->exists() => 'Tauschen kann nur, wer für den Dienst verantwortlich ist.',
+            $service->is($other) => 'Bitte einen anderen Dienst wählen.',
+            ! $other->responsible()->whereKey($target->id)->exists() => $target->name.' ist für diesen Dienst nicht verantwortlich.',
+            $target->is($by) || $other->responsible()->whereKey($by->id)->exists() => 'Für diesen Dienst bist du schon verantwortlich.',
+            $service->date->lt(self::today()) || $other->date->lt(self::today()) => 'Nur kommende Dienste lassen sich tauschen.',
+            Swap::where('status', 'pending')->whereIn('service_id', [$service->id, $other->id])->exists()
+                || Swap::where('status', 'pending')->whereIn('target_service_id', [$service->id, $other->id])->exists() => 'Für einen der Dienste ist schon ein Tausch angefragt.',
+            ! self::visibleTo($by)->whereKey($other->id)->exists() => 'Diesen Dienst kannst du nicht sehen.',
+            default => null,
+        };
+        if ($errors) {
+            throw ValidationException::withMessages(['swap' => $errors]);
+        }
+        $swap = Swap::create(['service_id' => $service->id, 'requester_id' => $by->id, 'target_service_id' => $other->id, 'target_user_id' => $target->id, 'status' => 'pending']);
+        $this->notify($target, new SwapRequestedNotification($swap->load(['requester', 'service', 'targetService'])));
+
+        return $swap;
+    }
+
+    /** The target agrees (both swap their place as responsible) or declines; the requester is told */
+    public function answerSwap(User $by, Swap $swap, bool $accept): void
+    {
+        $swap = DB::transaction(function () use ($by, $swap, $accept) {
+            $swap = Swap::lockForUpdate()->findOrFail($swap->id);
+            if (! $swap->isPending()) {
+                throw ValidationException::withMessages(['swap' => 'Dieser Tausch ist schon beantwortet.']);
+            }
+            if ($swap->target_user_id !== $by->id) {
+                throw ValidationException::withMessages(['swap' => 'Antworten kann nur, wer gefragt wurde.']);
+            }
+            if ($accept) {
+                $service = Service::findOrFail($swap->service_id);
+                $other = Service::findOrFail($swap->target_service_id);
+                $service->responsible()->detach($swap->requester_id);
+                $service->responsible()->syncWithoutDetaching([$swap->target_user_id]);
+                $other->responsible()->detach($swap->target_user_id);
+                $other->responsible()->syncWithoutDetaching([$swap->requester_id]);
+            }
+            $swap->update(['status' => $accept ? 'accepted' : 'declined', 'decided_at' => now()]);
+
+            return $swap;
+        });
+        $this->notify($swap->requester, new SwapAnsweredNotification($swap->load(['targetUser', 'service', 'targetService'])));
+    }
+
+    /** The requester takes the request back */
+    public function withdrawSwap(User $by, Swap $swap): void
+    {
+        if (! $swap->isPending() || $swap->requester_id !== $by->id) {
+            throw ValidationException::withMessages(['swap' => 'Zurückziehen kann nur, wer angefragt hat, solange noch keine Antwort da ist.']);
+        }
+        $swap->update(['status' => 'withdrawn', 'decided_at' => now()]);
+    }
+
+    private function notify(?User $user, $notification): void
+    {
+        try {
+            $user?->notify($notification);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private function schedule(string $date, ?string $time, ?string $location, array $details = []): array
@@ -145,8 +396,18 @@ class ServicePlan
         }
         $ids = fn (string $key, string $class) => array_values(array_map('intval', $class::whereIn('id', array_map('intval', $details[$key] ?? []))->pluck('id')->all()));
         $place = filled($details['place_id'] ?? null) ? Place::find((int) $details['place_id']) : null;
+        $owner = filled($details['owner_group_id'] ?? null) ? Group::find((int) $details['owner_group_id'])?->id : null;
+        $groupIds = $ids('group_ids', Group::class);
+        $functionIds = $ids('function_ids', MemberFunction::class);
+        // A Dienst of an Abteilung is for that Abteilung unless "Für wen?" says otherwise
+        if ($owner && $groupIds === [] && $functionIds === []) {
+            $groupIds = [$owner];
+        }
+        $organizer = trim((string) ($details['organizer'] ?? ''));
 
         return [
+            'owner_group_id' => $owner,
+            'organizer' => $organizer !== '' ? mb_substr($organizer, 0, 100) : null,
             'date' => $this->date($date)->toDateString(),
             'starts_at' => $time !== '' ? $time : null,
             'ends_at' => $end !== '' ? $end : null,
@@ -154,8 +415,8 @@ class ServicePlan
             'location' => $place?->name ?? (filled($location) ? mb_substr(trim($location), 0, 255) : null),
             'place_id' => $place?->id,
             'dress_code_ids' => $ids('dress_code_ids', DressCode::class) ?: null,
-            'group_ids' => $ids('group_ids', Group::class) ?: null,
-            'function_ids' => $ids('function_ids', MemberFunction::class) ?: null,
+            'group_ids' => $groupIds ?: null,
+            'function_ids' => $functionIds ?: null,
         ];
     }
 
@@ -165,10 +426,20 @@ class ServicePlan
             ?? throw ValidationException::withMessages(['date' => 'Bitte ein gültiges Datum angeben.']);
     }
 
-    private function assertAdmin(User $user): void
+    /** Planning for the whole Wehr (null) or an Abteilung */
+    private function assertMayPlanFor(User $user, ?int $groupId): void
     {
-        if (! $user->is_admin) {
-            throw ValidationException::withMessages(['date' => 'Datum, Uhrzeit und Ort ändern nur Admins.']);
+        if (! array_key_exists($groupId ?? '', self::ownerOptions($user))) {
+            throw ValidationException::withMessages(['date' => self::canPlan($user)
+                ? 'Für diese Abteilung planst du keine Übungsdienste.' : 'Übungsdienste anlegen, ändern und löschen nur Admins und Übungsdienstplaner.']);
+        }
+    }
+
+    private function assertMayEdit(User $user, Service $service): void
+    {
+        if (! self::mayEdit($user, $service)) {
+            throw ValidationException::withMessages(['date' => self::canPlan($user)
+                ? 'Diesen Dienst plant eine andere Abteilung.' : 'Übungsdienste ändern nur Admins und Übungsdienstplaner – tauschen kannst du über „Tauschen“.']);
         }
     }
 }

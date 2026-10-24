@@ -14,7 +14,7 @@ beforeEach(function () {
     }
     $this->bernd = User::factory()->create(['name' => 'Bernd Blaulicht']);
     $this->bernd->moduleAccess()->create(['module' => 'lehrgaenge', 'role' => 'ausbildungsleiter']);
-    $this->bernd->moduleAccess()->create(['module' => 'schichtplan', 'role' => 'planer']);
+    $this->bernd->moduleAccess()->create(['module' => 'schichtplan', 'role' => 'schichtplaner']);
     $this->bernd->moduleAccess()->create(['module' => 'ausruestung', 'role' => 'geraetewart']);
 });
 

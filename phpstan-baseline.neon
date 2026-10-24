@@ -5383,38 +5383,8 @@ parameters:
 			path: modules/Schluessel/src/Services/KeyService.php
 
 		-
-			message: '#^Cannot call method lt\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Uebungsdienste/src/Livewire/Planner.php
-
-		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Uebungsdienste/src/Livewire/ServiceForm.php
-
-		-
-			message: '#^Cannot access property \$dayOfWeek on string\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: modules/Uebungsdienste/src/Models/Service.php
-
-		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Uebungsdienste/src/Models/Service.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 1
-			path: modules/Uebungsdienste/src/Services/CalendarLink.php
-
-		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: modules/Uebungsdienste/src/Services/CalendarLink.php
 
@@ -5423,12 +5393,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: modules/Uebungsdienste/src/Services/CalendarLink.php
-
-		-
-			message: '#^Cannot call method gte\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Uebungsdienste/src/Services/ServicePlan.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'

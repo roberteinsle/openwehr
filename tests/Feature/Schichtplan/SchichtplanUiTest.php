@@ -25,7 +25,7 @@ beforeEach(function () {
     Notification::fake();
 
     $this->planer = User::factory()->create(['name' => 'Bernd Blaulicht', 'phone' => null]);
-    $this->planer->moduleAccess()->create(['module' => 'schichtplan', 'role' => 'planer']);
+    $this->planer->moduleAccess()->create(['module' => 'schichtplan', 'role' => 'schichtplaner']);
     $this->kid = User::factory()->create(['name' => 'Hanna Hydrant', 'phone' => null]);
     $this->kid->moduleAccess()->create(['module' => 'schichtplan']);
     $this->other = User::factory()->create(['name' => 'Klara Kübel', 'phone' => null]);

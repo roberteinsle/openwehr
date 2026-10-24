@@ -19,6 +19,7 @@ use App\Services\PersonnelFileRegistry;
 use App\Services\PushService;
 use App\Services\ScanRegistry;
 use App\Services\VehicleBlockRegistry;
+use App\Services\VehicleBookingRegistry;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Notifications\DatabaseNotification;
@@ -43,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ActivityRecorder::class);
         $this->app->singleton(PersonnelFileRegistry::class);
         $this->app->singleton(VehicleBlockRegistry::class);
+        $this->app->singleton(VehicleBookingRegistry::class);
         $this->app->singleton(PushService::class);
         $this->app->singleton(CredentialRegistry::class);
         $this->app->singleton(HoursRegistry::class);

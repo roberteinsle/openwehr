@@ -17,13 +17,16 @@ Route::prefix('uebungsdienste')->name('uebungsdienste.')
             return view('uebungsdienste::pages.print', [
                 'year' => $year,
                 'upcoming' => $upcoming,
-                'services' => Service::with('responsible')->whereYear('date', $year)
+                'services' => ServicePlan::visibleTo(auth()->user())->with('responsible')->whereYear('date', $year)
                     ->when($upcoming, fn ($q) => $q->whereDate('date', '>=', ServicePlan::today()))
                     ->orderBy('date')->orderBy('starts_at')->get(),
             ]);
         })->name('print');
 
-        // Date, time and place are planned by admins only
+        // Admins: who plans for which Abteilung
+        Route::get('/planer', fn () => view('uebungsdienste::pages.planners'))->name('planners');
+
+        // Admins and Übungsdienstplaner plan the Dienste
         Route::middleware('can:plan-uebungsdienste')->group(function () {
             Route::get('/anlegen', fn () => view('uebungsdienste::pages.form', ['service' => null]))->name('create');
             // Orte & Kleidung: the same lists as in the Kalender and every other module
