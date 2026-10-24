@@ -17,6 +17,7 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Modules\Fahrzeugbuchung\src\Models\Vehicle;
 use Modules\Fahrzeuge\src\Console\Commands\SendFleetReminders;
+use Modules\Fahrzeuge\src\Livewire\CallSigns;
 use Modules\Fahrzeuge\src\Livewire\Deadlines;
 use Modules\Fahrzeuge\src\Livewire\Fleet;
 use Modules\Fahrzeuge\src\Livewire\VehicleDetail;
@@ -59,7 +60,7 @@ class FahrzeugeServiceProvider extends ServiceProvider
 
         Gate::define('fahrzeuge-manage', fn (User $user) => FleetService::canManage($user));
 
-        foreach (['deadlines' => Deadlines::class, 'fleet' => Fleet::class, 'vehicle-detail' => VehicleDetail::class, 'vehicle-form' => VehicleForm::class] as $name => $class) {
+        foreach (['call-signs' => CallSigns::class, 'deadlines' => Deadlines::class, 'fleet' => Fleet::class, 'vehicle-detail' => VehicleDetail::class, 'vehicle-form' => VehicleForm::class] as $name => $class) {
             Livewire::component('fahrzeuge.'.$name, $class);
         }
 
@@ -139,6 +140,7 @@ class FahrzeugeServiceProvider extends ServiceProvider
         app(ModuleRegistry::class)->navigation('fahrzeuge', fn (User $u) => [
             'tabs' => [
                 ModuleNav::tab('Fahrzeuge', 'fahrzeuge.index', ['fahrzeuge.show', 'fahrzeuge.edit']),
+                ModuleNav::tab('Funkrufnamen', 'fahrzeuge.call-signs'),
                 ModuleNav::tab('Fristen', 'fahrzeuge.deadlines'),
             ],
         ]);

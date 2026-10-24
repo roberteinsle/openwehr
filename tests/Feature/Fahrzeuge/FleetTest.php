@@ -15,6 +15,7 @@ use Modules\Fahrzeugbuchung\src\Models\Booking;
 use Modules\Fahrzeugbuchung\src\Models\Vehicle;
 use Modules\Fahrzeugbuchung\src\Services\BookingService;
 use Modules\Fahrzeugbuchung\src\Services\DecisionService;
+use Modules\Fahrzeuge\src\Livewire\CallSigns;
 use Modules\Fahrzeuge\src\Livewire\VehicleDetail;
 use Modules\Fahrzeuge\src\Livewire\VehicleForm;
 use Modules\Fahrzeuge\src\Models\Deadline;
@@ -186,4 +187,19 @@ test('the pages open and the start page shows the fleet', function () {
     Livewire::actingAs($this->wart)->test(Home::class)->assertSee('2 von 2 einsatzbereit')->assertSee('1 Frist überfällig');
     Livewire::actingAs($this->hanna)->test(Home::class)->assertSee('2 von 2 einsatzbereit')->assertDontSee('Frist überfällig');
     expect(Deadline::count())->toBe(1);
+});
+
+test('Funkrufnamen at a glance: every vehicle in service with its call sign, searchable', function () {
+    Profile::create(['vehicle_id' => $this->hlf->id, 'call_sign' => 'Florian Musterstadt 42/1', 'license_plate' => 'MU-FW 421', 'crew' => '1/8']);
+    Profile::create(['vehicle_id' => $this->mtw->id, 'call_sign' => 'Florian Musterstadt 19/1']);
+    $old = Vehicle::factory()->create(['name' => 'LF 8 alt', 'is_active' => false]);
+    Profile::create(['vehicle_id' => $old->id, 'call_sign' => 'Florian Musterstadt 44/1']);
+    $tsf = Vehicle::factory()->create(['name' => 'TSF', 'is_active' => true]);
+
+    $this->actingAs($this->hanna)->get(route('fahrzeuge.call-signs'))->assertOk()->assertSee('Funkrufnamen');
+    Livewire::actingAs($this->hanna)->test(CallSigns::class)
+        ->assertSeeInOrder(['Florian Musterstadt 19/1', 'MTW', 'Florian Musterstadt 42/1', 'HLF 20', 'MU-FW 421'])
+        ->assertDontSee('Florian Musterstadt 44/1')
+        ->assertSee('Ohne Funkrufnamen: TSF')
+        ->set('search', '42')->assertSee('HLF 20')->assertDontSee('Florian Musterstadt 19/1');
 });

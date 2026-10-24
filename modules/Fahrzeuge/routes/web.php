@@ -13,6 +13,7 @@ Route::prefix('fahrzeuge')->name('fahrzeuge.')
     ->middleware(['auth', 'active', 'module:fahrzeuge'])
     ->group(function () {
         Route::get('/', fn () => view('fahrzeuge::pages.page', ['livewireComponent' => 'fahrzeuge.fleet', 'title' => 'Fahrzeuge']))->name('index');
+        Route::get('/funkrufnamen', fn () => view('fahrzeuge::pages.page', ['livewireComponent' => 'fahrzeuge.call-signs', 'title' => 'Funkrufnamen']))->name('call-signs');
         Route::get('/fristen', fn () => view('fahrzeuge::pages.page', ['livewireComponent' => 'fahrzeuge.deadlines', 'title' => 'Fristen']))->name('deadlines');
         Route::get('/neu', fn () => view('fahrzeuge::pages.page', ['livewireComponent' => 'fahrzeuge.vehicle-form', 'title' => 'Neues Fahrzeug']))
             ->middleware('can:fahrzeuge-manage')->name('create');
