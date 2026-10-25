@@ -34,6 +34,7 @@ parameters:
         - modules/Schluessel/database/migrations
         - modules/Uebungsdienste/database/migrations
         - modules/Unterweisungen/database/migrations
+        - modules/Gefahrstoffe/database/migrations
         - modules/Verbandbuch/database/migrations
         - modules/Wartung/database/migrations
         - modules/Wasserkarte/database/migrations

@@ -13,6 +13,10 @@
         @if(app(\App\Services\ModuleRegistry::class)->isActive('objektplaene') && auth()->user()->canUseModule('objektplaene'))
             @include('objektplaene::partials.report-section', ['report' => $report, 'class' => ''])
         @endif
+        {{-- Lagemonitor: the Gefahrstoff named in the report and its Warntafel, when Gefahrstoffe is on --}}
+        @if(app(\App\Services\ModuleRegistry::class)->isActive('gefahrstoffe') && auth()->user()->canUseModule('gefahrstoffe'))
+            @include('gefahrstoffe::partials.report-section', ['report' => $report, 'class' => ''])
+        @endif
         <livewire:einsatzbericht.situation-log :report="$report" :key="'log-'.$report->id" />
     </div>
 </x-layouts.app>

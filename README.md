@@ -19,6 +19,7 @@ openwehr ist eine Web-App für Freiwillige Feuerwehren: ein gemeinsamer Kern (An
 | [Budget & Finanzen](#budget--finanzen) | Ausgaben mit Beleg und Genehmigung, Buchungen und Export; Budgets je Kostenstelle und Jahresabschluss abschaltbar | Kassenwart, Wehrführung |
 | [Verbandbuch & Vorfälle](#verbandbuch--vorfälle) | Verletzungen, Unfälle und Vorfälle nach DGUV 204-021 dokumentieren, mit Unterschrift auf dem Bildschirm, verschlüsselt und mit Löschfrist | Sicherheitsbeauftragter, Wehrführung |
 | [Expositionen (Gefahrstoffe)](#expositionen-gefahrstoffe) | Gefahrstoff-Expositionen nach Einsatz und Übung erfassen, für die Besatzung aus dem Einsatzbericht, verschlüsselt, 40 Jahre aufbewahrt, Meldeliste für die DGUV-ZED | Expositionsbeauftragter |
+| [Gefahrstoffe](#gefahrstoffe) | Warntafel lesen: Gefahrnummern des ADR mit Bedeutung, Gefahrenmatrix (AAAA-C-EEEE) zum Antippen, GAMS; auch ohne Netz, im Einsatzbericht bei Gefahrstoff-Einsätzen | – |
 | [Führerscheine](#führerscheine) | Führerscheinkontrolle per Foto, Klassen und Feuerwehr-Fahrberechtigung mit Fristen, wer welches Fahrzeug fahren darf | Führerscheinprüfer |
 | [Unterweisungen](#unterweisungen) | Unterweisungen und Einweisungen mit Fristen, Unterschrift auf dem Tablet, Nachweis, Qualifikations-Kürzel | Unterweisungsbeauftragter |
 | [Wartungsmanagement](#wartungsmanagement) | Prüf- und Wartungsverwaltung für die Geräte der Ausrüstungsverwaltung: Vorlagen mit Intervall und Checkliste, fällige Wartungen, unterschriebene Prüfprotokolle als PDF, Fachfirmen, Prüfer-IDs, Zeit und Kosten | Gerätewart, Prüfer |
@@ -491,6 +492,17 @@ Wer bei Einsatz oder Übung krebserzeugenden, keimzellmutagenen oder reproduktio
 - **Datenschutz und Aufbewahrung:** Tätigkeit, Gefahrstoffe und Bemerkung sind **verschlüsselt** gespeichert; das allgemeine Admin-Log enthält keine Inhalte, Mails nur den Anlass. Eine erfasste Exposition ist **40 Jahre** ab dem Tag geschützt – die Datenbank verweigert vorher das Löschen, auch für Admins; danach löscht `model:prune` sie täglich. Nur ein nie bestätigter Vorschlag lässt sich verwerfen. Wird ein Kamerad mit „Löschen mit Übertragung“ entfernt, bleiben seine Expositionen mit seinem Namen erhalten und gehen nie auf einen anderen über.
 - **Jahresbericht:** Abschnitt „Gefahrstoff-Expositionen“ mit Zahl der Expositionen, betroffenen Einsatzkräften und den an die ZED gemeldeten.
 
+## Gefahrstoffe
+
+Schnell nachschlagen an der Einsatzstelle, auch im Funkloch. Das Modul hat keine eigenen Daten in der Datenbank; ist es eingeschaltet, dürfen es alle Kameraden nutzen.
+
+- **Seite „Gefahrstoffe“** (`/gefahrstoffe`): Die **Warntafel** erklärt: oben die Gefahrnummer, unten die UN-Nummer. Ins Feld „Gefahrnummer“ eingetippt (z. B. `33` oder `X423`), steht sofort die Bedeutung darunter; ein **X** davor wird rot hervorgehoben (reagiert gefährlich mit Wasser – Wasser nur im Einverständnis mit Sachverständigen). Steht eine Nummer nicht in der Liste, wird sie aus ihren Ziffern gelesen.
+- **Gefahrenmatrix (AAAA-C-EEEE):** Atemgifte, Angstreaktion, Ausbreitung, Atomare Gefahren, Chemische Gefahren, Erkrankung/Verletzung, Explosion, Elektrizität, Einsturz gegen Menschen, Tiere, Umwelt, Sachwerte, Mannschaft, Gerät. Antippen markiert ein Feld für die Lagebeurteilung (nur auf dem Gerät, nichts wird gespeichert); dazu die erste Maßnahmen nach **GAMS** und die Bedeutung der Ziffern.
+- **Alle Gefahrnummern** mit Suche (z. B. „giftig“ oder „26“).
+- **Quelle:** Die Gefahrnummern stammen nur aus dem ADR (Unterabschnitt 5.3.2.3) in der im Bundesgesetzblatt verkündeten Fassung – ein amtliches Werk (§ 5 UrhG), keine aufbereiteten Listen Dritter. Die Erklärtexte zur Gefahrenmatrix und zu GAMS sind für openwehr geschrieben. Eine Liste der UN-Nummern mit Stoffnamen gibt es (noch) nicht; den Stoff zur UN-Nummer liefern Leitstelle, Beförderungspapier oder die schriftlichen Weisungen im Fahrzeug.
+- **Ohne Netz:** Die Seite enthält alle Daten. Einmal mit Netz geöffnet, liefert sie die App danach auch ohne Empfang (der Service Worker hält eine Kopie samt Skripten, die bei jedem Öffnen mit Netz erneuert wird).
+- **Im Einsatzbericht** (wenn „Gefahrstoffe“ an ist): Bei Art der Hilfeleistung „Gefahrstoff“ oder ausgefülltem Feld „Gefahrstoff (Stoff / UN-Nummer)“ zeigen der Bericht und die Lagemeldungen einen Kasten mit Link „Nachschlagen“; steht dort eine Warntafel wie `33/1203`, ist ihre Bedeutung gleich dabei. Das Feld selbst bleibt ein freier Text.
+
 ## Führerscheine
 
 Führerscheinkontrolle ohne Kontrolltermin in der Wache: Die Kameraden reichen ihren Führerschein einmal per Foto ein, der **Führerscheinprüfer** gleicht ab, die App behält die Fristen im Blick und sagt, wer welches Fahrzeug fahren darf. Das Modul ist nach der Installation ausgeschaltet; ein Admin aktiviert es unter Admin → Module (sinnvoll: „automatisch freischalten“). Der Führerscheinprüfer muss kein Admin sein – „Prüfen“ ist ein Reiter der Modulleiste; ohne Prüfer übernehmen die Admins.
@@ -865,8 +877,7 @@ Ideen, Wünsche und Fehler sind willkommen – am besten als [Issue auf GitHub](
 
 **Geplant** (Reihenfolge noch offen):
 
-- **Gefahrstoffe nachschlagen:** Gefahrenmatrix (AAAA-C-EEEE) und Tabelle der Gefahrnummern und UN-Nummern, auch ohne Netz lesbar. Vorher zu klären: eine Datenquelle, die frei weitergegeben werden darf. ([#13](https://github.com/roberteinsle/openwehr/issues/13))
-- **Offline im Einsatz:** Nachschlagedaten (Gefahrstoffe, Wasserkarte) ohne Netz lesbar wie heute schon die Objektpläne; danach einzelne Eingaben, die ohne Netz gesammelt und später übertragen werden (z. B. Lagemeldungen). ([#14](https://github.com/roberteinsle/openwehr/issues/14))
+- **Offline im Einsatz:** weitere Nachschlagedaten (z. B. Wasserkarte) ohne Netz lesbar wie heute schon die Objektpläne und die Gefahrstoffe; danach einzelne Eingaben, die ohne Netz gesammelt und später übertragen werden (z. B. Lagemeldungen). ([#14](https://github.com/roberteinsle/openwehr/issues/14))
 - **Anmeldung über einen Identity Provider** (OpenID Connect, z. B. Keycloak oder Authentik) als Zusatz zum Login-Link per E-Mail – für Wehren, die mehrere Anwendungen mit einer Benutzerverwaltung betreiben. ([#15](https://github.com/roberteinsle/openwehr/issues/15))
 - **Anwesenheit nach dem Übungsdienst** per Mail an die Wehrführung, z. B. zum Übertragen in die Verwaltungssoftware der Kommune. ([#16](https://github.com/roberteinsle/openwehr/issues/16))
 - **Screenshots** im README und auf der Projektseite, automatisch aus den Beispieldaten erzeugt. ([#19](https://github.com/roberteinsle/openwehr/issues/19))

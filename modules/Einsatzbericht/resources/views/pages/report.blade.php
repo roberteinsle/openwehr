@@ -7,6 +7,9 @@
     @if(app(\App\Services\ModuleRegistry::class)->isActive('objektplaene') && auth()->user()->canUseModule('objektplaene'))
         @include('objektplaene::partials.report-section', ['report' => $report])
     @endif
+    @if(app(\App\Services\ModuleRegistry::class)->isActive('gefahrstoffe') && auth()->user()->canUseModule('gefahrstoffe'))
+        @include('gefahrstoffe::partials.report-section', ['report' => $report])
+    @endif
     @if(app(\App\Services\ModuleRegistry::class)->isActive('fahrtenbuch'))
         @include('fahrtenbuch::partials.report-section', ['report' => $report])
     @endif

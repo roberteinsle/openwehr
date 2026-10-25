@@ -1,6 +1,6 @@
 # openwehr
 
-> Kostenlose Open-Source-Web-App (AGPL-3.0) für Freiwillige Feuerwehren in Deutschland: ein gemeinsamer Kern mit Anmeldung ohne Passwort, Kameraden, Startseite, Benachrichtigungen und Admin-Bereich, dazu 23 Module, die jede Wehr einzeln einschaltet. Für das Handy gemacht, Oberfläche auf Deutsch, Betrieb auf dem eigenen Server (Docker-Image mit PostgreSQL).
+> Kostenlose Open-Source-Web-App (AGPL-3.0) für Freiwillige Feuerwehren in Deutschland: ein gemeinsamer Kern mit Anmeldung ohne Passwort, Kameraden, Startseite, Benachrichtigungen und Admin-Bereich, dazu 24 Module, die jede Wehr einzeln einschaltet. Für das Handy gemacht, Oberfläche auf Deutsch, Betrieb auf dem eigenen Server (Docker-Image mit PostgreSQL).
 
 - Projektseite: https://www.openwehr.de/
 - Quellcode und ausführliche Dokumentation (README): https://github.com/roberteinsle/openwehr
@@ -31,6 +31,7 @@
 - Kleiderkammer: Ausgabe und Rücknahme der Bekleidung, Größen, Bestand, QR-Etiketten
 - Mängelmanagement: Mängel mit Foto per QR-Code melden – an Objekten, Fahrzeugen oder Geräten der Ausrüstung –, Bearbeitung und Zuständigkeit direkt in der App, Rückfragen an den Melder, Fotos im Verlauf, „doch nicht behoben“, Zuständige je Objekt, Erinnerung an liegengebliebene Mängel, Jahresbericht
 - Expositionen (Gefahrstoffe): Gefahrstoff-Expositionen nach Einsatz und Übung erfassen, für die Besatzung aus dem Einsatzbericht vorschlagen, verschlüsselt und 40 Jahre aufbewahrt, Meldeliste und CSV für die Zentrale Expositionsdatenbank (ZED) der DGUV, Expositionsnachweis für die Einsatzkraft
+- Gefahrstoffe: Gefahrnummern der Warntafel aus dem ADR nachschlagen, Gefahrenmatrix AAAA-C-EEEE und GAMS, auch ohne Netz; im Einsatzbericht bei Gefahrstoff-Einsätzen
 - Führerscheine: Kontrolle per Foto statt Termin in der Wache, Fotos nach der Prüfung gelöscht, Klassen und Feuerwehr-Fahrberechtigung (4,75 t / 7,5 t) mit Fristen, Erinnerung und Kalender, Klassen je Abteilung, wer welches Fahrzeug fahren darf, Warnung im Fahrtenbuch
 - Unterweisungen: Unterweisungen und Einweisungen (auch auf Fahrzeuge) mit Kürzel, Wiederholungsintervall und Zielgruppe, Teilnehmer unterschreiben auf dem Tablet oder dem eigenen Handy, Nachweis zum Drucken, Fristen mit Erinnerung, Übersicht je Kamerad, zählt auf Wunsch als Atemschutz-Unterweisung
 - Verbandbuch & Vorfälle: Dokumentation nach DGUV, verschlüsselt, mit Unterschrift und Löschfrist
@@ -46,7 +47,7 @@
 
 ## Ausblick
 
-- Geplant: Gefahrenmatrix und Gefahrstoffnummern (auch offline), Offline-Nutzung im Einsatz, Anmeldung über OpenID Connect (Keycloak, Authentik), Anwesenheit nach dem Übungsdienst an die Wehrführung, Funkrufnamen-Liste, Screenshots
+- Geplant: weitere Offline-Nutzung im Einsatz, Anmeldung über OpenID Connect (Keycloak, Authentik), Anwesenheit nach dem Übungsdienst an die Wehrführung, Funkrufnamen-Liste, Screenshots
 - Ideen-Parkplatz: mehrere Ortswehren einer Gemeinde in einer Installation mit Rechten je Ort
 - Bewusst nicht: eigene Dateiablage oder Office-Integration
 - Ideen und Fehler als Issue: https://github.com/roberteinsle/openwehr/issues (Code wird vom Maintainer gepflegt, keine Code-Pull-Requests)

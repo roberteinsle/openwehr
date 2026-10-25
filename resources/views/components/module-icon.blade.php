@@ -48,6 +48,8 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6zM9 3v15M15 6v15"/>
     @elseif($key === 'wasserkarte')
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3s-6 6.5-6 11a6 6 0 0 0 12 0c0-4.5-6-11-6-11zM9.5 15a2.5 2.5 0 0 0 2.5 2.5"/>
+    @elseif($key === 'gefahrstoffe')
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.5 21.5 12 12 21.5 2.5 12zM12 8v5M12 16h.01"/>
     @else
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
     @endif
