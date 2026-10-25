@@ -20,6 +20,7 @@ use Modules\Kalender\src\Livewire\CalendarView;
 use Modules\Kalender\src\Livewire\EventDetail;
 use Modules\Kalender\src\Livewire\EventForm;
 use Modules\Kalender\src\Livewire\EventTypes;
+use Modules\Kalender\src\Livewire\MonitorBoard;
 use Modules\Kalender\src\Livewire\PollForm;
 use Modules\Kalender\src\Livewire\PollList;
 use Modules\Kalender\src\Livewire\PollView;
@@ -72,6 +73,7 @@ class KalenderServiceProvider extends ServiceProvider
 
         Livewire::component('kalender.calendar-view', CalendarView::class);
         Livewire::component('kalender.event-types', EventTypes::class);
+        Livewire::component('kalender.monitor-board', MonitorBoard::class);
         Livewire::component('kalender.event-form', EventForm::class);
         Livewire::component('kalender.event-detail', EventDetail::class);
         Livewire::component('kalender.sources', Sources::class);

@@ -2,6 +2,7 @@
 
 use App\Models\Contact;
 use App\Models\Group;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Modules\Kalender\src\Services\EventService;
 
@@ -37,4 +38,21 @@ test('the Dienstplan lists the Termine of a year or half-year with time, place, 
 
     // A Kamerad outside the Jugendfeuerwehr doesn't see its Termine
     $this->actingAs($this->hanna)->get(route('kalender.roster', ['jahr' => 2027]))->assertOk()->assertSee('Jahreshauptversammlung')->assertDontSee('Jugenddienst');
+});
+
+test('the Termin monitor shows the next Termin and the coming two weeks; admins or the DISPLAY_TOKEN only', function () {
+    config(['monitor.token' => 'geheim-fuer-die-wache']);
+    kalenderEvent('2027-01-05 19:00', '21:00', ['title' => 'Übungsdienst Atemschutz', 'location' => 'Wache']);
+    kalenderEvent('2027-01-12 18:00', '20:00', ['title' => 'Jugenddienst'], [$this->jf->id]);
+    kalenderEvent('2027-02-20 19:00', '21:00', ['title' => 'Zu weit weg']);
+
+    $this->get('/kalender/monitor')->assertNotFound();
+    $this->get('/kalender/monitor/falsch')->assertNotFound();
+    $this->actingAs($this->hanna)->get('/kalender/monitor')->assertNotFound();
+    $this->app['auth']->forgetGuards();
+
+    $this->get('/kalender/monitor/geheim-fuer-die-wache')->assertOk()
+        ->assertSee('Nächster Termin')->assertSee('Übungsdienst Atemschutz')->assertSee('noch 7 Std.')
+        ->assertSee('Jugenddienst')->assertSee('Jugendfeuerwehr')->assertDontSee('Zu weit weg');
+    $this->actingAs(User::factory()->admin()->create())->get('/kalender/monitor')->assertOk();
 });

@@ -61,6 +61,7 @@ class MagicLinkService
 
     public function consumeToken(string $rawToken, Request $request): User
     {
+        // Not even the format: refused without a database query (and without a log entry)
         if (! preg_match('/^'.self::TOKEN_PATTERN.'$/', $rawToken)) {
             throw ValidationException::withMessages([
                 'token' => ['Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.'],
@@ -75,9 +76,7 @@ class MagicLinkService
             ->first();
 
         if (! $loginToken) {
-            throw ValidationException::withMessages([
-                'token' => ['Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.'],
-            ]);
+            $this->failed('Link ungültig, abgelaufen oder schon benutzt');
         }
 
         // Claimed atomically: of two simultaneous clicks only one logs in
@@ -87,15 +86,14 @@ class MagicLinkService
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
         if ($claimed === 0) {
-            throw ValidationException::withMessages([
-                'token' => ['Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.'],
-            ]);
+            $this->failed('Link ungültig, abgelaufen oder schon benutzt');
         }
 
         /** @var User $user */
         $user = $loginToken->user;
 
         if (! $user->is_active || ! $user->hasLogin()) {
+            app(ActivityRecorder::class)->record('login_failed', User::class, $user->id, $user->name.' – Konto deaktiviert oder ohne Login', userId: $user->id);
             throw ValidationException::withMessages([
                 'token' => ['Dein Konto wurde deaktiviert. Bitte wende dich an den Administrator.'],
             ]);
@@ -116,6 +114,15 @@ class MagicLinkService
         return $user;
     }
 
+    /** A login link that doesn't work: logged for the admin "Analyse" (with the IP, no address), then refused */
+    private function failed(string $reason): never
+    {
+        app(ActivityRecorder::class)->record('login_failed', null, null, $reason);
+        throw ValidationException::withMessages([
+            'token' => ['Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.'],
+        ]);
+    }
+
     private function checkRateLimits(string $email, ?string $ip): void
     {
         $emailKey = 'magic-link:email:'.hash('sha256', $email);
@@ -125,6 +132,7 @@ class MagicLinkService
         $ipLimit = config('magic-link.rate_limit_per_ip', 20);
 
         if (RateLimiter::tooManyAttempts($emailKey, $emailLimit)) {
+            app(ActivityRecorder::class)->record('login_throttled', null, null, 'Zu viele Login-Links für eine E-Mail-Adresse');
             $seconds = RateLimiter::availableIn($emailKey);
             throw ValidationException::withMessages([
                 'email' => ["Zu viele Anfragen. Bitte warte {$seconds} Sekunden."],
@@ -132,6 +140,7 @@ class MagicLinkService
         }
 
         if (RateLimiter::tooManyAttempts($ipKey, $ipLimit)) {
+            app(ActivityRecorder::class)->record('login_throttled', null, null, 'Zu viele Login-Links von einer IP-Adresse');
             throw ValidationException::withMessages([
                 'email' => ['Zu viele Anfragen von dieser IP-Adresse. Bitte versuche es später erneut.'],
             ]);

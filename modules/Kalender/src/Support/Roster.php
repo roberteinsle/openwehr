@@ -4,6 +4,7 @@ namespace Modules\Kalender\src\Support;
 
 use App\Models\DressCode;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Modules\Kalender\src\Models\Event;
 use Modules\Kalender\src\Models\EventType;
@@ -16,6 +17,23 @@ use Modules\Kalender\src\Models\EventType;
 class Roster
 {
     public const PERIODS = ['jahr' => 'Ganzes Jahr', 'h1' => '1. Halbjahr', 'h2' => '2. Halbjahr'];
+
+    /**
+     * For the Kalender monitor at the station: Termine running now or starting in the next $days days,
+     * for every Abteilung (the screen hangs in the Wache), without personal, cancelled and external ones.
+     *
+     * @return Collection<int, Event>
+     */
+    public static function upcoming(int $days)
+    {
+        return Event::with(['groups', 'functions', 'place'])->withCount('invitees')
+            ->where('ends_at', '>', now())->where('starts_at', '<', now()->addDays($days))
+            ->whereNull('cancelled_at')->whereNull('source_id')
+            ->where(fn ($q) => $q->whereNull('managed_by')->orWhereNotIn('managed_by', ['fuehrerscheine', 'fahrzeuge']))
+            ->orderBy('starts_at')->get()
+            ->filter(fn (Event $e) => $e->groups->isNotEmpty() || $e->functions->isNotEmpty() || $e->invitees_count === 0)
+            ->values();
+    }
 
     /** @return array{0: Carbon, 1: Carbon} start and end (exclusive) in Berlin time */
     public static function range(int $year, string $period): array

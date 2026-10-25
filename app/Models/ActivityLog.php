@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Services\ModuleRegistry;
+use App\Support\Retention;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** One entry of the admin "Logs": a change, a login or a sent e-mail; kept for 180 days */
+/** One entry of the admin "Logs": a change, a login or a sent e-mail; kept as long as set under Analyse (audit log, default 180 days) */
 class ActivityLog extends Model
 {
     use MassPrunable;
@@ -23,6 +24,8 @@ class ActivityLog extends Model
         'deleted' => 'Gelöscht',
         'transferred' => 'Übertragen und gelöscht',
         'login' => 'Anmeldung',
+        'login_failed' => 'Anmeldung fehlgeschlagen',
+        'login_throttled' => 'Anmeldung gesperrt (zu viele Versuche)',
         'impersonate' => 'Als Kamerad angesehen',
         'mail' => 'E-Mail',
     ];
@@ -103,6 +106,6 @@ class ActivityLog extends Model
 
     public function prunable(): Builder
     {
-        return static::where('created_at', '<', now()->subDays(self::KEEP_DAYS));
+        return static::where('created_at', '<', now()->subDays(Retention::of('audit')));
     }
 }

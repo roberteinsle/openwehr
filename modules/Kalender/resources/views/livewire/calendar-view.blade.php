@@ -10,6 +10,9 @@
                 <option value="">Alle Terminarten</option>
                 @foreach($types as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
             </select>
+            @if(auth()->user()->is_admin)
+                <a href="{{ route('kalender.monitor') }}" target="_blank" rel="noopener" class="text-sm text-fw-navy underline" title="Termin-Monitor für den Bildschirm in der Wache (für den Bildschirm ohne Anmeldung: /kalender/monitor/ + DISPLAY_TOKEN)">Termin-Monitor ↗</a>
+            @endif
             @if($manager)
                 <x-page-action :href="route('kalender.create')">Termin anlegen</x-page-action>
             @endif

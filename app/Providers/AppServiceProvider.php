@@ -18,13 +18,18 @@ use App\Services\OrganizationSettings;
 use App\Services\PersonnelFileRegistry;
 use App\Services\PushService;
 use App\Services\ScanRegistry;
+use App\Services\SystemStatus;
 use App\Services\VehicleBlockRegistry;
 use App\Services\VehicleBookingRegistry;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -54,6 +59,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Webhooks without session and CSRF (backup reports for the admin "Analyse")
+        if (! $this->app->routesAreCached()) {
+            Route::group([], base_path('routes/webhooks.php'));
+        }
+
         // Links in mails (magic links, Einladungen) take their host from APP_URL, never from a
         // forwarded Host header – otherwise a spoofed X-Forwarded-Host could send a login link elsewhere
         if (filled($url = config('app.url'))) {
@@ -73,6 +83,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Every entry under the bell also goes as push to the Kamerad's devices
+        // Admin "Analyse": last run and failures of every scheduled command
+        Event::listen(ScheduledTaskStarting::class, fn ($e) => app(SystemStatus::class)->scheduleStarting($e));
+        Event::listen(ScheduledTaskFinished::class, fn ($e) => app(SystemStatus::class)->scheduleFinished($e));
+        Event::listen(ScheduledTaskFailed::class, fn ($e) => app(SystemStatus::class)->scheduleFailed($e));
+
         Event::listen(NotificationSent::class, function (NotificationSent $event) {
             if ($event->channel === 'database' && $event->notifiable instanceof User && $event->response instanceof DatabaseNotification) {
                 try {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Retention;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
@@ -57,6 +58,6 @@ class MailLog extends Model
 
     public function prunable(): Builder
     {
-        return static::where('sent_at', '<', now()->subDays(self::KEEP_DAYS));
+        return static::where('sent_at', '<', now()->subDays(Retention::of('mail')));
     }
 }
