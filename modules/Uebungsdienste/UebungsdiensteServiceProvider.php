@@ -75,7 +75,9 @@ class UebungsdiensteServiceProvider extends ServiceProvider
             $planner = $user->canUseModule('uebungsdienste');
             $next = $planner ? app(ServicePlan::class)->next($user) : app(ServicePlan::class)->nextFor($user);
 
-            return $next ? view('uebungsdienste::cards.next', ['service' => $next, 'planner' => $planner])->render() : null;
+            // In several Abteilungen (or seeing the whole plan): for whom the Dienst is
+            return $next ? view('uebungsdienste::cards.next', ['service' => $next, 'planner' => $planner,
+                'withAudience' => $planner || $user->groups()->count() > 1])->render() : null;
         }, everyone: true);
 
         // Jahresbericht: how many Übungsdienste were planned (the topics stay in the plan)

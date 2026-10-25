@@ -28,13 +28,21 @@ class DashboardRegistry
         $this->cards[$module.'.'.$name] = ['module' => $module, 'position' => $position, 'render' => $render, 'everyone' => $everyone];
     }
 
-    /** @return array<int, mixed> rendered cards for this Kamerad, in registration order */
-    public function for(User $user, string $position = self::CARDS): array
+    /**
+     * Rendered cards for this Kamerad. With $moduleOrder (module keys, e.g. the Kamerad's own order of the
+     * module tiles) the cards follow it; cards of modules not in it come last, in registration order.
+     *
+     * @param  ?list<string>  $moduleOrder
+     * @return array<int, mixed>
+     */
+    public function for(User $user, string $position = self::CARDS, ?array $moduleOrder = null): array
     {
         $registry = app(ModuleRegistry::class);
+        $rank = $moduleOrder !== null ? array_flip($moduleOrder) : [];
 
         return collect($this->cards)
             ->filter(fn ($card) => $card['position'] === $position)
+            ->sortBy(fn ($card, $id) => [$rank[$card['module']] ?? PHP_INT_MAX, array_search($id, array_keys($this->cards), true)])
             ->filter(fn ($card) => $registry->isActive($card['module']) && ($card['everyone'] || $user->canUseModule($card['module'])))
             ->map(fn ($card) => ($card['render'])($user))
             ->filter()

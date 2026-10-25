@@ -3,6 +3,9 @@
 @php($tag = $planner ? 'a' : 'div')
 <{{ $tag }} @if($planner) href="{{ route('uebungsdienste.index') }}" @endif class="flex h-full flex-col bg-white rounded-2xl border border-gray-100 shadow-sm p-5 {{ $planner ? 'hover:border-fw-navy' : '' }}">
     <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Nächster Übungsdienst</p>
+    @if(($withAudience ?? false) && $service->audienceLabel())
+        <p class="mt-1"><x-audience-chip :label="'Für: '.$service->audienceLabel()" /></p>
+    @endif
     <p class="mt-1 font-semibold text-gray-900">{{ $service->dateLabel() }}{{ $service->starts_at ? ' · '.$service->starts_at.' Uhr' : '' }}</p>
     @if($planner)
         <p class="text-sm text-gray-700">{{ $service->topic ?: 'Thema noch offen' }}</p>

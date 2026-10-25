@@ -74,8 +74,8 @@ class Home extends Component
 
         return view('livewire.dashboard.home', [
             'topCards' => $dashboard->for($user, DashboardRegistry::TOP),
-            // The next event (calendar module) and the next birthday side by side
-            'cards' => [...$dashboard->for($user), ...$this->birthdayCard()],
+            // The cards in the order of the Kamerad's module tiles, the birthday last
+            'cards' => [...$dashboard->for($user, DashboardRegistry::CARDS, array_keys($modules)), ...$this->birthdayCard()],
             'modules' => $this->editing ? $modules : array_filter($modules, fn ($m) => ! $m['hidden']),
             'hiddenCount' => count(array_filter($modules, fn ($m) => $m['hidden'])),
             'locked' => (bool) $user->modules_locked,

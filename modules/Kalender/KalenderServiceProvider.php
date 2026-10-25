@@ -92,12 +92,13 @@ class KalenderServiceProvider extends ServiceProvider
 
         // The next event on the personal start page, with the Kamerad's own Rückmeldung
         app(DashboardRegistry::class)->register('kalender', 'next-event', function (User $user) {
-            $event = Event::visibleTo($user)->upcoming()->with('groups')->first();
+            $event = Event::visibleTo($user)->upcoming()->with(['groups', 'functions'])->first();
 
             return $event ? view('kalender::cards.next-event', [
                 'event' => $event,
                 'response' => $event->responses()->where('user_id', $user->id)->first(),
                 'canOpen' => $user->canUseModule('kalender'),
+                'withAudience' => Event::showAudienceTo($user),
             ])->render() : null;
         }, everyone: true);
 

@@ -11,6 +11,9 @@
             {{ $event->title }}
         @endif
     </p>
+    @if(($withAudience ?? false) && $event->audienceLabel())
+        <p class="mt-1"><x-audience-chip :label="'Für: '.$event->audienceLabel()" /></p>
+    @endif
     <p class="mt-1 text-sm text-gray-600">{{ $event->timeLabel() }}</p>
     <x-place-info :place="$event->place" :location="$event->location" class="relative z-10 text-sm text-gray-500" />
     <x-dress-codes :ids="$event->dress_code_ids" class="text-sm text-gray-500" />

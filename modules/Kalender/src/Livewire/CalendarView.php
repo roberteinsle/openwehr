@@ -100,7 +100,7 @@ class CalendarView extends Component
 
         $base = fn () => Event::visibleTo($user)->when(array_key_exists($this->type, EventType::labels()), fn ($q) => $q->where('type', $this->type));
         $events = $base()->between($from->copy()->utc(), $until->copy()->utc())->orderBy('starts_at')
-            ->with(['responses' => fn ($q) => $q->where('user_id', $user->id)])->get();
+            ->with(['groups', 'functions', 'responses' => fn ($q) => $q->where('user_id', $user->id)])->get();
 
         // Every day of the period with the events touching it (multi-day events appear on each day)
         $days = [];
@@ -116,7 +116,7 @@ class CalendarView extends Component
         }
 
         $upcoming = $this->view === 'liste' ? collect() : $base()->where('ends_at', '>', now())->where('starts_at', '<', now()->addDays(60))
-            ->orderBy('starts_at')->limit(30)->with(['responses' => fn ($q) => $q->where('user_id', $user->id)])
+            ->orderBy('starts_at')->limit(30)->with(['groups', 'functions', 'responses' => fn ($q) => $q->where('user_id', $user->id)])
             ->withCount(['responses as yes_count' => fn ($q) => $q->where('status', 'yes')])->get();
 
         return view('kalender::livewire.calendar-view', [

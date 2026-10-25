@@ -1,4 +1,5 @@
 @php
+    $withAudience = \Modules\Kalender\src\Models\Event::showAudienceTo(auth()->user());
     $months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     $weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 @endphp
@@ -52,9 +53,9 @@
                         <div class="text-xs mb-0.5 {{ $day['isToday'] ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-fw-red font-bold text-white' : 'text-gray-500' }}">{{ $day['date']->day }}</div>
                         <div class="space-y-0.5">
                             @foreach($day['events']->take(3) as $event)
-                                <a href="{{ route('kalender.show', $event) }}" title="{{ $event->title }} – {{ $event->timeLabel() }}"
+                                <a href="{{ route('kalender.show', $event) }}" title="{{ $event->title }}{{ $event->audienceLabel() ? ' ('.$event->audienceLabel().')' : '' }} – {{ $event->timeLabel() }}"
                                    class="block truncate rounded border px-1 text-[11px] leading-4 {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}" style="{{ $event->colorStyle() }}">
-                                    @unless($event->all_day){{ $event->starts_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }} @endunless{{ $event->title }}
+                                    @unless($event->all_day){{ $event->starts_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }} @endunless{{ $event->title }}@if($withAudience && $event->audienceLabel()) <span class="opacity-75">· {{ $event->audienceLabel() }}</span>@endif
                                 </a>
                             @endforeach
                             @if($day['events']->count() > 3)<button type="button" wire:click="$set('date', '{{ $day['date']->toDateString() }}'); $set('view', 'woche')" class="text-[11px] text-gray-500 hover:underline">+{{ $day['events']->count() - 3 }} weitere</button>@endif
@@ -73,6 +74,7 @@
                                 <a href="{{ route('kalender.show', $event) }}" class="block rounded border px-1.5 py-1 text-xs {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}" style="{{ $event->colorStyle() }}">
                                     <span class="block font-semibold">{{ $event->all_day ? 'ganztägig' : $event->starts_at->copy()->setTimezone('Europe/Berlin')->format('H:i').'–'.$event->ends_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }}</span>
                                     <span class="block">{{ $event->title }}</span>
+                                    @if($withAudience && $event->audienceLabel())<span class="block font-semibold opacity-75">{{ $event->audienceLabel() }}</span>@endif
                                     @if($event->location)<span class="block opacity-75">{{ $event->location }}</span>@endif
                                 </a>
                             @empty
@@ -98,6 +100,7 @@
                                         <span class="min-w-0 text-sm">
                                             <span class="text-gray-500">{{ $event->all_day ? 'ganztägig' : $event->starts_at->copy()->setTimezone('Europe/Berlin')->format('H:i').'–'.$event->ends_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }}</span>
                                             <span class="font-medium text-gray-900 {{ $event->isCancelled() ? 'line-through text-gray-500' : '' }}">{{ $event->title }}</span>
+                                            @if($withAudience && $event->audienceLabel())<x-audience-chip :label="$event->audienceLabel()" />@endif
                                             @if($event->location)<span class="text-gray-500"> · {{ $event->location }}</span>@endif
                                         </span>
                                         <span class="flex shrink-0 items-center gap-2">
@@ -131,7 +134,7 @@
                     <a href="{{ route('kalender.show', $event) }}" class="block p-4 hover:bg-gray-50" wire:key="up-{{ $event->id }}">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
-                                <p class="font-semibold text-gray-900 {{ $event->isCancelled() ? 'line-through text-gray-500' : '' }}">{{ $event->title }}</p>
+                                <p class="font-semibold text-gray-900 {{ $event->isCancelled() ? 'line-through text-gray-500' : '' }}">{{ $event->title }}@if($withAudience && $event->audienceLabel()) <x-audience-chip :label="$event->audienceLabel()" />@endif</p>
                                 <p class="text-sm text-gray-500">{{ $event->timeLabel() }}@if($event->location) · {{ $event->location }}@endif</p>
                             </div>
                             <div class="flex flex-col items-end gap-1 shrink-0">

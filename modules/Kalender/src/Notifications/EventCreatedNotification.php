@@ -23,6 +23,9 @@ class EventCreatedNotification extends Notification
             ->greeting('Hallo '.$notifiable->name.',')
             ->line('**'.$event->typeLabel().': '.$event->title.'**')
             ->line($event->timeLabel().($this->count > 1 ? ' – und '.($this->count - 1).' weitere Termine dieser Reihe' : ''));
+        if ($audience = $event->audienceLabel()) {
+            $mail->line('Für: '.$audience);
+        }
 
         if ($event->place) {
             $mail->line('Ort: '.$event->place->label().' – Navigation: '.$event->place->navigationUrl());

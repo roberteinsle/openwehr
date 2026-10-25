@@ -122,6 +122,23 @@ class Event extends Model
         return EventType::labelOf($this->type);
     }
 
+    /** "Jugendfeuerwehr" or "Einsatzabteilung, Jugendfeuerwehr" (Abteilungen, then Funktionen); null when it is for everyone */
+    public function audienceLabel(): ?string
+    {
+        $names = [...$this->groups->pluck('name')->all(), ...$this->functions->pluck('name')->all()];
+
+        return $names === [] ? null : implode(', ', $names);
+    }
+
+    /**
+     * Whether the viewer needs to see for which Abteilung a Termin is: in more than one Abteilung (e.g.
+     * Einsatzabteilung and Jugendfeuerwehr, where both have an "Übungsdienst") or seeing every Termin.
+     */
+    public static function showAudienceTo(?User $user): bool
+    {
+        return $user !== null && ($user->canManageKalender() || $user->groups()->count() > 1);
+    }
+
     /** Inline style of the type badge, in the colour the admin chose for the Terminart */
     public function colorStyle(): string
     {
