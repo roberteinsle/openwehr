@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Modules\Kalender\src\Models\Event;
+use Modules\Kalender\src\Models\EventType;
 use Modules\Kalender\src\Services\PollService;
 
 /** A new Terminabfrage: what, for whom, and the date proposals */
@@ -67,7 +68,7 @@ class PollForm extends Component
     {
         $this->validate([
             'title' => ['required', 'string', 'max:150'],
-            'type' => ['required', Rule::in(array_keys(Event::TYPES))],
+            'type' => ['required', Rule::in(array_keys(EventType::labels()))],
             'location' => ['nullable', 'string', 'max:150'],
             'description' => ['nullable', 'string', 'max:5000'],
             'deadline' => ['nullable', 'date_format:Y-m-d\TH:i'],
@@ -118,7 +119,7 @@ class PollForm extends Component
     public function render()
     {
         return view('kalender::livewire.poll-form', [
-            'types' => Event::TYPES,
+            'types' => Event::types(),
             'groups' => Group::orderBy('sort_order')->orderBy('name')->pluck('name', 'id'),
             'functions' => MemberFunction::with('parent')->orderBy('sort_order')->orderBy('name')->get()->mapWithKeys(fn (MemberFunction $f) => [$f->id => $f->fullLabel()])->sort(),
             'people' => User::active()->orderBy('name')->get()->filter(fn (User $u) => $u->canUseModule('kalender'))->pluck('name', 'id'),

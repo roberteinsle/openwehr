@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Modules\Kalender\src\Models\Event;
+use Modules\Kalender\src\Models\EventType;
 use Modules\Kalender\src\Services\FeedService;
 
 /**
@@ -97,7 +98,7 @@ class CalendarView extends Component
             default => [$anchor->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY), $anchor->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY)->startOfDay()->addDay()],
         };
 
-        $base = fn () => Event::visibleTo($user)->when(array_key_exists($this->type, Event::TYPES), fn ($q) => $q->where('type', $this->type));
+        $base = fn () => Event::visibleTo($user)->when(array_key_exists($this->type, EventType::labels()), fn ($q) => $q->where('type', $this->type));
         $events = $base()->between($from->copy()->utc(), $until->copy()->utc())->orderBy('starts_at')
             ->with(['responses' => fn ($q) => $q->where('user_id', $user->id)])->get();
 
@@ -124,7 +125,7 @@ class CalendarView extends Component
             'until' => $until->copy()->subSecond(),
             'days' => $days,
             'upcoming' => $upcoming,
-            'types' => Event::TYPES,
+            'types' => Event::types(),
             'views' => self::VIEWS,
             'manager' => $user->canManageKalender(),
         ]);

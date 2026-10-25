@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\Kalender\src\Http\Controllers\FeedController;
 use Modules\Kalender\src\Http\Controllers\PublicCalendarController;
 use Modules\Kalender\src\Models\Event;
+use Modules\Kalender\src\Models\EventType;
 use Modules\Kalender\src\Models\Poll;
 use Modules\Kalender\src\Services\EventService;
 use Modules\Kalender\src\Support\Roster;
@@ -54,6 +55,9 @@ Route::prefix('kalender')->name('kalender.')
     ->group(function () {
         Route::get('/', fn () => view('kalender::pages.index'))->name('index');
 
+        // Admins: the Terminarten (checked in the component)
+        Route::get('/terminarten', fn () => view('kalender::pages.types'))->name('types');
+
         // The Dienstplan of a year or half-year to print or save as PDF (what the Kamerad may see)
         Route::get('/dienstplan', function () {
             $request = request();
@@ -61,7 +65,7 @@ Route::prefix('kalender')->name('kalender.')
             $period = array_key_exists((string) $request->query('zeitraum'), Roster::PERIODS) ? (string) $request->query('zeitraum') : 'jahr';
             $groups = Group::orderBy('sort_order')->orderBy('name')->pluck('name', 'id');
             $groupId = $groups->has($request->integer('abteilung')) ? $request->integer('abteilung') : null;
-            $types = array_values(array_intersect((array) $request->query('arten', []), array_keys(Event::TYPES))) ?: array_keys(Event::TYPES);
+            $types = array_values(array_intersect((array) $request->query('arten', []), array_keys(EventType::labels()))) ?: array_keys(Event::types());
             $text = fn (string $key, string $default, int $max) => mb_substr(trim((string) ($request->query($key) ?? $default)), 0, $max);
 
             return view('kalender::pages.roster', [

@@ -15,24 +15,11 @@ use Modules\Kalender\src\Support\Audience;
 
 class Event extends Model
 {
-    public const TYPES = [
-        'uebung' => 'Übung',
-        'dienst' => 'Dienst',
-        'veranstaltung' => 'Veranstaltung',
-        'wartung' => 'Wartung',
-        'arbeitsdienst' => 'Arbeitsdienst',
-        'sonstiges' => 'Sonstiges',
-    ];
-
-    /** Tailwind classes per type for chips and badges */
-    public const COLORS = [
-        'uebung' => 'bg-red-100 text-red-800 border-red-200',
-        'dienst' => 'bg-blue-100 text-blue-800 border-blue-200',
-        'veranstaltung' => 'bg-green-100 text-green-800 border-green-200',
-        'wartung' => 'bg-amber-100 text-amber-800 border-amber-200',
-        'arbeitsdienst' => 'bg-orange-100 text-orange-800 border-orange-200',
-        'sonstiges' => 'bg-gray-100 text-gray-700 border-gray-200',
-    ];
+    /** @return array<string, string> key => label of the Terminarten to choose from (an inactive one only when kept) */
+    public static function types(?string $keep = null): array
+    {
+        return EventType::options($keep);
+    }
 
     protected $table = 'kal_events';
 
@@ -132,12 +119,13 @@ class Event extends Model
 
     public function typeLabel(): string
     {
-        return self::TYPES[$this->type] ?? $this->type;
+        return EventType::labelOf($this->type);
     }
 
-    public function colorClasses(): string
+    /** Inline style of the type badge, in the colour the admin chose for the Terminart */
+    public function colorStyle(): string
     {
-        return self::COLORS[$this->type] ?? self::COLORS['sonstiges'];
+        return EventType::styleOf($this->type);
     }
 
     public function isExternal(): bool

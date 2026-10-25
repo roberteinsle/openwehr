@@ -1,5 +1,5 @@
 @inject('org', \App\Services\OrganizationSettings::class)
-@php($types = \Modules\Kalender\src\Models\Event::TYPES)
+@php($types = \Modules\Kalender\src\Models\EventType::labels())
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -70,7 +70,7 @@
             @endforelse
         </tbody>
     </table>
-    <p class="legend">@foreach($types as $key => $label)@if(in_array($key, $selectedTypes, true))<span style="color: {{ \Modules\Kalender\src\Support\Roster::COLORS[$key] ?? '#111827' }}">■ {{ $label }}</span>@endif @endforeach</p>
+    <p class="legend">@foreach($types as $key => $label)@if(in_array($key, $selectedTypes, true))<span style="color: {{ \Modules\Kalender\src\Models\EventType::colorOf($key) }}">■ {{ $label }}</span>@endif @endforeach</p>
 
     @if($hint !== '')
         @php($lines = preg_split('/\R/', $hint, 2))

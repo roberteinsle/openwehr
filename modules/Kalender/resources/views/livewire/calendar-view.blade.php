@@ -50,7 +50,7 @@
                         <div class="space-y-0.5">
                             @foreach($day['events']->take(3) as $event)
                                 <a href="{{ route('kalender.show', $event) }}" title="{{ $event->title }} – {{ $event->timeLabel() }}"
-                                   class="block truncate rounded border px-1 text-[11px] leading-4 {{ $event->colorClasses() }} {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}">
+                                   class="block truncate rounded border px-1 text-[11px] leading-4 {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}" style="{{ $event->colorStyle() }}">
                                     @unless($event->all_day){{ $event->starts_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }} @endunless{{ $event->title }}
                                 </a>
                             @endforeach
@@ -67,7 +67,7 @@
                         <p class="text-xs font-semibold {{ $day['isToday'] ? 'text-fw-red' : 'text-gray-500' }}">{{ $weekdays[$i] }} {{ $day['date']->format('d.m.') }}</p>
                         <div class="mt-1 space-y-1">
                             @forelse($day['events'] as $event)
-                                <a href="{{ route('kalender.show', $event) }}" class="block rounded border px-1.5 py-1 text-xs {{ $event->colorClasses() }} {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}">
+                                <a href="{{ route('kalender.show', $event) }}" class="block rounded border px-1.5 py-1 text-xs {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}" style="{{ $event->colorStyle() }}">
                                     <span class="block font-semibold">{{ $event->all_day ? 'ganztägig' : $event->starts_at->copy()->setTimezone('Europe/Berlin')->format('H:i').'–'.$event->ends_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }}</span>
                                     <span class="block">{{ $event->title }}</span>
                                     @if($event->location)<span class="block opacity-75">{{ $event->location }}</span>@endif
@@ -99,7 +99,7 @@
                                         </span>
                                         <span class="flex shrink-0 items-center gap-2">
                                             @if($event->rsvp && ! $event->isCancelled())<span class="text-xs {{ $mine?->status ? 'text-gray-500' : 'font-semibold text-fw-red' }}">{{ $mine?->status ? $mine->label() : 'Rückmeldung offen' }}</span>@endif
-                                            <span class="rounded border px-1.5 py-0.5 text-xs {{ $event->colorClasses() }}">{{ $event->typeLabel() }}</span>
+                                            <span class="rounded border px-1.5 py-0.5 text-xs" style="{{ $event->colorStyle() }}">{{ $event->typeLabel() }}</span>
                                         </span>
                                     </a>
                                 @endforeach
@@ -111,7 +111,7 @@
         @endif
 
         <div class="mt-3 flex flex-wrap gap-2 text-xs">
-            @foreach($types as $value => $label)<span class="rounded border px-1.5 {{ \Modules\Kalender\src\Models\Event::COLORS[$value] }}">{{ $label }}</span>@endforeach
+            @foreach($types as $value => $label)<span class="rounded border px-1.5" style="{{ \Modules\Kalender\src\Models\EventType::styleOf($value) }}">{{ $label }}</span>@endforeach
         </div>
     </section>
 
@@ -132,7 +132,7 @@
                                 <p class="text-sm text-gray-500">{{ $event->timeLabel() }}@if($event->location) · {{ $event->location }}@endif</p>
                             </div>
                             <div class="flex flex-col items-end gap-1 shrink-0">
-                                <span class="rounded border px-1.5 py-0.5 text-xs {{ $event->colorClasses() }}">{{ $event->typeLabel() }}</span>
+                                <span class="rounded border px-1.5 py-0.5 text-xs" style="{{ $event->colorStyle() }}">{{ $event->typeLabel() }}</span>
                                 @if($event->isCancelled())
                                     <span class="text-xs font-semibold text-red-700">Abgesagt</span>
                                 @elseif($event->rsvp)

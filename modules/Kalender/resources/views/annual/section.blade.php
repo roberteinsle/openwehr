@@ -6,6 +6,6 @@
     @if($tracked)<div class="ar-tile"><span>Ø Teilnehmer je Termin</span><strong>{{ round($attendances / $tracked, 1) }}</strong></div>@endif
 </div>
 @if($byType->isNotEmpty())
-    <table><tbody>@foreach($byType as $type => $count)<tr><td>{{ \Modules\Kalender\src\Models\Event::TYPES[$type] ?? $type }}</td><td class="n">{{ $count }}</td></tr>@endforeach</tbody></table>
+    <table><tbody>@foreach($byType as $type => $count)<tr><td>{{ \Modules\Kalender\src\Models\EventType::labelOf($type) }}</td><td class="n">{{ $count }}</td></tr>@endforeach</tbody></table>
 @endif
 <p class="note">Eigene Termine (ohne abgesagte und eingebundene externe Kalender), auch die Übungsdienste aus dem Übungsdienstplaner.</p>

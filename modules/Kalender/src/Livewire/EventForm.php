@@ -12,6 +12,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Modules\Kalender\src\Models\Event;
+use Modules\Kalender\src\Models\EventType;
 use Modules\Kalender\src\Models\Template;
 use Modules\Kalender\src\Services\EventService;
 
@@ -234,7 +235,7 @@ class EventForm extends Component
     {
         $this->validate([
             'title' => ['required', 'string', 'max:150'],
-            'type' => ['required', Rule::in(array_keys(Event::TYPES))],
+            'type' => ['required', Rule::in(array_keys(EventType::labels()))],
             'startsAt' => [$this->allDay ? 'nullable' : 'required', 'date_format:'.self::LOCAL],
             'endsAt' => [$this->allDay ? 'nullable' : 'required', 'date_format:'.self::LOCAL],
             'startDate' => [$this->allDay ? 'required' : 'nullable', 'date_format:Y-m-d'],
@@ -305,7 +306,7 @@ class EventForm extends Component
     public function render()
     {
         return view('kalender::livewire.event-form', [
-            'types' => Event::TYPES,
+            'types' => Event::types($this->event?->type),
             'groups' => Group::orderBy('sort_order')->orderBy('name')->pluck('name', 'id'),
             'people' => User::active()->orderBy('name')->get()->filter(fn (User $u) => $u->canUseModule('kalender'))->pluck('name', 'id'),
             'repeats' => EventService::REPEATS,

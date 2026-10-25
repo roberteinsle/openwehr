@@ -6,6 +6,7 @@ use App\Models\DressCode;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Modules\Kalender\src\Models\Event;
+use Modules\Kalender\src\Models\EventType;
 
 /**
  * The Dienstplan to print and hang up: the Termine of a year or half-year with time, place, Kleidung,
@@ -15,9 +16,6 @@ use Modules\Kalender\src\Models\Event;
 class Roster
 {
     public const PERIODS = ['jahr' => 'Ganzes Jahr', 'h1' => '1. Halbjahr', 'h2' => '2. Halbjahr'];
-
-    /** Text colour per type, like a printed Dienstplan */
-    public const COLORS = ['uebung' => '#111827', 'dienst' => '#1d4ed8', 'veranstaltung' => '#15803d', 'wartung' => '#b45309', 'arbeitsdienst' => '#c2410c', 'sonstiges' => '#6b7280'];
 
     /** @return array{0: Carbon, 1: Carbon} start and end (exclusive) in Berlin time */
     public static function range(int $year, string $period): array
@@ -60,7 +58,7 @@ class Roster
                     'dress' => implode(', ', DressCode::names($e->getAttribute('dress_code_ids'))),
                     'audience' => $audience === [] ? 'Alle' : implode(', ', $audience),
                     'organizer' => $e->getAttribute('organizer'),
-                    'color' => self::COLORS[$e->type] ?? '#111827',
+                    'color' => EventType::colorOf($e->type),
                 ];
             })->values()->all();
     }

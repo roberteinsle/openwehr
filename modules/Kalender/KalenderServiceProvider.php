@@ -19,6 +19,7 @@ use Modules\Kalender\src\Console\Commands\SyncCalendarSources;
 use Modules\Kalender\src\Livewire\CalendarView;
 use Modules\Kalender\src\Livewire\EventDetail;
 use Modules\Kalender\src\Livewire\EventForm;
+use Modules\Kalender\src\Livewire\EventTypes;
 use Modules\Kalender\src\Livewire\PollForm;
 use Modules\Kalender\src\Livewire\PollList;
 use Modules\Kalender\src\Livewire\PollView;
@@ -70,6 +71,7 @@ class KalenderServiceProvider extends ServiceProvider
         Gate::policy(Event::class, EventPolicy::class);
 
         Livewire::component('kalender.calendar-view', CalendarView::class);
+        Livewire::component('kalender.event-types', EventTypes::class);
         Livewire::component('kalender.event-form', EventForm::class);
         Livewire::component('kalender.event-detail', EventDetail::class);
         Livewire::component('kalender.sources', Sources::class);
@@ -141,6 +143,7 @@ class KalenderServiceProvider extends ServiceProvider
                 ModuleNav::tab('Dienstplan', 'kalender.roster'),
                 $u->canManageKalender() ? ModuleNav::tab('Orte & Kleidung', 'kalender.places') : null,
                 $u->canManageKalender() ? ModuleNav::tab('Externe Kalender', 'kalender.sources') : null,
+                $u->is_admin ? ModuleNav::tab('Terminarten', 'kalender.types') : null,
             ],
         ]);
     }

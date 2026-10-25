@@ -76,6 +76,6 @@ class Poll extends Model
 
     public function typeLabel(): string
     {
-        return Event::TYPES[$this->type] ?? $this->type;
+        return EventType::labelOf($this->type);
     }
 }

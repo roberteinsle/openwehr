@@ -5,6 +5,7 @@ namespace Modules\Kalender\src\Livewire;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Modules\Kalender\src\Models\Event;
+use Modules\Kalender\src\Models\EventType;
 use Modules\Kalender\src\Models\Source;
 use Modules\Kalender\src\Services\SourceSync;
 
@@ -24,7 +25,7 @@ class Sources extends Component
         $this->validate([
             'name' => ['required', 'string', 'max:100'],
             'url' => ['required', 'string', 'max:1000', 'regex:#^(https?|webcal)://#i'],
-            'type' => ['required', Rule::in(array_keys(Event::TYPES))],
+            'type' => ['required', Rule::in(array_keys(EventType::labels()))],
         ], ['url.regex' => 'Bitte eine Adresse mit https:// oder webcal:// angeben.']);
 
         $source = Source::create(['name' => trim($this->name), 'url' => trim($this->url), 'type' => $this->type]);
@@ -57,7 +58,7 @@ class Sources extends Component
     {
         return view('kalender::livewire.sources', [
             'sources' => Source::withCount('events')->orderBy('name')->get(),
-            'types' => Event::TYPES,
+            'types' => Event::types(),
         ]);
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Kalender\src\Models\Event;
+use Modules\Kalender\src\Models\EventType;
 use Modules\Kalender\src\Models\Poll;
 use Modules\Kalender\src\Models\PollOption;
 use Modules\Kalender\src\Models\PollVote;
@@ -47,7 +48,7 @@ class PollService
                 throw ValidationException::withMessages(['options' => 'Vorschlag '.($i + 1).': Das Ende muss nach dem Beginn liegen.']);
             }
         }
-        if (! array_key_exists($data['type'] ?? '', Event::TYPES)) {
+        if (! array_key_exists($data['type'] ?? '', EventType::labels())) {
             throw ValidationException::withMessages(['type' => 'Bitte die Art des Termins wählen.']);
         }
 

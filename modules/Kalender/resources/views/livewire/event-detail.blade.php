@@ -4,7 +4,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
-                <span class="inline-block rounded border px-1.5 py-0.5 text-xs {{ $event->colorClasses() }}">{{ $event->typeLabel() }}</span>
+                <span class="inline-block rounded border px-1.5 py-0.5 text-xs" style="{{ $event->colorStyle() }}">{{ $event->typeLabel() }}</span>
                 @if($event->isCancelled())<span class="ml-1 inline-block rounded bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white">Abgesagt</span>@endif
                 <h1 class="mt-1 text-xl font-bold text-gray-900 {{ $event->isCancelled() ? 'line-through' : '' }}">{{ $event->title }}</h1>
                 <p class="text-sm text-gray-600">{{ $event->timeLabel() }}</p>
