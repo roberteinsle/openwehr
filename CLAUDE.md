@@ -18,6 +18,7 @@ composer test                  # config:clear + artisan test
 composer audit && npm audit --omit=dev           # known vulnerabilities, enforced in CI
 npm run build                  # production assets
 docker compose up --build      # full stack on :8080, mails go to storage/logs/laravel.log
+python3 scripts/build-wiki.py <dir> <version>   # GitHub wiki pages from README.md; copy into a clone of openwehr.wiki.git and push
 ```
 
 **PostgreSQL is mandatory, including for tests.** SQLite and MySQL won't work. `phpunit.xml` expects `pgsql` at `127.0.0.1:5432` with db `openwehr_test`, user `openwehr`, password `secret`. Feature tests use `RefreshDatabase` (see `tests/Pest.php`). CI runs `pest --parallel` against Postgres 18.
