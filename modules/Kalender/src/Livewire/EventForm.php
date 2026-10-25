@@ -122,8 +122,9 @@ class EventForm extends Component
             $this->minParticipants = (string) ($event->min_participants ?? '');
             $this->isPublic = $event->is_public;
             $this->rsvp = $event->rsvp;
-            $this->rsvpDeadline = $event->rsvp_deadline?->setTimezone('Europe/Berlin')->format('Y-m-d') ?? '';
-            $deadlineTime = $event->rsvp_deadline?->setTimezone('Europe/Berlin')->format('H:i');
+            $deadline = $event->rsvp_deadline?->setTimezone('Europe/Berlin');
+            $this->rsvpDeadline = $deadline?->format('Y-m-d') ?? '';
+            $deadlineTime = $deadline?->format('H:i');
             $this->rsvpDeadlineTime = $deadlineTime && $deadlineTime !== '23:59' ? $deadlineTime : '';
         } else {
             $this->authorize('manage', Event::class);
