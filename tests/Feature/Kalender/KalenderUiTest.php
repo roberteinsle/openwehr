@@ -49,7 +49,7 @@ test('a Terminverwalter creates a repeating event with Rückmeldung', function (
         ->set('endsAt', '2027-06-08T21:30')
         ->set('location', 'Gerätehaus')
         ->set('rsvp', true)
-        ->set('rsvpDeadline', '2027-06-07')
+        ->set('rsvpUntil', '2027-06-07T23:59')
         ->set('repeat', 'biweekly')
         ->set('repeatUntil', '2027-07-06')
         ->call('save')
@@ -216,14 +216,16 @@ test('a new Termin asks for a Rückmeldung by default; an existing one keeps its
     Livewire::actingAs($this->manager)->test(EventForm::class, ['event' => $event])->assertSet('rsvp', false);
 });
 
-test('the Frist of a Rückmeldung takes a time; without one it ends the day', function () {
-    Livewire::actingAs($this->manager)->test(EventForm::class)
-        ->set('title', 'Jahreshauptversammlung')->set('type', 'dienst')->set('startsAt', '2027-06-20T19:00')->set('endsAt', '2027-06-20T22:00')
-        ->set('rsvp', true)->set('rsvpDeadline', '2027-06-15')->set('rsvpDeadlineTime', '18:30')->assertSee('Mindestens Kameraden benötigt')
+test('the Frist is preset one day before the start, moves with it until set by hand, and takes a time', function () {
+    $form = Livewire::actingAs($this->manager)->test(EventForm::class)
+        ->set('title', 'Jahreshauptversammlung')->set('type', 'dienst')->set('startsAt', '2027-06-20T19:00')
+        ->assertSet('rsvpUntil', '2027-06-19T19:00')->assertSee('Mindestens Kameraden benötigt');
+    $form->set('startsAt', '2027-06-21T19:30')->assertSet('rsvpUntil', '2027-06-20T19:30')
+        ->set('rsvpUntil', '2027-06-15T18:30')->set('startsAt', '2027-06-22T19:00')->assertSet('rsvpUntil', '2027-06-15T18:30')
         ->call('save')->assertHasNoErrors();
     $event = Event::where('title', 'Jahreshauptversammlung')->sole();
     expect($event->rsvp_deadline->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('15.06.2027 18:30');
-    Livewire::actingAs($this->manager)->test(EventForm::class, ['event' => $event])->assertSet('rsvpDeadlineTime', '18:30')
-        ->set('rsvpDeadlineTime', '')->call('save')->assertHasNoErrors();
-    expect($event->fresh()->rsvp_deadline->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('15.06.2027 23:59');
+    Livewire::actingAs($this->manager)->test(EventForm::class, ['event' => $event])->assertSet('rsvpUntil', '2027-06-15T18:30')
+        ->set('rsvpUntil', '')->call('save')->assertHasNoErrors();
+    expect($event->fresh()->rsvp_deadline)->toBeNull();
 });

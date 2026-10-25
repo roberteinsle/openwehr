@@ -3001,12 +3001,6 @@ parameters:
 			path: modules/Kalender/src/Livewire/EventForm.php
 
 		-
-			message: '#^Offset ''rsvp_days'' on string in isset\(\) does not exist\.$#'
-			identifier: isset.offset
-			count: 1
-			path: modules/Kalender/src/Livewire/EventForm.php
-
-		-
 			message: '#^Offset ''start_time'' on string on left side of \?\? does not exist\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -3027,7 +3021,7 @@ parameters:
 		-
 			message: '#^Result of && is always false\.$#'
 			identifier: booleanAnd.alwaysFalse
-			count: 2
+			count: 1
 			path: modules/Kalender/src/Livewire/EventForm.php
 
 		-

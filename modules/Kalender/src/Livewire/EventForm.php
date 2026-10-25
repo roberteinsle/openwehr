@@ -83,10 +83,11 @@ class EventForm extends Component
     /** New Termine ask for a Rückmeldung by default (Zusagen, Vielleicht, Absagen) */
     public bool $rsvp = true;
 
-    public string $rsvpDeadline = '';
+    /** The Frist as date and time (like Beginn and Ende); preset one day before the start and moved with it */
+    public string $rsvpUntil = '';
 
-    /** Time of the Frist (HH:MM); empty = end of that day */
-    public string $rsvpDeadlineTime = '';
+    /** The Frist follows the start until it is set by hand */
+    public bool $rsvpFollows = true;
 
     public string $repeat = '';
 
@@ -122,16 +123,38 @@ class EventForm extends Component
             $this->minParticipants = (string) ($event->min_participants ?? '');
             $this->isPublic = $event->is_public;
             $this->rsvp = $event->rsvp;
-            $deadline = $event->rsvp_deadline?->setTimezone('Europe/Berlin');
-            $this->rsvpDeadline = $deadline?->format('Y-m-d') ?? '';
-            $deadlineTime = $deadline?->format('H:i');
-            $this->rsvpDeadlineTime = $deadlineTime && $deadlineTime !== '23:59' ? $deadlineTime : '';
+            $this->rsvpUntil = $event->rsvp_deadline?->setTimezone('Europe/Berlin')->format(self::LOCAL) ?? '';
+            $this->rsvpFollows = false;
         } else {
             $this->authorize('manage', Event::class);
             $start = now('Europe/Berlin')->addDay()->setTime(19, 0);
             $this->startsAt = $start->format(self::LOCAL);
             $this->endsAt = $start->copy()->addMinutes(self::DEFAULT_MINUTES)->format(self::LOCAL);
             $this->startDate = $this->endDate = $start->format('Y-m-d');
+            $this->rsvpUntil = $this->defaultDeadline();
+        }
+    }
+
+    /** One day before the start (all-day: the evening before, 20:00) */
+    private function defaultDeadline(): string
+    {
+        $start = $this->allDay ? ($this->startDate ? Carbon::createFromFormat('!Y-m-d', $this->startDate, 'Europe/Berlin')->setTime(20, 0) : null) : $this->local($this->startsAt);
+
+        return $start ? $start->copy()->subDay()->format(self::LOCAL) : '';
+    }
+
+    /** Set by hand: the Frist no longer moves with the start */
+    public function updatedRsvpUntil(): void
+    {
+        $this->rsvpFollows = false;
+    }
+
+    /** Switched on: a Frist one day before the start if there is none yet */
+    public function updatedRsvp(bool $on): void
+    {
+        if ($on && $this->rsvpUntil === '') {
+            $this->rsvpUntil = $this->defaultDeadline();
+            $this->rsvpFollows = true;
         }
     }
 
@@ -146,6 +169,9 @@ class EventForm extends Component
             $minutes = $old && $oldEnd && $oldEnd->gt($old) ? $old->diffInMinutes($oldEnd) : self::DEFAULT_MINUTES;
             $this->endsAt = $new->copy()->addMinutes($minutes)->format(self::LOCAL);
             $this->startDate = $new->format('Y-m-d');
+            if ($this->rsvpFollows) {
+                $this->rsvpUntil = $new->copy()->subDay()->format(self::LOCAL);
+            }
         }
     }
 
@@ -163,6 +189,9 @@ class EventForm extends Component
         if ($value && (! $this->endDate || $this->endDate < $value)) {
             $this->endDate = $value;
         }
+        if ($this->allDay && $this->rsvpFollows) {
+            $this->rsvpUntil = $this->defaultDeadline();
+        }
     }
 
     /** Switching to whole days keeps the day of the timed start, and back */
@@ -174,6 +203,9 @@ class EventForm extends Component
         } elseif (! $allDay && $this->startDate && ! $this->local($this->startsAt)) {
             $this->startsAt = $this->startDate.'T19:00';
             $this->endsAt = Carbon::createFromFormat(self::LOCAL, $this->startsAt)->addMinutes(self::DEFAULT_MINUTES)->format(self::LOCAL);
+        }
+        if ($this->rsvpFollows) {
+            $this->rsvpUntil = $this->defaultDeadline();
         }
     }
 
@@ -200,8 +232,18 @@ class EventForm extends Component
         $this->endsAt = $start->copy()->addMinutes((int) ($d['minutes'] ?? self::DEFAULT_MINUTES))->format(self::LOCAL);
         $this->startDate = $day;
         $this->endDate = Carbon::parse($day)->addDays(max(0, (int) ($d['days'] ?? 1) - 1))->format('Y-m-d');
-        $this->rsvpDeadline = $this->rsvp && isset($d['rsvp_days']) ? Carbon::parse($day)->subDays((int) $d['rsvp_days'])->format('Y-m-d') : '';
-        $this->rsvpDeadlineTime = $this->rsvp ? (string) data_get($d, 'rsvp_time', '') : '';
+        // The Frist of the template: minutes before the start (older templates: days before, end of that day)
+        $this->rsvpFollows = true;
+        $this->rsvpUntil = $this->defaultDeadline();
+        $minutes = data_get($d, 'rsvp_minutes');
+        $days = data_get($d, 'rsvp_days');
+        if ($this->rsvp && $minutes !== null) {
+            $this->rsvpUntil = ($this->allDay ? Carbon::createFromFormat('!Y-m-d', $day, 'Europe/Berlin') : $start)->copy()->subMinutes((int) $minutes)->format(self::LOCAL);
+            $this->rsvpFollows = false;
+        } elseif ($this->rsvp && $days !== null) {
+            $this->rsvpUntil = Carbon::parse($day)->subDays((int) $days)->setTime(23, 59)->format(self::LOCAL);
+            $this->rsvpFollows = false;
+        }
         $this->flash = 'Vorlage „'.$template->name.'“ übernommen.';
     }
 
@@ -218,8 +260,8 @@ class EventForm extends Component
             'start_time' => $start?->format('H:i'), 'minutes' => $start && $end && $end->gt($start) ? (int) $start->diffInMinutes($end) : self::DEFAULT_MINUTES,
             'days' => $this->allDay && $this->startDate && $this->endDate ? Carbon::parse($this->startDate)->diffInDays(Carbon::parse($this->endDate)) + 1 : 1,
             'location' => trim($this->location), 'partners' => trim($this->partners), 'organizer' => trim($this->organizer), 'description' => trim($this->description), 'rsvp' => $this->rsvp,
-            'rsvp_days' => $this->rsvp && $this->rsvpDeadline && $day ? (int) Carbon::parse($this->rsvpDeadline)->diffInDays(Carbon::parse($day)) : null,
-            'rsvp_time' => $this->rsvp && $this->rsvpDeadline ? (trim($this->rsvpDeadlineTime) ?: null) : null,
+            'rsvp_minutes' => $this->rsvp && ($until = $this->local($this->rsvpUntil)) && ($from = $this->allDay ? ($day ? Carbon::createFromFormat('!Y-m-d', $day, 'Europe/Berlin') : null) : $start)
+                ? (int) $until->diffInMinutes($from) : null,
             'min_participants' => filled($this->minParticipants) ? (int) $this->minParticipants : null, 'is_public' => $this->isPublic,
             'group_ids' => array_map('intval', $this->groupIds), 'function_ids' => array_map('intval', $this->functionIds),
             'place_id' => filled($this->placeId) ? (int) $this->placeId : null, 'dress_code_ids' => array_map('intval', $this->dressCodeIds),
@@ -259,8 +301,7 @@ class EventForm extends Component
             'placeId' => ['nullable', 'exists:places,id'],
             'dressCodeIds.*' => ['exists:dress_codes,id'],
             'minParticipants' => ['nullable', 'integer', 'min:1', 'max:999'],
-            'rsvpDeadline' => ['nullable', 'date_format:Y-m-d'],
-            'rsvpDeadlineTime' => ['nullable', 'date_format:H:i'],
+            'rsvpUntil' => ['nullable', 'date_format:'.self::LOCAL],
             'repeat' => ['nullable', Rule::in(array_keys(EventService::REPEATS))],
             'repeatUntil' => [filled($this->repeat) && ! $this->event ? 'required' : 'nullable', 'date_format:Y-m-d'],
         ], [
@@ -289,9 +330,7 @@ class EventForm extends Component
             'rsvp' => $this->rsvp,
             'min_participants' => filled($this->minParticipants) ? (int) $this->minParticipants : null,
             'is_public' => $this->isPublic,
-            // The Frist at the given time, or at the end of the day
-            'rsvp_deadline' => $this->rsvp && filled($this->rsvpDeadline)
-                ? (filled($this->rsvpDeadlineTime) ? $day($this->rsvpDeadline)->setTimeFromTimeString($this->rsvpDeadlineTime) : $day($this->rsvpDeadline)->endOfDay()) : null,
+            'rsvp_deadline' => $this->rsvp ? $this->local($this->rsvpUntil) : null,
         ];
         $groups = array_map('intval', $this->groupIds);
         $invitees = array_map('intval', $this->inviteeIds);

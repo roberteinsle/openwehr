@@ -119,16 +119,16 @@ test('events can be for a Funktion; a Funktion includes its sub-functions', func
 test('a Terminvorlage fills the form for a regular Arbeitsdienst', function () {
     Livewire::actingAs($this->manager)->test(EventForm::class)
         ->set('title', 'Arbeitsdienst Gerätehaus')->set('type', 'arbeitsdienst')->set('startsAt', '2027-05-08T09:00')->set('endsAt', '2027-05-08T12:00')
-        ->set('location', 'Gerätehaus')->set('rsvp', true)->set('rsvpDeadline', '2027-05-06')->set('minParticipants', '8')
+        ->set('location', 'Gerätehaus')->set('rsvp', true)->set('rsvpUntil', '2027-05-06T12:00')->set('minParticipants', '8')
         ->set('groupIds', [(string) $this->youth->id])
         ->set('templateName', 'Arbeitsdienst Samstag')->call('saveTemplate')->assertSee('gespeichert');
 
-    expect(Template::sole()->data)->toMatchArray(['type' => 'arbeitsdienst', 'start_time' => '09:00', 'minutes' => 180, 'rsvp_days' => 2, 'min_participants' => 8, 'group_ids' => [$this->youth->id]]);
+    expect(Template::sole()->data)->toMatchArray(['type' => 'arbeitsdienst', 'start_time' => '09:00', 'minutes' => 180, 'rsvp_minutes' => 2 * 24 * 60 - 180, 'min_participants' => 8, 'group_ids' => [$this->youth->id]]);
 
     Livewire::actingAs($this->manager)->test(EventForm::class)
         ->set('startsAt', '2027-06-12T19:00')->set('templateId', (string) Template::sole()->id)->call('applyTemplate')
         ->assertSet('title', 'Arbeitsdienst Gerätehaus')->assertSet('startsAt', '2027-06-12T09:00')->assertSet('endsAt', '2027-06-12T12:00')
-        ->assertSet('rsvpDeadline', '2027-06-10')->assertSet('groupIds', [(string) $this->youth->id])
+        ->assertSet('rsvpUntil', '2027-06-10T12:00')->assertSet('groupIds', [(string) $this->youth->id])
         ->call('save')->assertHasNoErrors();
     expect(Event::sole())->type->toBe('arbeitsdienst')->min_participants->toBe(8);
 });
