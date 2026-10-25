@@ -86,7 +86,7 @@ class EventDetail extends Component
             'responses' => $responses,
             'summary' => $this->event->rsvp ? $events->summary($this->event) : null,
             'manager' => $manager,
-            'isAudience' => $events->audience($this->event)->contains('id', $user->id),
+            'isAudience' => $events->mayRespond($this->event, $user),
         ]);
     }
 }

@@ -43,7 +43,7 @@
     @if($event->rsvp && $isAudience)
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
             <h2 class="text-sm font-semibold text-gray-900">Deine Rückmeldung
-                @if($event->rsvp_deadline)<span class="font-normal text-gray-500">(bis {{ $event->rsvp_deadline->copy()->setTimezone('Europe/Berlin')->format('d.m.Y H:i') }} Uhr)</span>@endif
+                @if($event->rsvp_deadline)<span class="font-normal {{ $event->pastDeadline() && ! $mine?->status ? 'text-fw-red' : 'text-gray-500' }}">(bitte bis {{ $event->rsvp_deadline->copy()->setTimezone('Europe/Berlin')->format('d.m.Y H:i') }} Uhr)</span>@endif
             </h2>
             @if($event->acceptsResponses())
                 <input type="text" wire:model="comment" maxlength="500" placeholder="Kommentar (optional), z. B. komme später" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-fw-red focus:ring-fw-red">
@@ -54,7 +54,15 @@
                     @endforeach
                 </div>
             @endif
-            <p class="text-sm text-gray-600">{{ $mine?->status ? 'Du hast „'.$mine->label().'“ geantwortet.' : ($event->acceptsResponses() ? 'Du hast noch nicht geantwortet.' : 'Eine Rückmeldung ist nicht mehr möglich.') }}</p>
+            <p class="text-sm text-gray-600">
+                @if($mine?->status)
+                    Du hast <strong class="{{ ['yes' => 'text-green-700', 'no' => 'text-gray-900', 'maybe' => 'text-amber-700'][$mine->status] ?? '' }}">{{ $mine->label() }}</strong>
+                    – am {{ $mine->updated_at->copy()->setTimezone('Europe/Berlin')->format('d.m.Y') }} um {{ $mine->updated_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }} Uhr{{ $event->rsvp_deadline && $mine->updated_at->gt($event->rsvp_deadline) ? ' (nach der Frist)' : '' }}{{ $mine->set_by && $mine->set_by !== auth()->id() ? ', eingetragen von '.($mine->setter?->name ?? 'der Terminverwaltung') : '' }}.
+                    @if($event->acceptsResponses()) Ändern geht bis zum Beginn.@endif
+                @else
+                    {{ $event->acceptsResponses() ? 'Du hast noch nicht geantwortet.' : 'Eine Rückmeldung ist nicht mehr möglich.' }}
+                @endif
+            </p>
             @error('status')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
     @endif

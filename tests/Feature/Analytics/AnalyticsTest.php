@@ -3,6 +3,7 @@
 use App\Filament\Pages\Analytics;
 use App\Filament\Pages\ManageModules;
 use App\Filament\Resources\LogResource;
+use App\Filament\Widgets\SystemStatusWidget;
 use App\Models\ActivityLog;
 use App\Models\AppError;
 use App\Models\Module;
@@ -115,4 +116,13 @@ test('admins set the retention; old technical logs and audit entries are pruned'
     DB::table('activity_logs')->insert(['created_at' => now()->subDays(300), 'event' => 'login']);
     $this->artisan('model:prune', ['--model' => [AppError::class, ActivityLog::class]])->assertSuccessful();
     expect(AppError::count())->toBe(0)->and(ActivityLog::where('created_at', '<', now()->subDays(299))->count())->toBe(1);
+});
+
+test('the admin dashboard shows version, certificate and resources, then mail, backups and response times', function () {
+    Livewire::actingAs($this->admin)->test(SystemStatusWidget::class)
+        ->assertSee('Version')->assertSee(config('app.version'))->assertSee('TLS-Zertifikat')->assertSee('Ressourcen')
+        ->assertSee('Mailversand')->assertSee('Backups')->assertSee('Antwortzeiten (7 Tage)')->assertSee('Analyse öffnen');
+    expect(SystemStatusWidget::canView())->toBeTrue();
+    $this->actingAs($this->member);
+    expect(SystemStatusWidget::canView())->toBeFalse();
 });

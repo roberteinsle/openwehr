@@ -156,7 +156,7 @@ class ServicePlan
     }
 
     /**
-     * @param  array{ends_at?: ?string, place_id?: ?int, dress_code_ids?: list<int>, group_ids?: list<int>, function_ids?: list<int>, owner_group_id?: ?int, organizer?: ?string, vehicle_ids?: list<int|string>}  $details
+     * @param  array{ends_at?: ?string, place_id?: ?int, dress_code_ids?: list<int>, group_ids?: list<int>, function_ids?: list<int>, owner_group_id?: ?int, organizer?: ?string, vehicle_ids?: list<int|string>, rsvp?: bool, rsvp_days?: int|string|null, notify?: bool}  $details
      */
     public function add(User $by, string $date, ?string $time, ?string $location, array $details = []): Service
     {
@@ -164,7 +164,7 @@ class ServicePlan
         $data = $this->schedule($date, $time, $location, $details);
         $this->assertMayPlanFor($by, $data['owner_group_id']);
         $service = Service::create($data);
-        app(CalendarLink::class)->sync($service, $by);
+        app(CalendarLink::class)->sync($service, $by, (bool) ($details['notify'] ?? false));
         $this->bookVehicles($service, $details['vehicle_ids'] ?? [], $by);
 
         return $service;
@@ -190,6 +190,10 @@ class ServicePlan
             app(CalendarLink::class)->sync($service, $by);
             $this->bookVehicles($service, $details['vehicle_ids'] ?? [], $by);
         });
+        // One mail for the whole series (with the number of Dienste), not one per Dienst
+        if ($details['notify'] ?? false) {
+            app(CalendarLink::class)->announceSeries($created, $by);
+        }
 
         return $created;
     }
@@ -201,11 +205,11 @@ class ServicePlan
         // Callers that don't know the details keep them
         $details ??= ['ends_at' => $service->ends_at, 'place_id' => $service->place_id, 'dress_code_ids' => $service->dress_code_ids ?? [],
             'group_ids' => $service->group_ids ?? [], 'function_ids' => $service->function_ids ?? [],
-            'owner_group_id' => $service->owner_group_id, 'organizer' => $service->organizer, 'vehicle_ids' => $service->vehicles()->pluck('vehicle_id')->all()];
+            'owner_group_id' => $service->owner_group_id, 'organizer' => $service->organizer, 'rsvp' => $service->rsvp, 'rsvp_days' => $service->rsvp_days, 'vehicle_ids' => $service->vehicles()->pluck('vehicle_id')->all()];
         $data = $this->schedule($date, $time, $location, $details);
         $this->assertMayPlanFor($by, $data['owner_group_id']);
         $service->update($data);
-        app(CalendarLink::class)->sync($service->refresh(), $by);
+        app(CalendarLink::class)->sync($service->refresh(), $by, (bool) ($details['notify'] ?? false));
         // The time may have moved: book the vehicles anew
         $this->releaseVehicles($service);
         $this->bookVehicles($service, $details['vehicle_ids'] ?? [], $by);
@@ -303,6 +307,7 @@ class ServicePlan
         }
 
         $added = $service->responsible()->syncWithoutDetaching([$user->id])['attached'] !== [];
+        app(CalendarLink::class)->syncResponsible($service);
 
         if ($added && ! $user->is($by) && $service->date->gte(self::today())) {
             try {
@@ -382,6 +387,8 @@ class ServicePlan
         });
         $a->refresh();
         $b->refresh();
+        app(CalendarLink::class)->syncResponsible($a);
+        app(CalendarLink::class)->syncResponsible($b);
         // Who was on $a is now on $b and the other way round – unless they moved themselves
         foreach ([[$bPeople, $a, $b], [$aPeople, $b, $a]] as [$people, $now, $before]) {
             User::whereIn('id', $people)->where('id', '!=', $by->id)->get()
@@ -412,6 +419,10 @@ class ServicePlan
 
             return $swap;
         });
+        if ($swap->status === 'accepted') {
+            app(CalendarLink::class)->syncResponsible($swap->service);
+            app(CalendarLink::class)->syncResponsible($swap->targetService);
+        }
         $this->notify($swap->requester, new SwapAnsweredNotification($swap->load(['targetUser', 'service', 'targetService'])));
     }
 
@@ -456,7 +467,11 @@ class ServicePlan
         }
         $organizer = trim((string) ($details['organizer'] ?? ''));
 
+        $rsvpDays = filled($details['rsvp_days'] ?? null) ? max(0, min(60, (int) $details['rsvp_days'])) : null;
+
         return [
+            'rsvp' => (bool) ($details['rsvp'] ?? false),
+            'rsvp_days' => ($details['rsvp'] ?? false) ? $rsvpDays : null,
             'owner_group_id' => $owner,
             'organizer' => $organizer !== '' ? mb_substr($organizer, 0, 100) : null,
             'date' => $this->date($date)->toDateString(),

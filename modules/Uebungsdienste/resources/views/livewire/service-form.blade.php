@@ -71,6 +71,19 @@
             <input type="text" wire:model="organizer" maxlength="100" class="{{ $input }}">
         </label>
 
+        @if($inCalendar)
+            <div class="space-y-2 rounded-lg border border-gray-100 p-3">
+                <label class="flex items-center gap-2 text-sm font-medium text-gray-700"><input type="checkbox" wire:model.live="rsvp" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Rückmeldung erwünscht (zusagen, absagen, vielleicht)</label>
+                @if($rsvp)
+                    <label class="block text-sm text-gray-700">Frist: Rückmeldung bis
+                        <span class="flex items-center gap-2"><input type="number" min="0" max="60" wire:model="rsvpDays" class="{{ $input }} w-24"> Tage vorher <span class="text-xs text-gray-500">(leer = bis zum Beginn)</span></span>
+                    </label>
+                    <p class="text-xs text-gray-500">Die Kameraden antworten im Kalender und können ihre Antwort bis zum Beginn ändern. Die Verantwortlichen des Dienstes sind automatisch zugesagt.</p>
+                @endif
+                <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="notify" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> {{ $service ? 'Änderung von Zeit oder Ort an die Kameraden per E-Mail schicken' : 'Kameraden per E-Mail informieren (bei einer Serie eine Mail für alle Dienste)' }}</label>
+            </div>
+        @endif
+
         @if($vehicles->isNotEmpty())
             <div class="space-y-1">
                 <p class="text-sm font-medium text-gray-700">Fahrzeuge mitbuchen <span class="font-normal text-gray-500">(30 Minuten vor Beginn bis 30 Minuten nach Ende)</span></p>

@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+use Modules\Kalender\src\Livewire\EventDetail;
 use Modules\Kalender\src\Livewire\EventForm;
 use Modules\Kalender\src\Models\Event;
 use Modules\Kalender\src\Models\Template;
@@ -132,4 +133,36 @@ test('a Kalender Termin takes a saved place and Kleidung; they are shown, mailed
     expect($event->fresh())->place_id->toBeNull()->location->toBe('Gerätehaus Musterstadt');
     Place::create(['name' => 'Gerätehaus Musterstadt', 'address' => 'Neue Straße 2']);
     $this->actingAs($this->hanna)->get(route('kalender.show', $event))->assertSee('Neue Straße 2');
+});
+
+test('an Übungsdienst asks for a Rückmeldung with a Frist, mails the Kameraden on request, and the responsible people are zugesagt', function () {
+    Livewire::actingAs($this->admin)->test(ServiceForm::class)
+        ->set('date', '2027-03-16')->set('time', '19:00')->set('endTime', '21:00')->set('groupIds', [(string) $this->youth->id])
+        ->set('rsvp', true)->set('rsvpDays', '2')->set('notify', true)->call('save')->assertRedirect();
+    $service = Service::sole();
+    $event = Event::findOrFail($service->event_id);
+    expect($event->rsvp)->toBeTrue()
+        ->and($event->rsvp_deadline->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('14.03.2027 23:59');
+    Notification::assertSentTo($this->hanna, EventCreatedNotification::class);
+    Notification::assertNotSentTo($this->bernd, EventCreatedNotification::class);
+    // Who planned it is not on it
+    expect($event->responses()->count())->toBe(0);
+
+    // Made responsible: zugesagt in the Termin, even outside the target group, and can still change it
+    $this->plan->addResponsible($service, $this->bernd, $this->admin);
+    expect($event->responses()->where('user_id', $this->bernd->id)->value('status'))->toBe('yes');
+    app(EventService::class)->respond($event, $this->bernd, 'maybe');
+    expect($event->responses()->where('user_id', $this->bernd->id)->value('status'))->toBe('maybe');
+
+    // A Kamerad of the target group answers, sees when, and may change it until the start – after the Frist too
+    app(EventService::class)->respond($event, $this->hanna, 'yes');
+    $this->travelTo(Carbon::parse('2027-03-15 10:00', 'Europe/Berlin'));
+    app(EventService::class)->respond($event, $this->hanna, 'no');
+    Livewire::actingAs($this->hanna)->test(EventDetail::class, ['event' => $event])
+        ->assertSee('Abgesagt</strong>', false)->assertSee('am 15.03.2027 um 10:00 Uhr (nach der Frist)');
+
+    // Without e-mail: the Kameraden are not told
+    Notification::fake();
+    $this->plan->add($this->admin, '2027-03-23', '19:00', 'Wache', ['group_ids' => [$this->youth->id], 'rsvp' => true, 'notify' => false]);
+    Notification::assertNothingSent();
 });

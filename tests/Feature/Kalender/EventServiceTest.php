@@ -63,7 +63,7 @@ test('events for an Abteilung are only seen and announced there', function () {
     Notification::assertNotSentTo([$active, $noAccess, $manager], EventCreatedNotification::class);
 });
 
-test('Rückmeldungen only from the audience, while open and before the deadline', function () {
+test('Rückmeldungen only from the audience, changeable until the start (after the Frist too)', function () {
     $member = kalenderUser();
     $event = kalenderEvent('2027-06-15 19:00', attributes: ['rsvp' => true, 'rsvp_deadline' => Carbon::parse('2027-06-10 23:59', 'Europe/Berlin')]);
 
@@ -75,8 +75,11 @@ test('Rückmeldungen only from the audience, while open and before the deadline'
     expect(fn () => $this->events->respond($event, $outsider, 'yes'))->toThrow(ValidationException::class);
     expect(fn () => $this->events->respond($event, $member, 'vielleicht'))->toThrow(ValidationException::class);
 
+    // After the Frist: still possible (marked as late on the event page), after the start not
     $this->travelTo(Carbon::parse('2027-06-11 08:00', 'Europe/Berlin'));
-    expect(fn () => $this->events->respond($event, $member, 'no'))->toThrow(ValidationException::class);
+    expect($this->events->respond($event, $member, 'no')->status)->toBe('no')->and($event->pastDeadline())->toBeTrue();
+    $this->travelTo(Carbon::parse('2027-06-15 19:30', 'Europe/Berlin'));
+    expect(fn () => $this->events->respond($event, $member, 'yes'))->toThrow(ValidationException::class);
 
     $noRsvp = kalenderEvent('2027-06-20 19:00');
     expect(fn () => $this->events->respond($noRsvp, $member, 'yes'))->toThrow(ValidationException::class);

@@ -23,6 +23,8 @@ use Illuminate\Support\Carbon;
  * @property ?string $location
  * @property ?string $topic
  * @property ?string $organizer
+ * @property bool $rsvp
+ * @property ?int $rsvp_days
  * @property ?int $owner_group_id
  * @property ?array $group_ids
  * @property ?array $function_ids
@@ -37,11 +39,11 @@ class Service extends Model
     public const DEFAULT_MINUTES = 120;
 
     protected $fillable = ['date', 'starts_at', 'ends_at', 'location', 'place_id', 'dress_code_ids', 'group_ids', 'function_ids', 'topic', 'event_id', 'calendar_synced_at',
-        'owner_group_id', 'organizer'];
+        'owner_group_id', 'organizer', 'rsvp', 'rsvp_days'];
 
     protected function casts(): array
     {
-        return ['date' => 'date', 'calendar_synced_at' => 'datetime', 'dress_code_ids' => 'array', 'group_ids' => 'array', 'function_ids' => 'array'];
+        return ['date' => 'date', 'calendar_synced_at' => 'datetime', 'rsvp' => 'boolean', 'rsvp_days' => 'integer', 'dress_code_ids' => 'array', 'group_ids' => 'array', 'function_ids' => 'array'];
     }
 
     public function place(): BelongsTo

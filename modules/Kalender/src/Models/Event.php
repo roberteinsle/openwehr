@@ -156,10 +156,18 @@ class Event extends Model
     }
 
     /** Rückmeldung still possible */
+    /**
+     * Zusagen and Absagen can be changed until the Termin begins; the Frist (rsvp_deadline) is the time by
+     * which an answer is asked for – later ones still count and are marked "nach der Frist".
+     */
     public function acceptsResponses(): bool
     {
-        return $this->rsvp && ! $this->isCancelled() && ! $this->ends_at->isPast()
-            && ($this->rsvp_deadline === null || $this->rsvp_deadline->isFuture());
+        return $this->rsvp && ! $this->isCancelled() && ! $this->starts_at->isPast();
+    }
+
+    public function pastDeadline(): bool
+    {
+        return $this->rsvp_deadline !== null && now()->gt($this->getAttribute('rsvp_deadline'));
     }
 
     /** "Di, 14.06.2027 · 19:00–21:30 Uhr" or "Sa, 12.06.2027 (ganztägig)" in Berlin time */

@@ -99,7 +99,7 @@ test('members answer on the event page and see who comes', function () {
         ->set('comment', 'bringe Kuchen mit')
         ->call('respond', 'yes')
         ->assertHasNoErrors()
-        ->assertSee('Du hast „Zugesagt“ geantwortet.', false)
+        ->assertSee('Zugesagt</strong>', false)->assertSee('am 01.06.2027 um 12:00 Uhr')->assertSee('Ändern geht bis zum Beginn')
         ->assertSee('1 zugesagt');
 
     expect($event->responses()->sole()->comment)->toBe('bringe Kuchen mit');

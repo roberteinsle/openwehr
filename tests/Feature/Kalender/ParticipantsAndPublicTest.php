@@ -67,7 +67,8 @@ test('the Terminverwalter answers for others, also after the deadline, and the m
     [$anna, $ben] = [kalenderUser(attributes: ['name' => 'Anna']), kalenderUser(attributes: ['name' => 'Ben'])];
     $event = kalenderEvent('2027-06-15 19:00', attributes: ['rsvp' => true, 'min_participants' => 2, 'rsvp_deadline' => Carbon::parse('2027-06-01 08:00', 'Europe/Berlin')]);
 
-    expect(fn () => $this->events->respond($event, $anna, 'yes'))->toThrow(ValidationException::class);
+    // After the Frist the Kamerad still answers; it counts as late
+    expect($this->events->respond($event, $anna, 'maybe')->status)->toBe('maybe');
 
     $detail = Livewire::actingAs($this->manager)->test(EventDetail::class, ['event' => $event])
         ->call('respondFor', $anna->id, 'yes')

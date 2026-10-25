@@ -3043,12 +3043,6 @@ parameters:
 			path: modules/Kalender/src/Models/Event.php
 
 		-
-			message: '#^Cannot call method isFuture\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Kalender/src/Models/Event.php
-
-		-
 			message: '#^Cannot call method isPast\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 2

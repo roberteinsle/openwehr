@@ -48,6 +48,13 @@ class ServiceForm extends Component
 
     public string $organizer = '';
 
+    /** Rückmeldung in the Kalender with a Frist in days before (empty = until the start); mail to the target group */
+    public bool $rsvp = true;
+
+    public string $rsvpDays = '2';
+
+    public bool $notify = true;
+
     /** @var list<string> vehicles to book (30 minutes before until 30 minutes after) */
     public array $vehicleIds = [];
 
@@ -61,6 +68,9 @@ class ServiceForm extends Component
             $this->service = $service;
             $this->ownerGroupId = (string) ($service->owner_group_id ?? '');
             $this->organizer = (string) $service->organizer;
+            $this->rsvp = (bool) $service->rsvp;
+            $this->rsvpDays = (string) ($service->rsvp_days ?? '');
+            $this->notify = false;
             $this->vehicleIds = $service->vehicles()->pluck('vehicle_id')->map(fn ($id) => (string) $id)->all();
             $this->date = $service->date->toDateString();
             $this->time = (string) $service->starts_at;
@@ -98,7 +108,8 @@ class ServiceForm extends Component
     {
         return ['ends_at' => $this->endTime, 'place_id' => $this->placeId ?: null, 'dress_code_ids' => $this->dressCodeIds,
             'group_ids' => $this->groupIds, 'function_ids' => $this->functionIds, 'owner_group_id' => $this->ownerGroupId !== '' ? (int) $this->ownerGroupId : null,
-            'organizer' => $this->organizer, 'vehicle_ids' => $this->vehicleIds];
+            'organizer' => $this->organizer, 'vehicle_ids' => $this->vehicleIds,
+            'rsvp' => $this->rsvp, 'rsvp_days' => $this->rsvpDays, 'notify' => $this->notify];
     }
 
     public function save(ServicePlan $plan)

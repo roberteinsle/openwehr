@@ -73,7 +73,8 @@ test('a Terminabfrage: the target group ticks, the best date shows, fixing it ma
     $event = Event::sole();
     expect($event)->title->toBe('Arbeitsdienst Frühjahrsputz')->type->toBe('arbeitsdienst')->rsvp->toBeTrue()->location->toBe('Gerätehaus')
         ->and($event->groups()->pluck('groups.id')->all())->toBe([$this->youth->id])
-        ->and($event->responses()->pluck('status', 'user_id')->all())->toBe([$this->hanna->id => 'yes', $this->bernd->id => 'maybe'])
+        // Who fixed the date takes part (zugesagt), the answers of the poll are taken over
+        ->and($event->responses()->pluck('status', 'user_id')->all())->toEqualCanonicalizing([$this->manager->id => 'yes', $this->hanna->id => 'yes', $this->bernd->id => 'maybe'])
         ->and($poll->refresh())->event_id->toBe($event->id)->isOpen()->toBeFalse();
     Notification::assertSentTo($this->hanna, EventCreatedNotification::class);
     expect(fn () => $this->polls->vote($this->hanna, $poll, [$sat => 'no']))->toThrow(ValidationException::class, 'geschlossen');

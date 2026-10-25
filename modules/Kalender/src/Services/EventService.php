@@ -59,6 +59,10 @@ class EventService
                 $event->groups()->sync($groupIds);
                 $event->invitees()->sync($userIds);
                 $event->functions()->sync($functionIds);
+                // Who puts the Termin in takes part: already zugesagt (can be changed like any answer)
+                if (($data['rsvp'] ?? false) && $by) {
+                    Response::create(['event_id' => $event->id, 'user_id' => $by->id, 'status' => 'yes', 'set_by' => $by->id]);
+                }
 
                 return $event;
             });
@@ -175,7 +179,7 @@ class EventService
             throw ValidationException::withMessages(['status' => 'Für diesen Termin ist keine Rückmeldung (mehr) möglich.']);
         }
 
-        if (! $this->audience($event)->contains('id', $user->id)) {
+        if (! $this->mayRespond($event, $user)) {
             throw ValidationException::withMessages(['status' => 'Dieser Termin ist nicht für dich.']);
         }
 
@@ -183,6 +187,13 @@ class EventService
             'status' => $status,
             'comment' => filled($comment) ? trim($comment) : null,
         ]);
+    }
+
+    /** The target group, who created the Termin and who is already on it (e.g. responsible for an Übungsdienst) answer */
+    public function mayRespond(Event $event, User $user): bool
+    {
+        return $event->created_by === $user->id || $event->responses()->where('user_id', $user->id)->exists()
+            || $this->audience($event)->contains('id', $user->id);
     }
 
     /** A Terminverwalter answers for someone (e.g. after a phone call), also after the deadline; null clears it */
