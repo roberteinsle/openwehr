@@ -7,6 +7,8 @@
 - Installationsanleitung: https://github.com/roberteinsle/openwehr#installation
 - Docker-Image: ghcr.io/roberteinsle/openwehr
 - Versionen: https://github.com/roberteinsle/openwehr/releases
+- YouTube: https://www.youtube.com/@openwehr
+- Facebook: https://www.facebook.com/openwehr
 
 ## Module
 
