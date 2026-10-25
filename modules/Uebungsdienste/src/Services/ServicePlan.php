@@ -17,6 +17,7 @@ use Modules\Uebungsdienste\src\Models\Service;
 use Modules\Uebungsdienste\src\Models\ServiceVehicle;
 use Modules\Uebungsdienste\src\Models\Swap;
 use Modules\Uebungsdienste\src\Notifications\ResponsibleNotification;
+use Modules\Uebungsdienste\src\Notifications\ServiceExchangedNotification;
 use Modules\Uebungsdienste\src\Notifications\SwapAnsweredNotification;
 use Modules\Uebungsdienste\src\Notifications\SwapRequestedNotification;
 use Throwable;
@@ -83,6 +84,15 @@ class ServicePlan
         $groups = Group::orderBy('sort_order')->orderBy('name')->when($scope !== [], fn ($q) => $q->whereIn('id', $scope))->pluck('name', 'id')->all();
 
         return $scope === [] ? ['' => 'Ganze Wehr'] + $groups : $groups;
+    }
+
+    /**
+     * Swap two Dienste directly (topic and responsible people, without asking): admins, Übungsdienstplaner
+     * and the Vorstand (the Funktion "Vorstand" or a sub-function) with access to the module.
+     */
+    public static function canExchange(User $user): bool
+    {
+        return self::canPlan($user) || ($user->is_active && $user->canUseModule(self::MODULE) && $user->isVorstand());
     }
 
     /** Change, delete, topic and responsible people: planners for the Dienste of their Abteilungen */
@@ -336,6 +346,47 @@ class ServicePlan
         $this->notify($target, new SwapRequestedNotification($swap->load(['requester', 'service', 'targetService'])));
 
         return $swap;
+    }
+
+    /**
+     * The Vorstand swaps two coming Dienste in one go: topic and responsible people change places, date,
+     * time and place stay. Everyone responsible afterwards is told (bell, push, mail); open swap requests
+     * for the two Dienste are withdrawn.
+     */
+    public function exchange(User $by, Service $a, Service $b): void
+    {
+        $error = match (true) {
+            ! self::canExchange($by) => 'Dienste tauschen können der Vorstand, die Übungsdienstplaner und die Admins.',
+            $a->is($b) => 'Bitte einen anderen Dienst wählen.',
+            $a->date->lt(self::today()) || $b->date->lt(self::today()) => 'Nur kommende Dienste lassen sich tauschen.',
+            default => null,
+        };
+        if ($error || self::visibleTo($by)->whereKey([$a->id, $b->id])->count() !== 2) {
+            throw ValidationException::withMessages(['exchange' => $error ?? 'Diesen Dienst kannst du nicht sehen.']);
+        }
+
+        [$aPeople, $bPeople] = DB::transaction(function () use ($a, $b) {
+            $a = Service::lockForUpdate()->findOrFail($a->id);
+            $b = Service::lockForUpdate()->findOrFail($b->id);
+            $aPeople = $a->responsible()->pluck('users.id')->all();
+            $bPeople = $b->responsible()->pluck('users.id')->all();
+            [$aTopic, $bTopic] = [$a->topic, $b->topic];
+            $a->update(['topic' => $bTopic]);
+            $b->update(['topic' => $aTopic]);
+            $a->responsible()->sync($bPeople);
+            $b->responsible()->sync($aPeople);
+            Swap::where('status', 'pending')->where(fn ($q) => $q->whereIn('service_id', [$a->id, $b->id])->orWhereIn('target_service_id', [$a->id, $b->id]))
+                ->update(['status' => 'withdrawn', 'decided_at' => now()]);
+
+            return [$aPeople, $bPeople];
+        });
+        $a->refresh();
+        $b->refresh();
+        // Who was on $a is now on $b and the other way round – unless they moved themselves
+        foreach ([[$bPeople, $a, $b], [$aPeople, $b, $a]] as [$people, $now, $before]) {
+            User::whereIn('id', $people)->where('id', '!=', $by->id)->get()
+                ->each(fn (User $u) => $this->notify($u, new ServiceExchangedNotification($now, $before, $by)));
+        }
     }
 
     /** The target agrees (both swap their place as responsible) or declines; the requester is told */

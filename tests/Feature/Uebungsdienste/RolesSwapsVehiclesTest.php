@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Group;
+use App\Models\MemberFunction;
 use App\Models\Module;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,7 @@ use Modules\Uebungsdienste\src\Livewire\Planners;
 use Modules\Uebungsdienste\src\Livewire\ServiceForm;
 use Modules\Uebungsdienste\src\Models\Service;
 use Modules\Uebungsdienste\src\Models\Swap;
+use Modules\Uebungsdienste\src\Notifications\ServiceExchangedNotification;
 use Modules\Uebungsdienste\src\Notifications\SwapAnsweredNotification;
 use Modules\Uebungsdienste\src\Notifications\SwapRequestedNotification;
 use Modules\Uebungsdienste\src\Services\ServicePlan;
@@ -133,4 +135,35 @@ test('the vehicles of a Dienst are booked from 30 minutes before to 30 minutes a
 
     $this->plan->delete($this->planer, $service);
     expect(Booking::whereNull('cancelled_at')->where('vehicle_id', $hlf->id)->count())->toBe(0);
+});
+
+test('the Vorstand swaps topic and responsible people of two Dienste in one go; both sides are told', function () {
+    $vorstand = MemberFunction::create(['name' => 'Vorstand']);
+    $kassenwart = MemberFunction::create(['name' => 'Kassenwart', 'parent_id' => $vorstand->id]);
+    $vera = User::factory()->create(['name' => 'Vera Vorstand']);
+    $vera->moduleAccess()->create(['module' => 'uebungsdienste']);
+    $vera->functions()->attach($kassenwart);
+
+    $first = $this->plan->add($this->admin, '2027-03-16', '19:00', 'Wache');
+    $second = $this->plan->add($this->admin, '2027-03-30', '19:00', 'Gerätehaus');
+    $this->plan->setTopic($first, 'Knoten und Stiche');
+    $this->plan->setTopic($second, 'Wasserförderung');
+    $this->plan->addResponsible($first, $this->hanna);
+    $this->plan->addResponsible($second, $this->bernd);
+    $pending = $this->plan->requestSwap($this->hanna, $first, $second, $this->bernd);
+
+    Livewire::actingAs($vera)->test(Planner::class)->assertSee('Als Vorstand tauschst du')
+        ->call('startSwap', $first->id)->assertSee('Di, 30.03.2027 – Wasserförderung – Bernd Blaulicht')
+        ->set('swapWith', (string) $second->id)->call('exchange')->assertHasNoErrors()->assertSee('Getauscht');
+
+    expect($first->refresh())->topic->toBe('Wasserförderung')->location->toBe('Wache')
+        ->and($first->responsible()->pluck('name')->all())->toBe(['Bernd Blaulicht'])
+        ->and($second->refresh())->topic->toBe('Knoten und Stiche')
+        ->and($second->responsible()->pluck('name')->all())->toBe(['Hanna Hydrant'])
+        ->and($pending->fresh()->status)->toBe('withdrawn');
+    Notification::assertSentTo($this->hanna, ServiceExchangedNotification::class, fn ($n) => str_contains($n->toMail($this->hanna)->subject, '30.03.2027'));
+    Notification::assertSentTo($this->bernd, ServiceExchangedNotification::class);
+
+    // Without the Vorstand Funktion: only asking the other one
+    expect(fn () => $this->plan->exchange($this->hanna, $first, $second))->toThrow(ValidationException::class);
 });

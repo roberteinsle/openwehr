@@ -4,6 +4,7 @@ namespace Modules\Uebungsdienste\src\Livewire;
 
 use App\Models\User;
 use App\Services\VehicleBookingRegistry;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -69,6 +70,24 @@ class Planner extends Component
         $this->swapWith = '';
     }
 
+    /** Vorstand, Übungsdienstplaner, admins: swap topic and responsible people of two Dienste at once */
+    public function exchange(ServicePlan $plan): void
+    {
+        $otherId = (int) $this->swapWith;
+        if (! $otherId) {
+            $this->addError('plan', 'Bitte wählen, mit welchem Dienst getauscht wird.');
+
+            return;
+        }
+        $this->attempt(function () use ($plan, $otherId) {
+            $a = $this->service((int) $this->swapFrom);
+            $b = $this->service($otherId);
+            $plan->exchange(auth()->user(), $a, $b);
+            $this->flash = 'Getauscht: '.$a->dateLabel().' und '.$b->dateLabel().' – die Verantwortlichen sind benachrichtigt.';
+            $this->reset('swapFrom', 'swapWith');
+        });
+    }
+
     public function requestSwap(ServicePlan $plan): void
     {
         [$otherId, $userId] = array_map('intval', explode(':', $this->swapWith.':0'));
@@ -121,6 +140,11 @@ class Planner extends Component
             'planner' => ServicePlan::canPlan($user),
             'editable' => $all->filter(fn (Service $s) => ServicePlan::mayEdit($user, $s))->pluck('id')->all(),
             'swaps' => $swaps,
+            'exchanger' => ServicePlan::canExchange($user),
+            // The Vorstand swaps with any other coming Dienst
+            'exchangeOptions' => $this->swapFrom && ServicePlan::canExchange($user) ? (clone $visible)->with('responsible')->whereDate('date', '>=', $today)->whereKeyNot($this->swapFrom)
+                ->orderBy('date')->orderBy('starts_at')->get()->mapWithKeys(fn (Service $s) => [$s->id => $s->dateLabel().' – '.($s->topic ? Str::limit($s->topic, 40) : 'Thema offen')
+                    .' – '.($s->responsible->isNotEmpty() ? $s->responsible->pluck('name')->implode(', ') : 'niemand')]) : collect(),
             // Whom the own Dienst can be swapped with: coming Dienste with someone else responsible
             'swapOptions' => $this->swapFrom ? (clone $visible)->with('responsible')->whereDate('date', '>=', $today)->whereKeyNot($this->swapFrom)
                 ->orderBy('date')->orderBy('starts_at')->get()->reject(fn (Service $s) => $s->responsible->contains('id', $user->id))

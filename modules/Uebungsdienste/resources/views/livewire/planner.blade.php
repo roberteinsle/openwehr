@@ -5,7 +5,7 @@
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
             <h1 class="text-xl font-bold text-gray-900">Übungsdienstplaner</h1>
-            <p class="text-sm text-gray-500">{{ $planner ? 'Dienste anlegen, ändern und löschen, Thema und Verantwortliche eintragen.' : 'Thema und Verantwortliche tragen die Übungsdienstplaner ein. Für deinen eigenen Dienst kannst du einen Tausch anfragen – der andere muss zustimmen.' }}</p>
+            <p class="text-sm text-gray-500">{{ $planner ? 'Dienste anlegen, ändern und löschen, Thema und Verantwortliche eintragen und tauschen.' : ($exchanger ? 'Als Vorstand tauschst du Thema und Verantwortliche zweier Dienste mit „Tauschen“ – die Verantwortlichen werden benachrichtigt.' : 'Thema und Verantwortliche tragen die Übungsdienstplaner ein. Für deinen eigenen Dienst kannst du einen Tausch anfragen – der andere muss zustimmen.') }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('uebungsdienste.print', ['jahr' => $year]) }}" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Drucken / PDF</a>
@@ -110,8 +110,21 @@
                             </select>
                             @endif
                         </div>
+                        {{-- Vorstand: swap topic and responsible people with another Dienst at once --}}
+                        @if(! $past && $exchanger)
+                            <button type="button" wire:click="startSwap({{ $service->id }})" class="mt-1 text-sm text-fw-navy underline">{{ $swapFrom === $service->id ? 'Tauschen abbrechen' : 'Tauschen' }}</button>
+                            @if($swapFrom === $service->id)
+                                <form wire:submit="exchange" class="mt-2 space-y-2">
+                                    <select wire:model="swapWith" class="{{ $input }} w-full" aria-label="Tauschen mit">
+                                        <option value="">Thema und Verantwortliche tauschen mit …</option>
+                                        @foreach($exchangeOptions as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
+                                    </select>
+                                    <p class="text-xs text-gray-500">Datum, Zeit und Ort bleiben. Die Verantwortlichen beider Dienste bekommen eine Nachricht.</p>
+                                    <button type="submit" class="rounded-lg bg-fw-navy px-3 py-1.5 text-sm font-semibold text-white">Jetzt tauschen</button>
+                                </form>
+                            @endif
                         {{-- Own coming Dienst: ask someone else to swap --}}
-                        @if(! $past && $service->responsible->contains('id', auth()->id()))
+                        @elseif(! $past && $service->responsible->contains('id', auth()->id()))
                             <button type="button" wire:click="startSwap({{ $service->id }})" class="mt-1 text-sm text-fw-navy underline">{{ $swapFrom === $service->id ? 'Tauschen abbrechen' : 'Tauschen' }}</button>
                             @if($swapFrom === $service->id)
                                 <form wire:submit="requestSwap" class="mt-2 space-y-2">
