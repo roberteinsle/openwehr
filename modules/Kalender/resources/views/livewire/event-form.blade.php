@@ -92,10 +92,15 @@
             <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model.live="rsvp" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Rückmeldung erwünscht (zusagen, absagen, vielleicht)</label>
             @if($rsvp)
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label class="block text-sm text-gray-700">Rückmeldung bis (optional)
-                        <input type="date" wire:model="rsvpDeadline" class="mt-1 {{ $input }}">
-                    </label>
-                    <label class="block text-sm text-gray-700">Mindestens benötigt (optional)
+                    <div class="block text-sm text-gray-700">Rückmeldung bis (optional)
+                        <div class="mt-1 flex gap-2">
+                            <input type="date" wire:model="rsvpDeadline" class="{{ $input }} min-w-0 flex-1" aria-label="Rückmeldung bis – Datum">
+                            <input type="time" wire:model="rsvpDeadlineTime" class="{{ $input }} w-32" aria-label="Rückmeldung bis – Uhrzeit" title="Leer = bis Ende des Tages">
+                        </div>
+                        <span class="text-xs text-gray-500">Ohne Uhrzeit bis 23:59 Uhr.</span>
+                        @error('rsvpDeadlineTime')<span class="block text-sm text-red-600">Bitte die Uhrzeit als HH:MM angeben.</span>@enderror
+                    </div>
+                    <label class="block text-sm text-gray-700">Mindestens Kameraden benötigt (optional)
                         <input type="number" min="1" max="999" wire:model="minParticipants" placeholder="z. B. 9" class="mt-1 {{ $input }}">
                         @error('minParticipants')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
                     </label>

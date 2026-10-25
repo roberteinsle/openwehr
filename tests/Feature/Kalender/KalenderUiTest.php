@@ -209,3 +209,21 @@ test('the next Termin is on the start page also for Kameraden without access to 
     Livewire::actingAs($kamerad)->test(Home::class)
         ->assertSee('Nächster Termin')->assertSee('Jahreshauptversammlung')->assertDontSee('kalender/termine/', false);
 });
+
+test('a new Termin asks for a Rückmeldung by default; an existing one keeps its setting', function () {
+    Livewire::actingAs($this->manager)->test(EventForm::class)->assertSet('rsvp', true);
+    $event = kalenderEvent('2027-06-15 19:00', attributes: ['rsvp' => false]);
+    Livewire::actingAs($this->manager)->test(EventForm::class, ['event' => $event])->assertSet('rsvp', false);
+});
+
+test('the Frist of a Rückmeldung takes a time; without one it ends the day', function () {
+    Livewire::actingAs($this->manager)->test(EventForm::class)
+        ->set('title', 'Jahreshauptversammlung')->set('type', 'dienst')->set('startsAt', '2027-06-20T19:00')->set('endsAt', '2027-06-20T22:00')
+        ->set('rsvp', true)->set('rsvpDeadline', '2027-06-15')->set('rsvpDeadlineTime', '18:30')->assertSee('Mindestens Kameraden benötigt')
+        ->call('save')->assertHasNoErrors();
+    $event = Event::where('title', 'Jahreshauptversammlung')->sole();
+    expect($event->rsvp_deadline->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('15.06.2027 18:30');
+    Livewire::actingAs($this->manager)->test(EventForm::class, ['event' => $event])->assertSet('rsvpDeadlineTime', '18:30')
+        ->set('rsvpDeadlineTime', '')->call('save')->assertHasNoErrors();
+    expect($event->fresh()->rsvp_deadline->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('15.06.2027 23:59');
+});

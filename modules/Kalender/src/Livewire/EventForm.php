@@ -80,9 +80,13 @@ class EventForm extends Component
 
     public bool $isPublic = false;
 
-    public bool $rsvp = false;
+    /** New Termine ask for a Rückmeldung by default (Zusagen, Vielleicht, Absagen) */
+    public bool $rsvp = true;
 
     public string $rsvpDeadline = '';
+
+    /** Time of the Frist (HH:MM); empty = end of that day */
+    public string $rsvpDeadlineTime = '';
 
     public string $repeat = '';
 
@@ -119,6 +123,8 @@ class EventForm extends Component
             $this->isPublic = $event->is_public;
             $this->rsvp = $event->rsvp;
             $this->rsvpDeadline = $event->rsvp_deadline?->setTimezone('Europe/Berlin')->format('Y-m-d') ?? '';
+            $deadlineTime = $event->rsvp_deadline?->setTimezone('Europe/Berlin')->format('H:i');
+            $this->rsvpDeadlineTime = $deadlineTime && $deadlineTime !== '23:59' ? $deadlineTime : '';
         } else {
             $this->authorize('manage', Event::class);
             $start = now('Europe/Berlin')->addDay()->setTime(19, 0);
@@ -194,6 +200,7 @@ class EventForm extends Component
         $this->startDate = $day;
         $this->endDate = Carbon::parse($day)->addDays(max(0, (int) ($d['days'] ?? 1) - 1))->format('Y-m-d');
         $this->rsvpDeadline = $this->rsvp && isset($d['rsvp_days']) ? Carbon::parse($day)->subDays((int) $d['rsvp_days'])->format('Y-m-d') : '';
+        $this->rsvpDeadlineTime = $this->rsvp ? (string) data_get($d, 'rsvp_time', '') : '';
         $this->flash = 'Vorlage „'.$template->name.'“ übernommen.';
     }
 
@@ -211,6 +218,7 @@ class EventForm extends Component
             'days' => $this->allDay && $this->startDate && $this->endDate ? Carbon::parse($this->startDate)->diffInDays(Carbon::parse($this->endDate)) + 1 : 1,
             'location' => trim($this->location), 'partners' => trim($this->partners), 'organizer' => trim($this->organizer), 'description' => trim($this->description), 'rsvp' => $this->rsvp,
             'rsvp_days' => $this->rsvp && $this->rsvpDeadline && $day ? (int) Carbon::parse($this->rsvpDeadline)->diffInDays(Carbon::parse($day)) : null,
+            'rsvp_time' => $this->rsvp && $this->rsvpDeadline ? (trim($this->rsvpDeadlineTime) ?: null) : null,
             'min_participants' => filled($this->minParticipants) ? (int) $this->minParticipants : null, 'is_public' => $this->isPublic,
             'group_ids' => array_map('intval', $this->groupIds), 'function_ids' => array_map('intval', $this->functionIds),
             'place_id' => filled($this->placeId) ? (int) $this->placeId : null, 'dress_code_ids' => array_map('intval', $this->dressCodeIds),
@@ -251,6 +259,7 @@ class EventForm extends Component
             'dressCodeIds.*' => ['exists:dress_codes,id'],
             'minParticipants' => ['nullable', 'integer', 'min:1', 'max:999'],
             'rsvpDeadline' => ['nullable', 'date_format:Y-m-d'],
+            'rsvpDeadlineTime' => ['nullable', 'date_format:H:i'],
             'repeat' => ['nullable', Rule::in(array_keys(EventService::REPEATS))],
             'repeatUntil' => [filled($this->repeat) && ! $this->event ? 'required' : 'nullable', 'date_format:Y-m-d'],
         ], [
@@ -279,7 +288,9 @@ class EventForm extends Component
             'rsvp' => $this->rsvp,
             'min_participants' => filled($this->minParticipants) ? (int) $this->minParticipants : null,
             'is_public' => $this->isPublic,
-            'rsvp_deadline' => $this->rsvp && filled($this->rsvpDeadline) ? $day($this->rsvpDeadline)->endOfDay() : null,
+            // The Frist at the given time, or at the end of the day
+            'rsvp_deadline' => $this->rsvp && filled($this->rsvpDeadline)
+                ? (filled($this->rsvpDeadlineTime) ? $day($this->rsvpDeadline)->setTimeFromTimeString($this->rsvpDeadlineTime) : $day($this->rsvpDeadline)->endOfDay()) : null,
         ];
         $groups = array_map('intval', $this->groupIds);
         $invitees = array_map('intval', $this->inviteeIds);
