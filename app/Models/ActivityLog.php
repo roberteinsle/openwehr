@@ -44,6 +44,7 @@ class ActivityLog extends Model
         'Report' => 'Bericht', 'ReportVehicle' => 'Fahrzeug', 'CrewMember' => 'Besatzung',
         'Entry' => 'Finanzbuchung', 'Budget' => 'Budget', 'CostCenter' => 'Kostenstelle', 'Receipt' => 'Beleg',
         'IssuedItem' => 'Ausgabe', 'Stock' => 'Bestand', 'Size' => 'Größe', 'MemberSize' => 'Größe', 'EquipmentMessage' => 'Nachricht',
+        'Contact' => 'Ansprechpartner', 'ContactGroup' => 'Ansprechpartner-Gruppe',
     ];
 
     protected $fillable = ['created_at', 'user_id', 'impersonator_id', 'event', 'subject_type', 'subject_id', 'subject_label', 'changes', 'mail_log_id', 'ip'];

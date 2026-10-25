@@ -41,12 +41,12 @@
 
 - Stundennachweis je Kamerad und für die Wehr, automatisch aus Diensten, Einsätzen, Lehrgängen und Schichten
 - Als App auf dem Startbildschirm (PWA) mit Push-Benachrichtigungen, ohne App-Store
-- Ansprechpartner der Wehr mit Telefon zum direkten Anrufen
+- Ansprechpartner der Wehr mit Telefon zum direkten Anrufen, auch externe Kontakte (Leitstelle, Gemeinde) in frei definierbaren Gruppen
 - Erziehungsberechtigte je Kamerad, z. B. für die Jugendfeuerwehr
 
 ## Ausblick
 
-- Geplant: Gefahrenmatrix und Gefahrstoffnummern (auch offline), Offline-Nutzung im Einsatz, Anmeldung über OpenID Connect (Keycloak, Authentik), Anwesenheit nach dem Übungsdienst an die Wehrführung, Funkrufnamen-Liste, externe Ansprechpartner, Screenshots
+- Geplant: Gefahrenmatrix und Gefahrstoffnummern (auch offline), Offline-Nutzung im Einsatz, Anmeldung über OpenID Connect (Keycloak, Authentik), Anwesenheit nach dem Übungsdienst an die Wehrführung, Funkrufnamen-Liste, Screenshots
 - Ideen-Parkplatz: mehrere Ortswehren einer Gemeinde in einer Installation mit Rechten je Ort
 - Bewusst nicht: eigene Dateiablage oder Office-Integration
 - Ideen und Fehler als Issue: https://github.com/roberteinsle/openwehr/issues (Code wird vom Maintainer gepflegt, keine Code-Pull-Requests)

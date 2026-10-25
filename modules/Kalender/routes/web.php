@@ -87,7 +87,7 @@ Route::prefix('kalender')->name('kalender.')
                 'subheading' => $text('unterzeile', $groupId ? $groups[$groupId] : 'Alle Mitglieder', 120),
                 'hint' => $text('hinweis', '', 600),
                 'showContacts' => $request->boolean('kontakte'),
-                'contacts' => Contact::orderBy('sort_order')->orderBy('name')->get(),
+                'contacts' => Contact::forRoster(),
                 'logo' => app(OrganizationSettings::class)->logoUrl(),
             ]);
         })->name('roster');

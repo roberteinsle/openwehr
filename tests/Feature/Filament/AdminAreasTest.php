@@ -38,6 +38,7 @@ test('a Kleiderwart can not open core pages or other module areas', function (st
     '/admin/funktionen',
     '/admin/feedback',
     '/admin/ansprechpartner',
+    '/admin/ansprechpartner-gruppen',
     '/admin/module',
     '/admin/einstellungen',
     '/admin/kleiderkammer/datentransfer',

@@ -1,11 +1,11 @@
 <x-layouts.app title="Ansprechpartner">
     <div class="mx-auto max-w-2xl space-y-4">
         <h1 class="text-xl font-bold text-gray-900">Ansprechpartner</h1>
-        @forelse($contacts->groupBy(fn ($c) => $c->group?->name ?? '') as $group => $rows)
+        @forelse($sections as $section)
             <section class="space-y-2">
-                @if($group !== '')<h2 class="text-sm font-semibold text-gray-700">{{ $group }}</h2>@endif
+                @if($section['title'] !== '')<h2 class="text-sm font-semibold text-gray-700">{{ $section['title'] }}</h2>@endif
                 <div class="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-white shadow-sm">
-                    @foreach($rows as $c)
+                    @foreach($section['contacts'] as $c)
                         <div class="flex flex-wrap items-center justify-between gap-3 p-4">
                             <div class="min-w-0">
                                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ $c->role }}</p>

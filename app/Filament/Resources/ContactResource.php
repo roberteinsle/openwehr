@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ContactResource\Pages;
 use App\Models\Contact;
+use App\Models\ContactGroup;
 use App\Models\Group;
 use Filament\Actions;
 use Filament\Forms;
@@ -43,6 +44,11 @@ class ContactResource extends Resource
             Forms\Components\TextInput::make('email')->label('E-Mail')->email()->maxLength(255),
             Forms\Components\Select::make('group_id')->label('Abteilung (optional)')->options(fn () => Group::orderBy('sort_order')->orderBy('name')->pluck('name', 'id'))
                 ->helperText('Zum Gruppieren, z. B. „Jugendfeuerwehr“. Sichtbar sind alle Ansprechpartner für alle.'),
+            Forms\Components\Select::make('contact_group_id')->label('Gruppe (optional)')
+                ->options(fn () => ContactGroup::orderBy('sort_order')->orderBy('name')->pluck('name', 'id'))
+                ->createOptionForm(ContactGroupResource::fields())
+                ->createOptionUsing(fn (array $data) => ContactGroup::create($data + ['sort_order' => (int) ContactGroup::max('sort_order') + 1])->getKey())
+                ->helperText('Eigene Gruppe statt der Abteilung, z. B. „Extern“ für Leitstelle, Gemeinde, Kreisbrandmeister. Gruppen stehen nach den Ansprechpartnern der Wehr.'),
             Forms\Components\TextInput::make('note')->label('Hinweis')->placeholder('z. B. erreichbar abends')->maxLength(300),
         ])->columns(2);
     }
@@ -55,10 +61,12 @@ class ContactResource extends Resource
                 Tables\Columns\TextColumn::make('name')->label('Name')->searchable(),
                 Tables\Columns\TextColumn::make('phone')->label('Telefon'),
                 Tables\Columns\TextColumn::make('group.name')->label('Abteilung'),
+                Tables\Columns\TextColumn::make('contactGroup.name')->label('Gruppe'),
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
             ->reorderRecordsTriggerAction(fn (Actions\Action $action, bool $isReordering) => $action->button()->label($isReordering ? 'Fertig' : 'Reihenfolge ändern'))
+            ->filters([Tables\Filters\SelectFilter::make('contact_group_id')->label('Gruppe')->relationship('contactGroup', 'name')])
             ->actions([Actions\EditAction::make(), Actions\DeleteAction::make()]);
     }
 
