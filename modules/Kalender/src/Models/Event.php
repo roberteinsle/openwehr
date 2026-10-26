@@ -11,8 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Modules\Kalender\src\Support\Audience;
 
+/**
+ * @property Carbon $starts_at
+ * @property Carbon $ends_at
+ */
 class Event extends Model
 {
     /** @return array<string, string> key => label of the Terminarten to choose from (an inactive one only when kept) */
@@ -28,7 +33,7 @@ class Event extends Model
     protected $fillable = [
         'title', 'type', 'starts_at', 'ends_at', 'all_day', 'location', 'partners', 'description', 'rsvp', 'rsvp_deadline',
         'min_participants', 'is_public', 'reminder_sent_at', 'series_id', 'source_id', 'external_uid', 'cancelled_at', 'created_by',
-        'place_id', 'dress_code_ids', 'managed_by', 'organizer',
+        'place_id', 'dress_code_ids', 'managed_by', 'organizer', 'attendance_closed_at', 'attendance_closed_by', 'attendance_changed_at', 'attendance_reminded_at',
     ];
 
     /** Modules that keep events in sync, and where to change them */
@@ -43,6 +48,9 @@ class Event extends Model
             'rsvp_deadline' => 'datetime',
             'cancelled_at' => 'datetime',
             'reminder_sent_at' => 'datetime',
+            'attendance_closed_at' => 'datetime',
+            'attendance_changed_at' => 'datetime',
+            'attendance_reminded_at' => 'datetime',
             'all_day' => 'boolean',
             'rsvp' => 'boolean',
             'is_public' => 'boolean',
@@ -50,12 +58,22 @@ class Event extends Model
         ];
     }
 
+    /**
+     * Who sent the Anwesenheit; null when it went out automatically
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function attendanceClosedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'attendance_closed_by');
+    }
+
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'kal_event_group', 'event_id', 'group_id');
     }
 
-    /** Funktionen of the target group (each includes its sub-functions) */
+    /** @return BelongsTo<Place, $this> */
     public function place(): BelongsTo
     {
         return $this->belongsTo(Place::class);

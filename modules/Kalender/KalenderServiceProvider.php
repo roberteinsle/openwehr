@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Modules\Kalender\src\Console\Commands\CloseAttendance;
 use Modules\Kalender\src\Console\Commands\RemindPendingResponses;
 use Modules\Kalender\src\Console\Commands\SyncCalendarSources;
+use Modules\Kalender\src\Livewire\AttendanceSettings;
 use Modules\Kalender\src\Livewire\CalendarView;
 use Modules\Kalender\src\Livewire\EventDetail;
 use Modules\Kalender\src\Livewire\EventForm;
@@ -30,6 +32,7 @@ use Modules\Kalender\src\Models\Poll;
 use Modules\Kalender\src\Models\PollVote;
 use Modules\Kalender\src\Models\Response;
 use Modules\Kalender\src\Policies\EventPolicy;
+use Modules\Kalender\src\Services\AttendanceService;
 use Modules\Kalender\src\Services\EventService;
 use Modules\Kalender\src\Services\FeedService;
 use Modules\Kalender\src\Services\IcsExporter;
@@ -41,7 +44,7 @@ class KalenderServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        foreach ([EventService::class, PollService::class, IcsParser::class, IcsExporter::class, SourceSync::class, FeedService::class] as $service) {
+        foreach ([EventService::class, AttendanceService::class, PollService::class, IcsParser::class, IcsExporter::class, SourceSync::class, FeedService::class] as $service) {
             $this->app->singleton($service);
         }
     }
@@ -56,7 +59,7 @@ class KalenderServiceProvider extends ServiceProvider
         }
         $this->loadMigrationsFrom($base.'/database/migrations');
 
-        $this->commands([SyncCalendarSources::class, RemindPendingResponses::class]);
+        $this->commands([SyncCalendarSources::class, RemindPendingResponses::class, CloseAttendance::class]);
 
         // Scheduled commands write to /dev/null by default, so send their output to the container log
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
@@ -67,12 +70,16 @@ class KalenderServiceProvider extends ServiceProvider
 
             // Kameraden who have not answered are reminded once, shortly before the deadline or the event
             $schedule->command(RemindPendingResponses::class)->hourly()->withoutOverlapping()->appendOutputTo($output);
+
+            // The Anwesenheit of Dienste over for 24 hours goes to the Wehrführung (or a reminder when none is recorded)
+            $schedule->command(CloseAttendance::class)->hourly()->withoutOverlapping()->appendOutputTo($output);
         });
 
         Gate::policy(Event::class, EventPolicy::class);
 
         Livewire::component('kalender.calendar-view', CalendarView::class);
         Livewire::component('kalender.event-types', EventTypes::class);
+        Livewire::component('kalender.attendance-settings', AttendanceSettings::class);
         Livewire::component('kalender.monitor-board', MonitorBoard::class);
         Livewire::component('kalender.event-form', EventForm::class);
         Livewire::component('kalender.event-detail', EventDetail::class);
@@ -147,6 +154,7 @@ class KalenderServiceProvider extends ServiceProvider
                 $u->canManageKalender() ? ModuleNav::tab('Orte & Kleidung', 'kalender.places') : null,
                 $u->canManageKalender() ? ModuleNav::tab('Externe Kalender', 'kalender.sources') : null,
                 $u->is_admin ? ModuleNav::tab('Terminarten', 'kalender.types') : null,
+                $u->is_admin ? ModuleNav::tab('Anwesenheit', 'kalender.attendance') : null,
             ],
         ]);
     }

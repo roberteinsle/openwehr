@@ -343,12 +343,6 @@ parameters:
 			path: app/Models/LoginToken.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/MemberFunction.php
-
-		-
 			message: '#^Cannot access property \$timestamp on string\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -2857,18 +2851,6 @@ parameters:
 			path: modules/Kalender/KalenderServiceProvider.php
 
 		-
-			message: '#^Cannot call method diffInMinutes\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Kalender/KalenderServiceProvider.php
-
-		-
-			message: '#^Parameter \#3 \$rows of method App\\Services\\HoursRegistry\:\:register\(\) expects callable\(list\<int\>, Illuminate\\Support\\Carbon, Illuminate\\Support\\Carbon\)\: iterable\<array\{user_id\: int, date\: Illuminate\\Support\\Carbon, title\: string, minutes\: int\}\>, Closure\(array, Illuminate\\Support\\Carbon, Illuminate\\Support\\Carbon\)\: Illuminate\\Support\\Collection\<int, array\{user_id\: int, date\: string, title\: non\-falsy\-string, minutes\: int\<min, 1440\>\}\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Kalender/KalenderServiceProvider.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2887,33 +2869,9 @@ parameters:
 			path: modules/Kalender/routes/web.php
 
 		-
-			message: '#^Cannot call method copy\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Kalender/routes/web.php
-
-		-
-			message: '#^Cannot call method gt\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Kalender/src/Livewire/CalendarView.php
-
-		-
-			message: '#^Cannot call method lt\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Kalender/src/Livewire/CalendarView.php
-
-		-
 			message: '#^Access to an undefined property Modules\\Kalender\\src\\Models\\Event\:\:\$partners\.$#'
 			identifier: property.notFound
 			count: 1
-			path: modules/Kalender/src/Livewire/EventForm.php
-
-		-
-			message: '#^Cannot call method copy\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
 			path: modules/Kalender/src/Livewire/EventForm.php
 
 		-
@@ -3031,18 +2989,6 @@ parameters:
 			path: modules/Kalender/src/Livewire/PollView.php
 
 		-
-			message: '#^Cannot call method copy\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: modules/Kalender/src/Models/Event.php
-
-		-
-			message: '#^Cannot call method isPast\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: modules/Kalender/src/Models/Event.php
-
-		-
 			message: '#^Cannot call method isFuture\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -3061,18 +3007,6 @@ parameters:
 			path: modules/Kalender/src/Notifications/EventCreatedNotification.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Kalender/src/Notifications/EventCreatedNotification.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:navigationUrl\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Kalender/src/Notifications/EventCreatedNotification.php
-
-		-
 			message: '#^Cannot call method copy\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -3087,12 +3021,6 @@ parameters:
 		-
 			message: '#^Call to an undefined method Illuminate\\Notifications\\Notification\:\:toMail\(\)\.$#'
 			identifier: method.notFound
-			count: 1
-			path: modules/Kalender/src/Notifications/GuardianCopyNotification.php
-
-		-
-			message: '#^Cannot call method copy\(\) on string\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: modules/Kalender/src/Notifications/GuardianCopyNotification.php
 
@@ -3136,12 +3064,6 @@ parameters:
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
 			identifier: method.notFound
 			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Cannot call method isPast\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
 			path: modules/Kalender/src/Services/EventService.php
 
 		-
@@ -3196,18 +3118,6 @@ parameters:
 			message: '#^Access to an undefined property Modules\\Kalender\\src\\Models\\Event\:\:\$partners\.$#'
 			identifier: property.notFound
 			count: 2
-			path: modules/Kalender/src/Services/IcsExporter.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Kalender/src/Services/IcsExporter.php
-
-		-
-			message: '#^Cannot call method copy\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 4
 			path: modules/Kalender/src/Services/IcsExporter.php
 
 		-
@@ -4703,12 +4613,6 @@ parameters:
 			identifier: argument.unresolvableType
 			count: 1
 			path: modules/Schichtplan/SchichtplanServiceProvider.php
-
-		-
-			message: '#^Cannot call method copy\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: modules/Schichtplan/src/Livewire/PlanCreate.php
 
 		-
 			message: '#^Parameter \#1 \$time of static method Modules\\Schichtplan\\src\\Livewire\\PlanTimes\:\:local\(\) expects Illuminate\\Support\\Carbon\|null, string\|null given\.$#'

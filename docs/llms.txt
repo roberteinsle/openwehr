@@ -19,7 +19,7 @@
 - Fahrzeugbuchung: Fahrzeuge im gemeinsamen Kalender reservieren, Konfliktentscheidung, Wachen-Monitor
 - Fahrzeugverwaltung & Flotte: Fahrzeugakte (Stammdaten, Beschaffung, Dokumente wie Fahrzeugschein), Status, Werkstattzeiten, Fristen (HU, SP, UVV) mit Fristenliste und im Kalender, Prüfungen mit Checkliste, Ergebnis und Unterschrift setzen die Einsatzbereitschaft, Mängel aus der Prüfung oder per QR-Code am Fahrzeug ins Mängelmanagement, Kosten an die Finanzen
 - Fahrtenbuch: Fahrten mit Kilometerstand, verknüpft mit Buchung und Einsatz, Tanken und Export
-- Kalender & Termine: Termine für eine Zielgruppe mit Ort samt Navigation, Kleidung und Rückmeldung, Terminabfragen, Kalender-Abo, gemeinsame Übungen mit Nachbarwehren; Erziehungsberechtigte (z. B. Jugendfeuerwehr) bekommen die Termin-Mails und sagen ohne eigenes Konto für das Kind zu oder ab
+- Kalender & Termine: Termine für eine Zielgruppe mit Ort samt Navigation, Kleidung und Rückmeldung, Anwesenheit mit Liste und CSV an die Wehrführung, Terminabfragen, Kalender-Abo, gemeinsame Übungen mit Nachbarwehren; Erziehungsberechtigte (z. B. Jugendfeuerwehr) bekommen die Termin-Mails und sagen ohne eigenes Konto für das Kind zu oder ab
 - Schichtplan: Schichten verteilen oder Mitglieder selbst eintragen lassen
 - Übungsdienstplaner: Übungsdienste mit Thema und Verantwortlichen für den Vorstand; jeder Dienst steht ohne Thema im Kalender der Zielgruppe
 - Personalverwaltung: eigener Bereich für Personalverwalter, persönliche Daten (Anschrift, Geburtsdatum, Mobilnummer) zuschaltbar mit Selbstpflege und Benachrichtigung, Diensthistorie (Dienstgrade, Abteilungen, Funktionen, Ereignisse, Dienstzeiten in anderen Wehren) mit Nachweisen und anrechenbarer Dienstzeit, Ehrungen nach Dienstjahren (mit üblichen Ehrungsarten als Vorlage), Sammelverarbeitung für Beförderungen, Ehrungen und Funktionen, Auswertungen für Kommune und Verband, Dienstausweis (auch digital auf dem Handy mit Prüf-QR-Code), Änderungswünsche der Kameraden zur eigenen Akte, neue Mitglieder anlegen oder per CSV importieren und per QR-Code einladen, Rolle Personaleinsicht nur lesend, Dienstbeteiligung aus dem Kalender, Zugriff je Abteilung
@@ -47,7 +47,7 @@
 
 ## Ausblick
 
-- Geplant: weitere Offline-Nutzung im Einsatz, Anmeldung über OpenID Connect (Keycloak, Authentik), Anwesenheit nach dem Übungsdienst an die Wehrführung, Funkrufnamen-Liste, Screenshots
+- Geplant: weitere Offline-Nutzung im Einsatz, Anmeldung über OpenID Connect (Keycloak, Authentik), Funkrufnamen-Liste, Screenshots
 - Ideen-Parkplatz: mehrere Ortswehren einer Gemeinde in einer Installation mit Rechten je Ort
 - Bewusst nicht: eigene Dateiablage oder Office-Integration
 - Ideen und Fehler als Issue: https://github.com/roberteinsle/openwehr/issues (Code wird vom Maintainer gepflegt, keine Code-Pull-Requests)

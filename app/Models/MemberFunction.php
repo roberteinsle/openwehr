@@ -20,6 +20,7 @@ class MemberFunction extends Model
         return ['sort_order' => 'integer'];
     }
 
+    /** @return BelongsTo<self, $this> */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');

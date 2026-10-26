@@ -95,12 +95,38 @@
         </div>
     @endif
 
-    @if($manager && ! $event->isExternal())
+    @if($attendance)
+        {{-- "Anwesenheit abschließen": the list goes to the Wehrführung, otherwise automatically 24 hours after the end --}}
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
+            <h2 class="text-sm font-semibold text-gray-900">Anwesenheit an die Wehrführung</h2>
+            @error('attendance')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+            @if(! $event->attendance_closed_at)
+                <p class="text-sm text-gray-600">Mit „Anwesenheit abschließen“ geht die Liste per E-Mail (mit CSV) an: {{ $attendance['recipients'] }}. Ohne Abschluss geht sie 24 Stunden nach dem Ende automatisch raus.</p>
+                @if($attendance['mayClose'])
+                    <button type="button" wire:click="closeAttendance" wire:confirm="Anwesenheit jetzt abschließen und die Liste verschicken?" class="rounded-xl bg-fw-red px-4 py-2 text-sm font-semibold text-white">Anwesenheit abschließen</button>
+                @else
+                    <p class="text-xs text-gray-500">Abschließen können der Wehrführer und seine Stellvertreter.</p>
+                @endif
+            @else
+                <p class="text-sm text-gray-600">Abgeschlossen am {{ $event->attendance_closed_at->setTimezone('Europe/Berlin')->format('d.m.Y H:i') }} Uhr{{ $event->attendanceClosedBy ? ' von '.$event->attendanceClosedBy->name : '' }}.</p>
+                @if($event->attendance_changed_at)
+                    <p class="text-sm font-semibold text-amber-700">Seit dem Abschluss geändert.</p>
+                    @if($attendance['mayClose'])
+                        <button type="button" wire:click="sendAttendanceCorrection" wire:confirm="Die geänderte Liste als Korrektur verschicken?" class="rounded-xl bg-fw-navy px-4 py-2 text-sm font-semibold text-white">Korrektur senden</button>
+                    @endif
+                @endif
+            @endif
+        </div>
+    @endif
+
+    @if($recorder && ! $event->isExternal())
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h2 class="text-sm font-semibold text-gray-900">Teilnehmer verwalten ({{ $people->count() }})</h2>
-                <a href="{{ route('kalender.participants', $event) }}" class="text-sm text-fw-navy underline">Liste als CSV</a>
-                <a href="{{ route('kalender.participants.print', $event) }}" target="_blank" class="ml-3 text-sm text-fw-navy underline">Liste drucken</a>
+                @if($manager)
+                    <a href="{{ route('kalender.participants', $event) }}" class="text-sm text-fw-navy underline">Liste als CSV</a>
+                    <a href="{{ route('kalender.participants.print', $event) }}" target="_blank" class="ml-3 text-sm text-fw-navy underline">Liste drucken</a>
+                @endif
             </div>
             <p class="mb-3 text-xs text-gray-500">Rückmeldungen lassen sich hier für andere eintragen, etwa nach einem Anruf, auch nach der Frist. Die Anwesenheit ist ab Beginn des Termins erfassbar.@if($event->hasStarted()) Anwesend: {{ $summary ? $summary['attended']->count() : $responses->where('attended', true)->count() }}.@endif</p>
             @error('attended')<p class="mb-2 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -114,10 +140,14 @@
                                 <td class="py-1.5 pr-3">{{ $person->name }}@if($r?->comment)<span class="block text-xs text-gray-500">{{ $r->comment }}</span>@endif</td>
                                 @if($event->rsvp)
                                     <td class="py-1.5 pr-3">
-                                        <select wire:change="respondFor({{ $person->id }}, $event.target.value)" class="rounded-md border border-gray-300 px-2 py-1 text-sm">
-                                            <option value="" @selected(! $r?->status)>– offen –</option>
-                                            @foreach(\Modules\Kalender\src\Models\Response::STATUSES as $value => $label)<option value="{{ $value }}" @selected($r?->status === $value)>{{ $label }}</option>@endforeach
-                                        </select>
+                                        @if($manager)
+                                            <select wire:change="respondFor({{ $person->id }}, $event.target.value)" class="rounded-md border border-gray-300 px-2 py-1 text-sm">
+                                                <option value="" @selected(! $r?->status)>– offen –</option>
+                                                @foreach(\Modules\Kalender\src\Models\Response::STATUSES as $value => $label)<option value="{{ $value }}" @selected($r?->status === $value)>{{ $label }}</option>@endforeach
+                                            </select>
+                                        @else
+                                            {{ $r?->status ? $r->label() : 'offen' }}
+                                        @endif
                                     </td>
                                 @endif
                                 @if($event->hasStarted())

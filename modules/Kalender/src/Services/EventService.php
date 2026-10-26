@@ -214,6 +214,11 @@ class EventService
         }
 
         Response::updateOrCreate(['event_id' => $event->id, 'user_id' => $user->id], ['attended' => $attended, 'set_by' => $by->id]);
+
+        // After "Anwesenheit abschließen" a change can be sent as Korrektur
+        if ($event->attendance_closed_at) {
+            $event->update(['attendance_changed_at' => now()]);
+        }
     }
 
     /**

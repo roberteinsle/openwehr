@@ -68,6 +68,7 @@ Route::prefix('kalender')->name('kalender.')
 
         // Admins: the Terminarten (checked in the component)
         Route::get('/terminarten', fn () => view('kalender::pages.types'))->name('types');
+        Route::get('/anwesenheit', fn () => view('kalender::pages.attendance'))->name('attendance');
 
         // The Dienstplan of a year or half-year to print or save as PDF (what the Kamerad may see)
         Route::get('/dienstplan', function () {
