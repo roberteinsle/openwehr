@@ -13,10 +13,10 @@ ENV AUTORUN_ENABLED=true \
     PHP_OPCACHE_ENABLE=1
 
 # Security fixes of the Alpine packages (e.g. libX11 for gd, nghttp2) that the base image doesn't have yet,
-# then Node.js (LTS) and PHP extensions (intl; gd + exif for avatar resizing)
+# then Node.js (LTS) and PHP extensions (intl; gd + exif for avatar resizing; gmp for the web push encryption)
 RUN apk upgrade --no-cache && \
     apk add --no-cache nodejs npm && \
-    install-php-extensions intl gd exif
+    install-php-extensions intl gd exif gmp
 
 WORKDIR /var/www/html
 

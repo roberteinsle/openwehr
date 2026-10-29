@@ -8,10 +8,16 @@ use App\Models\PushSubscription;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\PushService;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 use Modules\Mitteilungen\src\Livewire\Manage;
+use Psr\Http\Client\ClientInterface;
 
 /** Records what would go to the push services; the endpoint "gone" is unknown there */
 class FakePushService extends PushService
@@ -99,4 +105,34 @@ test('Ansprechpartner: everyone sees them with phone to tap, grouped by Abteilun
         ->assertSeeInOrder(['Wehrführer', 'Bernd Blaulicht', 'Jugendfeuerwehr', 'Jugendwartin'])
         ->assertSee('href="tel:01701234567"', false)->assertSee('href="tel:+494055512"', false);
     $this->get(route('home'))->assertSee(route('contacts'));
+});
+
+test('the real delivery encrypts and sends through the HTTP client and recognises expired devices', function () {
+    $handler = new MockHandler([new Response(201), new Response(410)]);
+    $requests = [];
+    $stack = HandlerStack::create($handler);
+    $stack->push(Middleware::history($requests));
+    $service = new class($stack) extends PushService
+    {
+        public function __construct(private readonly HandlerStack $stack) {}
+
+        protected function client(): ClientInterface
+        {
+            return new Client(['handler' => $this->stack]);
+        }
+    };
+    app()->instance(PushService::class, $service);
+
+    // Keys like a browser sends them: an uncompressed P-256 point and a 16-byte auth secret
+    $b64 = fn (string $bytes) => rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+    $key = openssl_pkey_get_details(openssl_pkey_new(['curve_name' => 'prime256v1', 'private_key_type' => OPENSSL_KEYTYPE_EC]))['ec'];
+    $browser = fn (string $endpoint) => ['endpoint' => $endpoint, 'keys' => ['p256dh' => $b64("\x04".str_pad($key['x'], 32, "\0", STR_PAD_LEFT).str_pad($key['y'], 32, "\0", STR_PAD_LEFT)), 'auth' => $b64(random_bytes(16))]];
+    $service->subscribe($this->hanna, $browser('https://web.push.apple.com/ok'), 'Mozilla/5.0 (iPhone) Safari/604.1');
+    $service->subscribe($this->hanna, $browser('https://web.push.apple.com/expired'), 'Mozilla/5.0 (iPhone) Safari/604.1');
+
+    expect($service->toUser($this->hanna, 'Test', 'Hallo'))->toBe(1)
+        ->and($requests)->toHaveCount(2)
+        ->and($requests[0]['request']->getHeaderLine('Content-Encoding'))->toBe('aes128gcm')
+        ->and($requests[0]['request']->getHeaderLine('Authorization'))->toStartWith('vapid t=')
+        ->and(PushSubscription::pluck('endpoint')->all())->toBe(['https://web.push.apple.com/ok']);
 });

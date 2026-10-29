@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PushSubscription;
 use App\Models\Setting;
 use App\Models\User;
+use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -12,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\VAPID;
 use Minishlink\WebPush\WebPush;
+use Psr\Http\Client\ClientInterface;
 use Throwable;
 
 /**
@@ -90,15 +92,25 @@ class PushService
         return collect($results)->filter(fn ($ok) => $ok === true)->count();
     }
 
+    /**
+     * The HTTP client for the push services (web-push 11 takes a PSR-18 client instead of a timeout).
+     * The logger keeps the library's hints (e.g. "install GMP") out of trigger_error, which Laravel turns into exceptions.
+     */
+    protected function client(): ClientInterface
+    {
+        return new Client(['timeout' => 10, 'connect_timeout' => 5]);
+    }
+
     /** @return array<int, true|false|'gone'> by subscription id */
     protected function deliver(Collection $subscriptions, string $payload): array
     {
         $keys = $this->keys();
         $subject = str_starts_with((string) config('app.url'), 'https://') ? config('app.url') : 'mailto:'.config('mail.from.address');
-        $push = new WebPush(['VAPID' => ['subject' => $subject, 'publicKey' => $keys['publicKey'], 'privateKey' => $keys['privateKey']]], ['TTL' => 86400], 10);
+        $push = new WebPush(['VAPID' => ['subject' => $subject, 'publicKey' => $keys['publicKey'], 'privateKey' => $keys['privateKey']]], ['TTL' => 86400], client: $this->client(), logger: app('log'));
         $byEndpoint = $subscriptions->keyBy('endpoint');
         foreach ($subscriptions as $s) {
-            $push->queueNotification(Subscription::create(['endpoint' => $s->endpoint, 'publicKey' => $s->public_key, 'authToken' => $s->auth_token]), $payload);
+            // aes128gcm (RFC 8291): the encoding every current browser supports, and the only one Apple's push service takes
+            $push->queueNotification(Subscription::create(['endpoint' => $s->endpoint, 'publicKey' => $s->public_key, 'authToken' => $s->auth_token, 'contentEncoding' => 'aes128gcm']), $payload);
         }
 
         $results = [];
