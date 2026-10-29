@@ -36,6 +36,9 @@ class ItemResource extends Resource
 
     protected static ?string $navigationLabel = 'Einzelteile';
 
+    // Part of the Lager (StorePage)
+    protected static ?string $navigationParentItem = 'Lager';
+
     protected static ?string $modelLabel = 'Teil';
 
     protected static ?string $pluralModelLabel = 'Einzelteile';

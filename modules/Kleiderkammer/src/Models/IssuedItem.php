@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Kleiderkammer\src\Concerns\TracksUser;
 
+/** @property ?int $group_id */
 class IssuedItem extends Model
 {
     use SoftDeletes, TracksUser;
@@ -50,11 +51,13 @@ class IssuedItem extends Model
         return $this->belongsTo(ItemType::class, 'item_type_id');
     }
 
+    /** @return BelongsTo<Size, $this> */
     public function size(): BelongsTo
     {
         return $this->belongsTo(Size::class, 'size_id');
     }
 
+    /** @return BelongsTo<ItemGroup, $this> */
     public function group(): BelongsTo
     {
         return $this->belongsTo(ItemGroup::class, 'group_id');

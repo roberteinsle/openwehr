@@ -14,6 +14,7 @@ class ItemType extends Model
         'category_id',
         'name',
         'code_prefix',
+        'price_net_cents',
         'is_tracked',
         'has_size',
         'is_washable',
@@ -28,9 +29,25 @@ class ItemType extends Model
             'has_size' => 'boolean',
             'is_washable' => 'boolean',
             'is_chainsaw_protection' => 'boolean',
+            'price_net_cents' => 'integer',
         ];
     }
 
+    /** Umsatzsteuer on clothing (Regelsteuersatz) */
+    public const VAT_PERCENT = 19;
+
+    /** Gross from net, in cent */
+    public static function gross(?int $netCents): ?int
+    {
+        return $netCents === null ? null : (int) round($netCents * (100 + self::VAT_PERCENT) / 100);
+    }
+
+    public function priceGrossCents(): ?int
+    {
+        return self::gross($this->price_net_cents);
+    }
+
+    /** @return BelongsTo<ItemCategory, $this> */
     public function category(): BelongsTo
     {
         return $this->belongsTo(ItemCategory::class, 'category_id');

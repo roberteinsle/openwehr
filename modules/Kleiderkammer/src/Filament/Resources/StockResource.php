@@ -31,6 +31,9 @@ class StockResource extends Resource
 
     protected static ?string $navigationLabel = 'Massenbestand';
 
+    // Part of the Lager (StorePage)
+    protected static ?string $navigationParentItem = 'Lager';
+
     protected static ?string $modelLabel = 'Bestandsposition';
 
     protected static ?string $pluralModelLabel = 'Massenbestand';

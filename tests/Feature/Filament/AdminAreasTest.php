@@ -20,7 +20,7 @@ test('a Kleiderwart lands in the Kleiderkammer area and sees only its group', fu
 
     $this->actingAs($this->kleiderwart)->get('/admin/kleiderkammer')->assertOk()
         ->assertSee('Kleiderkammer')
-        ->assertSee('href="'.url('/admin/kleiderkammer/einzelteile').'"', false)
+        ->assertSee('href="'.url('/admin/kleiderkammer/lager').'"', false)
         ->assertDontSee('href="'.url('/admin/ausruestung').'"', false)
         ->assertDontSee('href="'.url('/admin/maengelmanagement').'"', false)
         ->assertDontSee('href="'.url('/admin/fahrzeugbuchung').'"', false)

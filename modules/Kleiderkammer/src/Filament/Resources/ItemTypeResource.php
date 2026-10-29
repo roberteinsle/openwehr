@@ -2,6 +2,7 @@
 
 namespace Modules\Kleiderkammer\src\Filament\Resources;
 
+use App\Support\Money;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -59,6 +60,19 @@ class ItemTypeResource extends Resource
                     ->label('Reihenfolge')
                     ->numeric()
                     ->default(0),
+
+                // Net is typed, gross follows (19 % USt.); both appear in the Inventar
+                Forms\Components\TextInput::make('price_net_cents')
+                    ->label('Preis netto (€ je Stück)')
+                    ->placeholder('z. B. 129,90')
+                    ->formatStateUsing(fn ($state) => Money::input($state === null ? null : (int) $state))
+                    ->dehydrateStateUsing(fn ($state) => Money::parse($state))
+                    ->rule(fn () => fn (string $attribute, $value, \Closure $fail) => filled($value) && Money::parse($value) === null ? $fail('Bitte einen Betrag wie 129,90 eingeben.') : null)
+                    ->live(onBlur: true),
+
+                Forms\Components\Placeholder::make('price_gross')
+                    ->label('Preis brutto (berechnet, '.ItemType::VAT_PERCENT.' % USt.)')
+                    ->content(fn ($get) => ($cents = ItemType::gross(Money::parse($get('price_net_cents')))) === null ? '–' : Money::format($cents)),
             ])
                 ->columns(['default' => 1, 'md' => 2])
                 ->columnSpanFull(),
@@ -106,6 +120,19 @@ class ItemTypeResource extends Resource
                 Tables\Columns\TextColumn::make('code_prefix')
                     ->label('Präfix')
                     ->placeholder('–'),
+
+                Tables\Columns\TextColumn::make('price_net_cents')
+                    ->label('Netto')
+                    ->formatStateUsing(fn ($state) => Money::format((int) $state))
+                    ->placeholder('–')
+                    ->alignEnd(),
+
+                Tables\Columns\TextColumn::make('price_gross')
+                    ->label('Brutto')
+                    ->state(fn (ItemType $record) => $record->priceGrossCents())
+                    ->formatStateUsing(fn ($state) => Money::format((int) $state))
+                    ->placeholder('–')
+                    ->alignEnd(),
 
                 Tables\Columns\IconColumn::make('is_tracked')
                     ->label('Einzeln')
