@@ -5,6 +5,7 @@ namespace Modules\Kleiderkammer\src\Filament\Resources\ItemResource\Pages;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Modules\Kleiderkammer\src\Filament\Pages\StoreTypePage;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemResource;
 use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Services\CodeGenerator;
@@ -70,6 +71,6 @@ class CreateItem extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return StoreTypePage::getUrl(['type' => $this->getRecord()->getAttribute('item_type_id')]);
     }
 }

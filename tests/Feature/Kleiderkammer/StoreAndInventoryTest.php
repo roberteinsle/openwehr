@@ -9,6 +9,7 @@ use Livewire\Livewire;
 use Modules\Kleiderkammer\src\Enums\ItemStatus;
 use Modules\Kleiderkammer\src\Filament\Pages\InventoryPage;
 use Modules\Kleiderkammer\src\Filament\Pages\StorePage;
+use Modules\Kleiderkammer\src\Filament\Pages\StoreTypePage;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource\Pages\EditItemType;
 use Modules\Kleiderkammer\src\Models\Item;
 use Modules\Kleiderkammer\src\Models\ItemCategory;
@@ -72,12 +73,46 @@ test('the Lager page books a Zugang and asks for the code only where the Artikel
     expect(Item::where('code', 'WEHRPJA0007')->exists())->toBeTrue()
         ->and(Stock::where('item_type_id', $this->gloves->id)->value('quantity'))->toBe(4);
 
-    // Einzelteile and Massenbestand are the sub-pages of the Lager
+    // One row per Artikel, a click opens its page; Einzelteile and Massenbestand have no menu entry or list any more
     $this->get(StorePage::getUrl())->assertOk()
-        ->assertSee('href="'.url('/admin/kleiderkammer/einzelteile').'"', false)
-        ->assertSee('href="'.url('/admin/kleiderkammer/massenbestand').'"', false);
+        ->assertSee('href="'.StoreTypePage::getUrl(['type' => $this->jacket->id]).'"', false)
+        ->assertDontSee('href="'.url('/admin/kleiderkammer/einzelteile').'"', false)
+        ->assertDontSee('href="'.url('/admin/kleiderkammer/massenbestand').'"', false);
+    $this->get('/admin/kleiderkammer/einzelteile')->assertRedirect(StorePage::getUrl());
+    $this->get('/admin/kleiderkammer/massenbestand')->assertRedirect(StorePage::getUrl());
 
     $this->actingAs($this->hanna)->get(StorePage::getUrl())->assertForbidden();
+});
+
+test('the Artikel page lists the pieces with code and issues, takes back and books a Zugang there', function () {
+    $this->actingAs($this->warden);
+    $item = $this->store->receive($this->jacket, $this->size, null, 'WEHRPJA0001');
+    $this->store->receive($this->jacket, $this->size, null, 'WEHRPJA0002');
+
+    Livewire::test(StoreTypePage::class, ['type' => $this->jacket->id])
+        ->assertSee('PSA-Jacke')->assertSee('Einzeln mit Code')->assertSee('420,00 € netto / 499,80 € brutto')
+        ->assertSeeHtml('L: <b>2</b> im Lager')
+        ->assertCanSeeTableRecords([$item])
+        ->callTableAction('issue', $item, ['user_id' => $this->hanna->id])
+        ->assertHasNoTableActionErrors()
+        ->callAction('receive', ['size_id' => $this->size->id, 'code' => 'WEHRPJA0003'])
+        ->assertHasNoActionErrors();
+    expect($item->refresh()->status)->toBe(ItemStatus::Issued)
+        ->and(Item::where('code', 'WEHRPJA0003')->value('item_type_id'))->toBe($this->jacket->id);
+
+    Livewire::test(StoreTypePage::class, ['type' => $this->jacket->id])->callTableAction('return', $item);
+    expect($item->refresh()->status)->toBe(ItemStatus::Available);
+
+    // Gloves: quantities, issued from there; a Zugang adds to the quantity
+    $this->store->receive($this->gloves, null, null, null, 5);
+    $stock = Stock::where('item_type_id', $this->gloves->id)->sole();
+    Livewire::test(StoreTypePage::class, ['type' => $this->gloves->id])
+        ->assertSee('Menge ohne Code')
+        ->callTableAction('issue', $stock, ['user_id' => $this->hanna->id, 'quantity' => 2])
+        ->callAction('receive', ['quantity' => 10])->assertHasNoActionErrors();
+    expect($stock->refresh()->quantity)->toBe(13);
+
+    $this->actingAs($this->hanna)->get(StoreTypePage::getUrl(['type' => $this->jacket->id]))->assertForbidden();
 });
 
 test('the net price is typed and the gross price follows', function () {

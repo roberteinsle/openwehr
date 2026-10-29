@@ -4,6 +4,7 @@ namespace Modules\Kleiderkammer\src\Filament\Resources\ItemResource\Pages;
 
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Modules\Kleiderkammer\src\Filament\Pages\StoreTypePage;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemResource;
 
 class EditItem extends EditRecord
@@ -20,6 +21,6 @@ class EditItem extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return StoreTypePage::getUrl(['type' => $this->getRecord()->getAttribute('item_type_id')]);
     }
 }

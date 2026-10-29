@@ -31,8 +31,8 @@ class StockResource extends Resource
 
     protected static ?string $navigationLabel = 'Massenbestand';
 
-    // Part of the Lager (StorePage)
-    protected static ?string $navigationParentItem = 'Lager';
+    // No menu entry: the quantities are listed on the Artikel page of the Lager (StorePage → StoreTypePage)
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $modelLabel = 'Bestandsposition';
 
@@ -122,41 +122,49 @@ class StockResource extends Resource
             ], layout: Tables\Enums\FiltersLayout::AboveContentCollapsible)
             ->filtersFormColumns(['default' => 1, 'sm' => 2, 'lg' => 4])
             ->actions([
-                Actions\Action::make('issue')
-                    ->label('Ausgeben')
-                    ->icon('heroicon-o-arrow-right')
-                    ->color('primary')
-                    ->visible(fn (Stock $record) => $record->quantity > 0)
-                    ->form([
-                        Forms\Components\Select::make('user_id')
-                            ->label('Mitglied')
-                            ->options(fn () => User::where('status', MemberStatus::Active->value)->orderBy('name')->pluck('name', 'id'))
-                            ->required()
-                            ->searchable(),
-                        Forms\Components\TextInput::make('quantity')
-                            ->label('Anzahl')
-                            ->numeric()
-                            ->required()
-                            ->minValue(1)
-                            ->default(1),
-                        Forms\Components\Textarea::make('notes')->label('Notizen')->nullable(),
-                    ])
-                    ->action(function (Stock $record, array $data) {
-                        $member = User::findOrFail($data['user_id']);
-                        app(IssuingService::class)->issueStock(
-                            $member,
-                            $record->itemType,
-                            $record->size,
-                            (int) $data['quantity'],
-                            $data['notes'] ?? '',
-                            $record->group,
-                        );
-                        Notification::make()->title('Bestand ausgegeben.')->success()->send();
-                    }),
-
+                ...self::rowActions(),
                 Actions\EditAction::make(),
             ])
             ->bulkActions([]);
+    }
+
+    /** Ausgeben from one stock position; also on the Artikel page of the Lager */
+    public static function rowActions(): array
+    {
+        return [
+            Actions\Action::make('issue')
+                ->label('Ausgeben')
+                ->icon('heroicon-o-arrow-right')
+                ->color('primary')
+                ->visible(fn (Stock $record) => $record->quantity > 0)
+                ->form([
+                    Forms\Components\Select::make('user_id')
+                        ->label('Mitglied')
+                        ->options(fn () => User::where('status', MemberStatus::Active->value)->orderBy('name')->pluck('name', 'id'))
+                        ->required()
+                        ->searchable(),
+                    Forms\Components\TextInput::make('quantity')
+                        ->label('Anzahl')
+                        ->numeric()
+                        ->required()
+                        ->minValue(1)
+                        ->default(1),
+                    Forms\Components\Textarea::make('notes')->label('Notizen')->nullable(),
+                ])
+                ->action(function (Stock $record, array $data) {
+                    $member = User::findOrFail($data['user_id']);
+                    app(IssuingService::class)->issueStock(
+                        $member,
+                        $record->itemType,
+                        $record->size,
+                        (int) $data['quantity'],
+                        $data['notes'] ?? '',
+                        $record->group,
+                    );
+                    Notification::make()->title('Bestand ausgegeben.')->success()->send();
+                }),
+
+        ];
     }
 
     public static function getPages(): array

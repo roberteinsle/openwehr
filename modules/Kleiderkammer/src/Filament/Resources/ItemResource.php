@@ -36,8 +36,8 @@ class ItemResource extends Resource
 
     protected static ?string $navigationLabel = 'Einzelteile';
 
-    // Part of the Lager (StorePage)
-    protected static ?string $navigationParentItem = 'Lager';
+    // No menu entry: the pieces are listed on the Artikel page of the Lager (StorePage → StoreTypePage)
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $modelLabel = 'Teil';
 
@@ -167,51 +167,7 @@ class ItemResource extends Resource
             ], layout: Tables\Enums\FiltersLayout::AboveContentCollapsible)
             ->filtersFormColumns(['default' => 1, 'sm' => 2, 'lg' => 5])
             ->actions([
-                Actions\Action::make('issue')
-                    ->label('Ausgeben')
-                    ->icon('heroicon-o-arrow-right')
-                    ->color('primary')
-                    ->visible(fn (Item $record) => $record->isAvailable())
-                    ->form([
-                        Forms\Components\Select::make('user_id')
-                            ->label('Mitglied')
-                            ->options(fn () => User::where('status', MemberStatus::Active->value)->orderBy('name')->pluck('name', 'id'))
-                            ->required()
-                            ->searchable(),
-                        Forms\Components\Textarea::make('notes')->label('Notizen')->nullable(),
-                    ])
-                    ->action(function (Item $record, array $data) {
-                        $member = User::findOrFail($data['user_id']);
-                        app(IssuingService::class)->issueTracked($member, $record, $data['notes'] ?? '');
-                        Notification::make()->title('Teil ausgegeben.')->success()->send();
-                    }),
-
-                Actions\Action::make('return')
-                    ->label('Zurücknehmen')
-                    ->icon('heroicon-o-arrow-uturn-left')
-                    ->requiresConfirmation()
-                    ->visible(fn (Item $record) => $record->isIssued())
-                    ->action(function (Item $record) {
-                        $issuedItem = $record->currentIssuance()->firstOrFail();
-                        app(IssuingService::class)->return($issuedItem);
-                        Notification::make()->title('Teil zurückgenommen.')->success()->send();
-                    }),
-
-                Actions\Action::make('retire')
-                    ->label('Ausmustern')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('Teil ausmustern?')
-                    ->visible(fn (Item $record) => ! $record->isRetired() && ! $record->isIssued())
-                    ->form([
-                        Forms\Components\Textarea::make('notes')->label('Grund / Notiz')->nullable(),
-                    ])
-                    ->action(function (Item $record, array $data) {
-                        app(IssuingService::class)->retire($record, $data['notes'] ?? '');
-                        Notification::make()->title('Teil ausgemustert.')->warning()->send();
-                    }),
-
+                ...self::rowActions(),
                 Actions\EditAction::make(),
                 Actions\RestoreAction::make(),
             ])
@@ -227,6 +183,58 @@ class ItemResource extends Resource
                     Actions\DeleteBulkAction::make()->label('Archivieren'),
                 ]),
             ]);
+    }
+
+    /** Ausgeben, Zurücknehmen, Ausmustern of one piece; also on the Artikel page of the Lager */
+    public static function rowActions(): array
+    {
+        return [
+            Actions\Action::make('issue')
+                ->label('Ausgeben')
+                ->icon('heroicon-o-arrow-right')
+                ->color('primary')
+                ->visible(fn (Item $record) => $record->isAvailable())
+                ->form([
+                    Forms\Components\Select::make('user_id')
+                        ->label('Mitglied')
+                        ->options(fn () => User::where('status', MemberStatus::Active->value)->orderBy('name')->pluck('name', 'id'))
+                        ->required()
+                        ->searchable(),
+                    Forms\Components\Textarea::make('notes')->label('Notizen')->nullable(),
+                ])
+                ->action(function (Item $record, array $data) {
+                    $member = User::findOrFail($data['user_id']);
+                    app(IssuingService::class)->issueTracked($member, $record, $data['notes'] ?? '');
+                    Notification::make()->title('Teil ausgegeben.')->success()->send();
+                }),
+
+            Actions\Action::make('return')
+                ->label('Zurücknehmen')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->requiresConfirmation()
+                ->visible(fn (Item $record) => $record->isIssued())
+                ->action(function (Item $record) {
+                    $issuedItem = $record->currentIssuance()->firstOrFail();
+                    app(IssuingService::class)->return($issuedItem);
+                    Notification::make()->title('Teil zurückgenommen.')->success()->send();
+                }),
+
+            Actions\Action::make('retire')
+                ->label('Ausmustern')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Teil ausmustern?')
+                ->visible(fn (Item $record) => ! $record->isRetired() && ! $record->isIssued())
+                ->form([
+                    Forms\Components\Textarea::make('notes')->label('Grund / Notiz')->nullable(),
+                ])
+                ->action(function (Item $record, array $data) {
+                    app(IssuingService::class)->retire($record, $data['notes'] ?? '');
+                    Notification::make()->title('Teil ausgemustert.')->warning()->send();
+                }),
+
+        ];
     }
 
     public static function getPages(): array
