@@ -192,6 +192,7 @@ foreach ([
     'admin/kleiderkammer/items' => 'admin/kleiderkammer/einzelteile',
     'admin/kleiderkammer/members' => 'admin/kleiderkammer/kameraden',
     'admin/kleiderkammer/stocks' => 'admin/kleiderkammer/massenbestand',
+    'admin/kleiderkammer/bestandsbericht' => 'admin/kleiderkammer',
     'admin/maengelmanagement/login' => 'admin/anmelden',
     'admin/maengelmanagement/anmelden' => 'admin/anmelden',
     'admin/maengelmanagement/defects' => 'admin/maengelmanagement/maengel',

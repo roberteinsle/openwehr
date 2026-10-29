@@ -1,12 +1,6 @@
-<x-filament-panels::page>
+<x-filament-widgets::widget>
     <style>
         .ir { display: flex; flex-direction: column; gap: 1.5rem; }
-        .ir-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
-        .ir-tile { display: flex; align-items: center; gap: 1rem; padding: 1.1rem 1.25rem; border-radius: .75rem; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .05); border: 1px solid rgb(0 0 0 / .07); }
-        .ir-tile-icon { display: flex; align-items: center; justify-content: center; flex: none; width: 3rem; height: 3rem; border-radius: 9999px; }
-        .ir-tile-icon svg { width: 1.5rem; height: 1.5rem; }
-        .ir-tile-value { font-size: 1.9rem; font-weight: 600; line-height: 1.1; }
-        .ir-tile-label { font-size: .85rem; color: #6b7280; }
         .ir-success { background: #dcfce7; color: #15803d; }
         .ir-warning { background: #fef3c7; color: #b45309; }
         .ir-danger { background: #fee2e2; color: #b91c1c; }
@@ -27,7 +21,6 @@
         .ir-table .num { text-align: right; padding-right: 0; }
         .ir-mono { font-family: ui-monospace, monospace; font-size: .75rem; }
         .ir-badge { display: inline-block; min-width: 1.75rem; padding: .1rem .5rem; border-radius: .4rem; font-size: .8rem; font-weight: 600; text-align: center; }
-        .dark .ir-tile { background: #18181b; border-color: rgb(255 255 255 / .1); }
         .dark .ir-bar { background: rgb(255 255 255 / .1); }
         .dark .ir-table th { border-color: rgb(255 255 255 / .1); }
         .dark .ir-table td { border-color: rgb(255 255 255 / .05); }
@@ -36,31 +29,7 @@
         .dark .ir-danger { background: rgb(239 68 68 / .15); color: #f87171; }
         .dark .ir-info { background: rgb(59 130 246 / .15); color: #60a5fa; }
     </style>
-    @php
-        $tiles = [
-            ['label' => 'Verfügbar', 'value' => $summary['available'], 'icon' => 'heroicon-o-check-circle', 'tone' => 'success'],
-            ['label' => 'Ausgegeben', 'value' => $summary['issued'], 'icon' => 'heroicon-o-arrow-right-circle', 'tone' => 'warning'],
-            ['label' => 'Ausgemustert', 'value' => $summary['retired'], 'icon' => 'heroicon-o-archive-box-x-mark', 'tone' => 'danger'],
-            ['label' => 'Offene Leihen', 'value' => $summary['open_loans'], 'icon' => 'heroicon-o-clock', 'tone' => 'info'],
-        ];
-    @endphp
-
     <div class="ir">
-        {{-- Kennzahlen --}}
-        <div class="ir-tiles">
-            @foreach($tiles as $tile)
-                <div class="ir-tile">
-                    <div class="ir-tile-icon ir-{{ $tile['tone'] }}">
-                        <x-filament::icon :icon="$tile['icon']" />
-                    </div>
-                    <div>
-                        <div class="ir-tile-value">{{ $tile['value'] }}</div>
-                        <div class="ir-tile-label">{{ $tile['label'] }}</div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
         <div class="ir-cols">
             {{-- Einzelteile --}}
             <x-filament::section icon="heroicon-o-qr-code" heading="Einzelteile" description="Einzeln erfasste Artikel nach Typ">
@@ -152,4 +121,4 @@
             @endif
         </x-filament::section>
     </div>
-</x-filament-panels::page>
+</x-filament-widgets::widget>

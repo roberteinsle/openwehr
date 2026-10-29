@@ -94,9 +94,9 @@ class StoreService
     }
 
     /**
-     * The Lager list: one row per Artikeltyp (also those with nothing in it), its groups and sizes summed up.
+     * The Lager list: one row per Artikeltyp (also those with nothing in it), its groups and sizes summed up; Gesamt = Lager + ausgegeben.
      *
-     * @return Collection<string, array{key: string, type_id: int, type: string, category: string, tracked: bool, in_store: int, issued: int, variants: int}>
+     * @return Collection<string, array{key: string, type_id: int, type: string, category: string, tracked: bool, in_store: int, issued: int, total: int}>
      */
     public function byType(): Collection
     {
@@ -105,7 +105,7 @@ class StoreService
         foreach ($this->types() as $type) {
             $own = $levels->get($type->id, collect());
             $rows->put('t'.$type->id, ['key' => 't'.$type->id, 'type_id' => $type->id, 'type' => $type->name, 'category' => (string) $type->category?->name,
-                'tracked' => (bool) $type->is_tracked, 'in_store' => (int) $own->sum('in_store'), 'issued' => (int) $own->sum('issued'), 'variants' => $own->count()]);
+                'tracked' => (bool) $type->is_tracked, 'in_store' => (int) $own->sum('in_store'), 'issued' => (int) $own->sum('issued'), 'total' => (int) $own->sum('in_store') + (int) $own->sum('issued')]);
         }
 
         return $rows;

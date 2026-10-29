@@ -5,6 +5,7 @@ namespace Modules\Kleiderkammer\src\Filament\Resources;
 use App\Support\Money;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -150,11 +151,6 @@ class ItemTypeResource extends Resource
                     ->label('Kettensäge')
                     ->boolean(),
 
-                Tables\Columns\TextColumn::make('groups.name')
-                    ->label('Gruppen')
-                    ->badge()
-                    ->placeholder('–'),
-
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Reihenf.')
                     ->sortable(),
@@ -184,6 +180,21 @@ class ItemTypeResource extends Resource
                 ->label($isReordering ? 'Fertig' : 'Reihenfolge ändern'))
             ->actions([
                 Actions\EditAction::make(),
+                Actions\Action::make('copy')
+                    ->label('Kopieren')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->color('gray')
+                    ->modalHeading(fn (ItemType $record) => '„'.$record->name.'“ kopieren')
+                    ->modalDescription('Übernommen werden Kategorie, Preis, Eigenschaften, Gruppen und Größen – keine Teile und kein Bestand. Den Code-Präfix bitte neu vergeben.')
+                    ->fillForm(fn (ItemType $record) => ['name' => $record->name.' (Kopie)'])
+                    ->form([Forms\Components\TextInput::make('name')->label('Name der Kopie')->required()->maxLength(255)])
+                    ->modalSubmitActionLabel('Kopieren')
+                    ->action(function (ItemType $record, array $data) {
+                        $copy = $record->copyAs(trim($data['name']));
+                        Notification::make()->title('„'.$copy->name.'“ angelegt.')->success()->send();
+
+                        return redirect(self::getUrl('edit', ['record' => $copy]));
+                    }),
             ])
             ->bulkActions([]);
     }

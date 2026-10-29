@@ -54,9 +54,9 @@ class StorePage extends Page implements HasTable
             ->columns([
                 TextColumn::make('type')->label('Artikel')->description(fn (array $record) => $record['category'] ?: null)->searchable()->weight('medium'),
                 TextColumn::make('tracked')->label('Erfassung')->formatStateUsing(fn ($state) => $state ? 'Einzeln mit Code' : 'Menge')->badge()->color(fn ($state) => $state ? 'info' : 'gray'),
-                TextColumn::make('variants')->label('Größen / Gruppen')->alignEnd()->formatStateUsing(fn ($state) => $state ?: '–'),
-                TextColumn::make('in_store')->label('Im Lager')->alignEnd()->color(fn ($state) => $state <= 0 ? 'danger' : ($state <= 2 ? 'warning' : 'success')),
+                TextColumn::make('in_store')->label('Lager')->alignEnd()->color(fn ($state) => $state <= 0 ? 'danger' : ($state <= 2 ? 'warning' : 'success')),
                 TextColumn::make('issued')->label('Ausgegeben')->alignEnd(),
+                TextColumn::make('total')->label('Gesamt')->alignEnd()->weight('medium'),
             ])
             ->recordUrl(fn (array $record) => StoreTypePage::getUrl(['type' => $record['type_id']]))
             ->emptyStateHeading('Noch keine Artikeltypen')

@@ -5,6 +5,7 @@ namespace Modules\Kleiderkammer\src\Filament\Pages;
 use App\Filament\ModuleDashboard;
 use App\Models\User;
 use Modules\Kleiderkammer\src\Filament\Widgets\OverviewWidget;
+use Modules\Kleiderkammer\src\Filament\Widgets\ReportWidget;
 
 // /admin/kleiderkammer: the Kleiderkammer area of the admin panel
 class KleiderkammerDashboard extends ModuleDashboard
@@ -27,6 +28,7 @@ class KleiderkammerDashboard extends ModuleDashboard
     {
         return [
             OverviewWidget::class,
+            ReportWidget::class,
         ];
     }
 }
