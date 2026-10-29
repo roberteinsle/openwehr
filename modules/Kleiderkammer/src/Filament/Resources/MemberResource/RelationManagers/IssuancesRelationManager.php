@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 use Modules\Kleiderkammer\src\Enums\ItemStatus;
+use Modules\Kleiderkammer\src\Filament\Pages\StorePage;
 use Modules\Kleiderkammer\src\Models\EquipmentMessage;
 use Modules\Kleiderkammer\src\Models\IssuedItem;
 use Modules\Kleiderkammer\src\Models\Item;
@@ -23,6 +24,7 @@ use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Models\Size;
 use Modules\Kleiderkammer\src\Models\Stock;
 use Modules\Kleiderkammer\src\Services\IssuingService;
+use Modules\Kleiderkammer\src\Services\StoreService;
 
 class IssuancesRelationManager extends RelationManager
 {
@@ -122,6 +124,20 @@ class IssuancesRelationManager extends RelationManager
                     ->action(function (IssuedItem $record) {
                         app(IssuingService::class)->return($record);
                         Notification::make()->title('Zurückgenommen.')->success()->send();
+                    }),
+                // The piece is worn out or lost: the loan ends and it doesn't go back into the Lager
+                Actions\Action::make('dispose')
+                    ->label('Ausmustern')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->visible(fn (IssuedItem $record) => $record->isOpen())
+                    ->modalHeading('Ausmustern statt zurücknehmen')
+                    ->modalDescription('Das Teil kommt nicht zurück ins Lager, sondern verlässt die Kleiderkammer (z. B. verschlissen, defekt, verloren).')
+                    ->modalSubmitActionLabel('Ausmustern')
+                    ->schema([StorePage::reasonField()])
+                    ->action(function (IssuedItem $record, array $data) {
+                        app(StoreService::class)->disposeIssued($record, (string) $data['reason'], auth()->user());
+                        Notification::make()->title('Ausgemustert.')->warning()->send();
                     }),
             ]);
     }

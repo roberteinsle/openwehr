@@ -2,10 +2,12 @@
 
 namespace Modules\Kleiderkammer\src\Services;
 
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Kleiderkammer\src\Enums\ItemStatus;
+use Modules\Kleiderkammer\src\Models\Disposal;
 use Modules\Kleiderkammer\src\Models\IssuedItem;
 use Modules\Kleiderkammer\src\Models\Item;
 use Modules\Kleiderkammer\src\Models\ItemGroup;
@@ -16,7 +18,8 @@ use Modules\Kleiderkammer\src\Models\Stock;
 /**
  * The Lager: everything comes in here and is issued from here. Artikeltypen "Einzeln erfasst" (PSA jacket,
  * trousers, boots …) come in piece by piece with their code; all others (gloves …) as a quantity in the
- * Massenbestand. The Inventar values what is in the Lager with the prices of the Artikeltypen.
+ * Massenbestand. An Ausgang (Ausmusterung) from the Lager or from a Kamerad is kept in kk_disposals with its reason.
+ * The Inventar values what the Kleiderkammer owns (Lager and issued) with the prices of the Artikeltypen.
  */
 class StoreService
 {
@@ -54,6 +57,86 @@ class StoreService
 
             return $stock->refresh();
         });
+    }
+
+    /** Ausgang from the Lager: one piece by its code, or a quantity of an Artikeltyp without code */
+    public function dispose(ItemType $type, ?Size $size, ?ItemGroup $group, ?string $code, int $quantity, string $reason, User $by): Disposal
+    {
+        $reason = $this->reason($reason);
+        if ($type->is_tracked) {
+            $item = Item::where('item_type_id', $type->id)->where('code', trim((string) $code))->first();
+            if (! $item) {
+                throw ValidationException::withMessages(['code' => 'Zu „'.$type->name.'“ gibt es kein Teil mit diesem Code.']);
+            }
+
+            return $this->retireItem($item, $reason, $by);
+        }
+
+        if ($quantity < 1) {
+            throw ValidationException::withMessages(['quantity' => 'Bitte eine Anzahl ab 1 eingeben.']);
+        }
+
+        return DB::transaction(function () use ($type, $size, $group, $quantity, $reason, $by) {
+            $stock = Stock::lockForUpdate()->where('item_type_id', $type->id)->where('size_id', $size?->id)->where('group_id', $group?->id)->first();
+            $available = $stock ? (int) $stock->quantity : 0;
+            if ($stock === null || $available < $quantity) {
+                throw ValidationException::withMessages(['quantity' => 'Im Lager sind nur '.$available.' davon.']);
+            }
+            $stock->decrement('quantity', $quantity);
+
+            return Disposal::create(['item_type_id' => $type->id, 'size_id' => $size?->id, 'group_id' => $group?->id,
+                'quantity' => $quantity, 'reason' => $reason, 'user_id' => $by->id]);
+        });
+    }
+
+    /** Ausmustern of one piece in the Lager (not one a Kamerad has: that goes through disposeIssued) */
+    public function retireItem(Item $item, string $reason, User $by): Disposal
+    {
+        $reason = $this->reason($reason);
+
+        return DB::transaction(function () use ($item, $reason, $by) {
+            $fresh = Item::lockForUpdate()->findOrFail($item->id);
+            if ($fresh->status === ItemStatus::Issued) {
+                throw ValidationException::withMessages(['code' => 'Das Teil '.$fresh->code.' ist ausgegeben – bitte beim Kameraden unter „Ausrüstung“ ausmustern.']);
+            }
+            if ($fresh->status === ItemStatus::Retired) {
+                throw ValidationException::withMessages(['code' => 'Das Teil '.$fresh->code.' ist schon ausgemustert.']);
+            }
+            $fresh->update(['status' => ItemStatus::Retired, 'notes' => trim(($fresh->notes ? $fresh->notes."\n" : '').'Ausgemustert: '.$reason)]);
+
+            return Disposal::create(['item_type_id' => $fresh->item_type_id, 'item_id' => $fresh->id, 'size_id' => $fresh->size_id,
+                'group_id' => $fresh->group_id, 'quantity' => 1, 'reason' => $reason, 'user_id' => $by->id]);
+        });
+    }
+
+    /** Ausmustern from a Kamerad's Ausrüstung: the loan ends, nothing goes back into the Lager */
+    public function disposeIssued(IssuedItem $issued, string $reason, User $by): Disposal
+    {
+        $reason = $this->reason($reason);
+
+        return DB::transaction(function () use ($issued, $reason, $by) {
+            $fresh = IssuedItem::lockForUpdate()->findOrFail($issued->id);
+            if ($fresh->returned_at !== null) {
+                throw ValidationException::withMessages(['reason' => 'Das ist schon zurückgegeben.']);
+            }
+            $fresh->update(['returned_at' => now(), 'notes' => trim(($fresh->notes ? $fresh->notes."\n" : '').'Ausgemustert: '.$reason)]);
+            $item = $fresh->item_id ? Item::lockForUpdate()->find($fresh->item_id) : null;
+            $item?->update(['status' => ItemStatus::Retired, 'notes' => trim(($item->notes ? $item->notes."\n" : '').'Ausgemustert: '.$reason)]);
+
+            return Disposal::create(['item_type_id' => $item ? $item->item_type_id : $fresh->item_type_id, 'item_id' => $item?->id,
+                'size_id' => $item ? $item->size_id : $fresh->size_id, 'group_id' => $item ? $item->group_id : $fresh->group_id,
+                'quantity' => $item ? 1 : (int) $fresh->quantity, 'reason' => $reason, 'from_user_id' => $fresh->user_id, 'user_id' => $by->id]);
+        });
+    }
+
+    private function reason(string $reason): string
+    {
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw ValidationException::withMessages(['reason' => 'Bitte einen Grund angeben (z. B. verschlissen, defekt).']);
+        }
+
+        return mb_substr($reason, 0, 300);
     }
 
     /**
@@ -112,7 +195,7 @@ class StoreService
     }
 
     /**
-     * Inventar: per Artikeltyp the number in the Lager with net and gross prices and sums (cent).
+     * Inventar: per Artikeltyp the number the Kleiderkammer owns (in the Lager and issued) with net and gross prices and sums (cent).
      *
      * @return array{rows: list<array{nr: int, name: string, quantity: int, net: ?int, net_sum: ?int, gross: ?int, gross_sum: ?int}>, net_total: int, gross_total: int, quantity_total: int, unpriced: int}
      */
@@ -121,9 +204,11 @@ class StoreService
         $rows = [];
         $netTotal = $grossTotal = $quantityTotal = $unpriced = 0;
         foreach ($this->types() as $type) {
+            // Everything the Kleiderkammer owns: in the Lager and issued to Kameraden; retired pieces are gone
             $quantity = $type->is_tracked
-                ? Item::where('item_type_id', $type->id)->where('status', ItemStatus::Available->value)->count()
-                : max(0, (int) Stock::where('item_type_id', $type->id)->sum('quantity'));
+                ? Item::where('item_type_id', $type->id)->whereIn('status', [ItemStatus::Available->value, ItemStatus::Issued->value])->count()
+                : max(0, (int) Stock::where('item_type_id', $type->id)->sum('quantity'))
+                    + (int) IssuedItem::where('item_type_id', $type->id)->whereNull('item_id')->whereNull('returned_at')->sum('quantity');
             if ($quantity === 0) {
                 continue;
             }

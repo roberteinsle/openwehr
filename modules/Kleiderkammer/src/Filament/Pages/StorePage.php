@@ -11,6 +11,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Modules\Kleiderkammer\src\Filament\Concerns\KleiderkammerArea;
+use Modules\Kleiderkammer\src\Models\Disposal;
 use Modules\Kleiderkammer\src\Models\ItemGroup;
 use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Models\Size;
@@ -18,7 +19,7 @@ use Modules\Kleiderkammer\src\Services\StoreService;
 
 /**
  * The Lager: one row per Artikel, a click opens its page (StoreTypePage) with the pieces or quantities;
- * the Lagereingang asks for the code where the Artikeltyp needs one. Einzelteile and Massenbestand have no
+ * the Lagereingang asks for the code where the Artikeltyp needs one, the Ausgang (Ausmustern) likewise. Einzelteile and Massenbestand have no
  * list of their own any more.
  */
 class StorePage extends Page implements HasTable
@@ -66,7 +67,57 @@ class StorePage extends Page implements HasTable
 
     protected function getHeaderActions(): array
     {
-        return [self::receiveAction()];
+        return [self::receiveAction(), self::disposeAction()];
+    }
+
+    /** The reason of an Ausmusterung, with suggestions */
+    public static function reasonField(): Forms\Components\TextInput
+    {
+        return Forms\Components\TextInput::make('reason')->label('Grund')->required()->maxLength(300)
+            ->datalist(Disposal::REASONS)->placeholder('z. B. verschlissen, defekt');
+    }
+
+    /** Ausgang = Ausmustern from the Lager: a piece by its code or a quantity; on the Artikel page with its Artikeltyp fixed */
+    public static function disposeAction(?ItemType $fixed = null): Action
+    {
+        $type = fn ($get) => $fixed ?? ItemType::find($get('item_type_id'));
+
+        return Action::make('dispose')
+            ->label('Ausgang buchen')
+            ->icon('heroicon-o-minus')
+            ->color('danger')
+            ->modalHeading($fixed ? 'Ausgang: '.$fixed->name : 'Ausgang aus dem Lager')
+            ->modalDescription('Ausmustern: Das Teil oder die Menge verlässt die Kleiderkammer endgültig (z. B. verschlissen, defekt). Was ein Kamerad hat, wird bei ihm unter „Ausrüstung“ ausgemustert.')
+            ->form([
+                Forms\Components\Select::make('item_type_id')->label('Artikeltyp')->required(! $fixed)->searchable()->live()
+                    ->options(fn () => ItemType::orderBy('name')->pluck('name', 'id'))
+                    ->visible(! $fixed)
+                    ->afterStateUpdated(function ($set) {
+                        $set('size_id', null);
+                        $set('group_id', null);
+                    }),
+                Forms\Components\TextInput::make('code')->label('Code')->maxLength(50)->autofocus()
+                    ->helperText('Der Code vom Etikett; ein Handscanner trägt ihn direkt ein.')
+                    ->required(fn ($get) => (bool) $type($get)?->is_tracked)
+                    ->visible(fn ($get) => (bool) $type($get)?->is_tracked),
+                Forms\Components\Select::make('group_id')->label('Gruppe')->live()
+                    ->options(fn ($get) => ItemGroup::where('item_type_id', $type($get)?->id)->orderBy('sort_order')->pluck('name', 'id'))
+                    ->visible(fn ($get) => $type($get) && ! $type($get)->is_tracked && ItemGroup::where('item_type_id', $type($get)->id)->exists()),
+                Forms\Components\Select::make('size_id')->label('Größe')
+                    ->options(fn ($get) => Size::where('item_type_id', $type($get)?->id)->forGroup($get('group_id'))->orderBy('sort_order')->pluck('name', 'id'))
+                    ->visible(fn ($get) => $type($get) && ! $type($get)->is_tracked && $type($get)->has_size),
+                Forms\Components\TextInput::make('quantity')->label('Anzahl')->numeric()->minValue(1)->default(1)
+                    ->required(fn ($get) => $type($get) && ! $type($get)->is_tracked)
+                    ->visible(fn ($get) => $type($get) && ! $type($get)->is_tracked),
+                self::reasonField(),
+            ])
+            ->action(function (array $data) use ($fixed) {
+                $type = $fixed ?? ItemType::findOrFail($data['item_type_id']);
+                $disposal = app(StoreService::class)->dispose($type, isset($data['size_id']) ? Size::find($data['size_id']) : null,
+                    isset($data['group_id']) ? ItemGroup::find($data['group_id']) : null, $data['code'] ?? null, (int) ($data['quantity'] ?? 1), (string) $data['reason'], auth()->user());
+                Notification::make()->warning()->title($disposal->quantity.' × „'.$type->name.'“ ausgemustert.')->send();
+            })
+            ->modalSubmitActionLabel('Ausmustern');
     }
 
     /** Lagereingang; on the Artikel page with its Artikeltyp fixed */

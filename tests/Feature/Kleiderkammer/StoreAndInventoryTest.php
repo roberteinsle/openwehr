@@ -130,7 +130,7 @@ test('the net price is typed and the gross price follows', function () {
         ->fillForm(['price_net_cents' => 'zwölf'])->call('save')->assertHasFormErrors(['price_net_cents']);
 });
 
-test('the Inventar counts what is in the Lager, with sums, as PDF and as A4 Excel', function () {
+test('the Inventar counts what the Kleiderkammer owns (Lager and issued), with sums, as PDF and as A4 Excel', function () {
     $this->store->receive($this->jacket, $this->size, null, 'WEHRPJA0001');
     $this->store->receive($this->jacket, $this->size, null, 'WEHRPJA0002');
     $issued = $this->store->receive($this->jacket, $this->size, null, 'WEHRPJA0003');
@@ -141,15 +141,16 @@ test('the Inventar counts what is in the Lager, with sums, as PDF and as A4 Exce
     $this->store->receive($rope, null, null, null, 3);
 
     $inventory = $this->store->inventory();
-    expect($inventory['rows'][0])->toBe(['nr' => 1, 'name' => 'PSA-Jacke', 'quantity' => 2, 'net' => 42000, 'net_sum' => 84000, 'gross' => 49980, 'gross_sum' => 99960])
+    // The issued jacket belongs to the Kleiderkammer too
+    expect($inventory['rows'][0])->toBe(['nr' => 1, 'name' => 'PSA-Jacke', 'quantity' => 3, 'net' => 42000, 'net_sum' => 126000, 'gross' => 49980, 'gross_sum' => 149940])
         ->and($inventory['rows'][1])->toMatchArray(['name' => 'Handschuhe', 'quantity' => 10, 'net_sum' => 29900, 'gross' => 3558, 'gross_sum' => 35580])
         ->and($inventory['rows'][2])->toMatchArray(['name' => 'Feuerwehrleine', 'net' => null, 'net_sum' => null])
-        ->and($inventory)->toMatchArray(['net_total' => 113900, 'gross_total' => 135540, 'quantity_total' => 15, 'unpriced' => 1]);
+        ->and($inventory)->toMatchArray(['net_total' => 155900, 'gross_total' => 185520, 'quantity_total' => 16, 'unpriced' => 1]);
 
     $this->actingAs($this->warden);
     Livewire::test(InventoryPage::class)
         ->assertSee('Erstellt von: Karla Kleiderwart (Kleiderwart)')
-        ->assertSee('1.139,00 €')->assertSee('1.355,40 €')->assertSee('1 Artikel ohne Preis')
+        ->assertSee('1.559,00 €')->assertSee('1.855,20 €')->assertSee('1 Artikel ohne Preis')
         ->callAction('pdf')->assertFileDownloaded('inventar-kleiderkammer-'.now('Europe/Berlin')->format('Y-m-d').'.pdf')
         ->callAction('xlsx')->assertFileDownloaded('inventar-kleiderkammer-'.now('Europe/Berlin')->format('Y-m-d').'.xlsx');
 

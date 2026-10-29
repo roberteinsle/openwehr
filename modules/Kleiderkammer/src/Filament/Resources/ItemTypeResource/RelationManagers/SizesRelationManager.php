@@ -97,12 +97,7 @@ class SizesRelationManager extends RelationManager
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make()
                     ->before(function (Size $record, Actions\DeleteAction $action) {
-                        $inUse = $record->items()->exists()
-                            || $record->stock()->exists()
-                            || IssuedItem::where('size_id', $record->id)->exists()
-                            || MemberSize::where('size_id', $record->id)->exists();
-
-                        if ($inUse) {
+                        if (self::inUse($record)) {
                             Notification::make()
                                 ->title('Größe kann nicht gelöscht werden')
                                 ->body('Es gibt Teile, Bestand, Ausgabevorgänge oder Kleiderkammerprofile mit dieser Größe.')
@@ -111,6 +106,33 @@ class SizesRelationManager extends RelationManager
                             $action->cancel();
                         }
                     }),
+            ])
+            // Several at once; sizes still in use stay and are named
+            ->toolbarActions([
+                Actions\BulkAction::make('deleteSizes')
+                    ->label('Löschen')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Markierte Größen löschen?')
+                    ->modalDescription('Größen, zu denen es Teile, Bestand, Ausgaben oder Profileinträge gibt, bleiben erhalten.')
+                    ->action(function ($records) {
+                        [$kept, $free] = $records->partition(fn (Size $size) => self::inUse($size));
+                        $free->each->delete();
+                        $note = Notification::make()->title($free->count().' '.($free->count() === 1 ? 'Größe' : 'Größen').' gelöscht.');
+                        $kept->isEmpty() ? $note->success() : $note->warning()->body('Noch verwendet und deshalb nicht gelöscht: '.$kept->pluck('name')->implode(', ').'.');
+                        $note->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
             ]);
+    }
+
+    /** Pieces, stock, issues or Kleiderkammerprofile with this size */
+    public static function inUse(Size $size): bool
+    {
+        return $size->items()->exists()
+            || $size->stock()->exists()
+            || IssuedItem::where('size_id', $size->id)->exists()
+            || MemberSize::where('size_id', $size->id)->exists();
     }
 }

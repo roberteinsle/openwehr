@@ -38,6 +38,6 @@
                 </tfoot>
             </table>
         </div>
-        <p class="inv-hint">Gezählt wird, was im Lager ist: verfügbare Einzelteile und der Massenbestand; ausgegebene und ausgemusterte Teile nicht. Preise kommen vom Artikeltyp (netto eingegeben, brutto mit {{ \Modules\Kleiderkammer\src\Models\ItemType::VAT_PERCENT }} % USt.).@if($inventory['unpriced'] > 0) {{ app(\Modules\Kleiderkammer\src\Services\InventoryExport::class)->unpricedHint($inventory['unpriced']) }}@endif</p>
+        <p class="inv-hint">Gezählt wird alles, was der Kleiderkammer gehört – im Lager und an Kameraden ausgegeben, Artikel mit Code wie Artikel mit Menge; ausgemusterte Teile nicht. Preise kommen vom Artikeltyp (netto eingegeben, brutto mit {{ \Modules\Kleiderkammer\src\Models\ItemType::VAT_PERCENT }} % USt.).@if($inventory['unpriced'] > 0) {{ app(\Modules\Kleiderkammer\src\Services\InventoryExport::class)->unpricedHint($inventory['unpriced']) }}@endif</p>
     </x-filament::section>
 </x-filament-panels::page>

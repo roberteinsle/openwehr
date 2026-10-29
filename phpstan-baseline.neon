@@ -3163,12 +3163,6 @@ parameters:
 			path: modules/Kalender/src/Services/PollService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kleiderkammer/KleiderkammerServiceProvider.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
@@ -3283,12 +3277,6 @@ parameters:
 			path: modules/Kleiderkammer/src/Filament/Resources/MemberResource/RelationManagers/IssuancesRelationManager.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kleiderkammer/src/Filament/Resources/MemberResource/RelationManagers/IssuancesRelationManager.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$size\.$#'
 			identifier: property.notFound
 			count: 1
@@ -3361,12 +3349,6 @@ parameters:
 			path: modules/Kleiderkammer/src/Filament/Resources/MemberResource/RelationManagers/IssuancesRelationManager.php
 
 		-
-			message: '#^Parameter \#2 \$itemType of method Modules\\Kleiderkammer\\src\\Services\\IssuingService\:\:issueStock\(\) expects Modules\\Kleiderkammer\\src\\Models\\ItemType, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Kleiderkammer/src/Filament/Resources/StockResource.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:withTrashed\(\)\.$#'
 			identifier: method.notFound
 			count: 2
@@ -3387,7 +3369,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 7
+			count: 3
 			path: modules/Kleiderkammer/src/Services/DataTransferService.php
 
 		-

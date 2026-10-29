@@ -12,12 +12,14 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Modules\Kleiderkammer\src\Filament\Concerns\KleiderkammerArea;
+use Modules\Kleiderkammer\src\Filament\Pages\StorePage;
 use Modules\Kleiderkammer\src\Filament\Resources\StockResource\Pages;
 use Modules\Kleiderkammer\src\Models\ItemGroup;
 use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Models\Size;
 use Modules\Kleiderkammer\src\Models\Stock;
 use Modules\Kleiderkammer\src\Services\IssuingService;
+use Modules\Kleiderkammer\src\Services\StoreService;
 
 class StockResource extends Resource
 {
@@ -164,6 +166,21 @@ class StockResource extends Resource
                     Notification::make()->title('Bestand ausgegeben.')->success()->send();
                 }),
 
+            Actions\Action::make('dispose')
+                ->label('Ausmustern')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->visible(fn (Stock $record) => $record->quantity > 0)
+                ->modalHeading('Aus dem Lager ausmustern')
+                ->modalSubmitActionLabel('Ausmustern')
+                ->form([
+                    Forms\Components\TextInput::make('quantity')->label('Anzahl')->numeric()->required()->minValue(1)->default(1),
+                    StorePage::reasonField(),
+                ])
+                ->action(function (Stock $record, array $data) {
+                    app(StoreService::class)->dispose($record->itemType, $record->size, $record->group, null, (int) $data['quantity'], (string) $data['reason'], auth()->user());
+                    Notification::make()->title((int) $data['quantity'].' ausgemustert.')->warning()->send();
+                }),
         ];
     }
 

@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Modules\Kleiderkammer\src\Enums\ItemStatus;
 use Modules\Kleiderkammer\src\Filament\Concerns\KleiderkammerArea;
+use Modules\Kleiderkammer\src\Filament\Pages\StorePage;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemResource\Pages;
 use Modules\Kleiderkammer\src\Models\Item;
 use Modules\Kleiderkammer\src\Models\ItemGroup;
@@ -23,6 +24,7 @@ use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Models\Size;
 use Modules\Kleiderkammer\src\Services\IssuingService;
 use Modules\Kleiderkammer\src\Services\LabelSheetGenerator;
+use Modules\Kleiderkammer\src\Services\StoreService;
 
 class ItemResource extends Resource
 {
@@ -223,14 +225,12 @@ class ItemResource extends Resource
                 ->label('Ausmustern')
                 ->icon('heroicon-o-trash')
                 ->color('danger')
-                ->requiresConfirmation()
-                ->modalHeading('Teil ausmustern?')
+                ->modalHeading(fn (Item $record) => 'Teil '.$record->code.' ausmustern?')
+                ->modalSubmitActionLabel('Ausmustern')
                 ->visible(fn (Item $record) => ! $record->isRetired() && ! $record->isIssued())
-                ->form([
-                    Forms\Components\Textarea::make('notes')->label('Grund / Notiz')->nullable(),
-                ])
+                ->form([StorePage::reasonField()])
                 ->action(function (Item $record, array $data) {
-                    app(IssuingService::class)->retire($record, $data['notes'] ?? '');
+                    app(StoreService::class)->retireItem($record, (string) $data['reason'], auth()->user());
                     Notification::make()->title('Teil ausgemustert.')->warning()->send();
                 }),
 

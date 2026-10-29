@@ -35,6 +35,7 @@ class Item extends Model
         ];
     }
 
+    /** @return BelongsTo<ItemType, $this> */
     public function itemType(): BelongsTo
     {
         return $this->belongsTo(ItemType::class, 'item_type_id');

@@ -16,6 +16,7 @@ use Modules\Kleiderkammer\src\Filament\Concerns\KleiderkammerArea;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemResource;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource;
 use Modules\Kleiderkammer\src\Filament\Resources\StockResource;
+use Modules\Kleiderkammer\src\Models\Disposal;
 use Modules\Kleiderkammer\src\Models\Item;
 use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Models\Stock;
@@ -72,13 +73,17 @@ class StoreTypePage extends Page implements HasTable
 
     protected function getViewData(): array
     {
-        return ['levels' => app(StoreService::class)->levels()->where('type_id', $this->itemType->id)->values()];
+        return [
+            'levels' => app(StoreService::class)->levels()->where('type_id', $this->itemType->id)->values(),
+            'disposals' => Disposal::where('item_type_id', $this->itemType->id)->with(['item', 'size', 'group', 'fromUser', 'user'])->latest('created_at')->limit(20)->get(),
+        ];
     }
 
     protected function getHeaderActions(): array
     {
         return [
             StorePage::receiveAction($this->itemType),
+            StorePage::disposeAction($this->itemType),
             Actions\Action::make('editType')->label('Artikeltyp bearbeiten')->icon('heroicon-o-pencil-square')->color('gray')
                 ->url(ItemTypeResource::getUrl('edit', ['record' => $this->itemType])),
         ];

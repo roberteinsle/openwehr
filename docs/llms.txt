@@ -28,7 +28,7 @@
 - Bestand (Kern): eine Suche und ein Scan-Feld über Fahrzeuge, Geräte, Kleiderkammer, Schlüssel und Mängel-Objekte; Ersatzbeschaffungsplan aus Lebensdauer und geplanten Fahrzeugbeschaffungen
 - Schlüsselverwaltung: Schlüssel und Transponder mit Ausgabe, unterschriebener Schlüsselquittung, Rückgabefristen, Verlust und QR-Etikett
 - Wartungsmanagement: Prüfungen nach Vorlage, unterschriebene Prüfprotokolle als PDF
-- Kleiderkammer: Lager mit Zugang (PSA einzeln mit Code, Massenartikel als Anzahl), Ausgabe und Rücknahme der Bekleidung, Größen, QR-Etiketten, Inventar mit Netto-/Bruttopreisen als PDF und Excel (DIN A4)
+- Kleiderkammer: Lager mit Zugang und Ausgang/Ausmusterung (PSA einzeln mit Code, Massenartikel als Anzahl), Ausgabe und Rücknahme der Bekleidung, Größen, QR-Etiketten, Inventar mit Netto-/Bruttopreisen als PDF und Excel (DIN A4)
 - Mängelmanagement: Mängel mit Foto per QR-Code melden – an Objekten, Fahrzeugen oder Geräten der Ausrüstung –, Bearbeitung und Zuständigkeit direkt in der App, Rückfragen an den Melder, Fotos im Verlauf, „doch nicht behoben“, Zuständige je Objekt, Erinnerung an liegengebliebene Mängel, Jahresbericht
 - Expositionen (Gefahrstoffe): Gefahrstoff-Expositionen nach Einsatz und Übung erfassen, für die Besatzung aus dem Einsatzbericht vorschlagen, verschlüsselt und 40 Jahre aufbewahrt, Meldeliste und CSV für die Zentrale Expositionsdatenbank (ZED) der DGUV, Expositionsnachweis für die Einsatzkraft
 - Gefahrstoffe: Gefahrnummern der Warntafel aus dem ADR nachschlagen, Gefahrenmatrix AAAA-C-EEEE und GAMS, auch ohne Netz; im Einsatzbericht bei Gefahrstoff-Einsätzen

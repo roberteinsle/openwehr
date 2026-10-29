@@ -46,6 +46,7 @@ class IssuedItem extends Model
         return $this->belongsTo(Item::class, 'item_id');
     }
 
+    /** @return BelongsTo<ItemType, $this> */
     public function itemType(): BelongsTo
     {
         return $this->belongsTo(ItemType::class, 'item_type_id');

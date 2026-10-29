@@ -42,7 +42,7 @@
             <tr class="total"><td></td><td>Gesamtsumme</td><td class="num">{{ $inventory['quantity_total'] }}</td><td></td><td class="num">{{ $euro($inventory['net_total']) }}</td><td></td><td class="num">{{ $euro($inventory['gross_total']) }}</td></tr>
         </tfoot>
     </table>
-    <p class="hint">Bestand im Lager: einzeln erfasste Teile, die verfügbar sind, und der Massenbestand; ausgegebene und ausgemusterte Teile zählen nicht. Brutto mit {{ \Modules\Kleiderkammer\src\Models\ItemType::VAT_PERCENT }} % USt.@if($inventory['unpriced'] > 0) {{ app(\Modules\Kleiderkammer\src\Services\InventoryExport::class)->unpricedHint($inventory['unpriced']) }}@endif</p>
+    <p class="hint">Gezählt wird alles, was der Kleiderkammer gehört – im Lager und an Kameraden ausgegeben, Artikel mit Code wie Artikel mit Menge; ausgemusterte Teile zählen nicht. Brutto mit {{ \Modules\Kleiderkammer\src\Models\ItemType::VAT_PERCENT }} % USt.@if($inventory['unpriced'] > 0) {{ app(\Modules\Kleiderkammer\src\Services\InventoryExport::class)->unpricedHint($inventory['unpriced']) }}@endif</p>
     <p class="sign">Datum, Unterschrift</p>
 </body>
 </html>
