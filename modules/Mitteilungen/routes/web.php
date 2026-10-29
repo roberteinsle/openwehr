@@ -46,6 +46,9 @@ Route::prefix('mitteilungen')->name('mitteilungen.')
         })->whereNumber('file')->name('file');
 
         Route::get('/verwalten', fn () => view('mitteilungen::pages.manage'))->middleware('can:post-announcements')->name('manage');
+        Route::get('/neu', fn () => view('mitteilungen::pages.editor', ['announcement' => null]))->middleware('can:post-announcements')->name('create');
+        Route::get('/{announcement}/bearbeiten', fn (Announcement $announcement) => view('mitteilungen::pages.editor', ['announcement' => $announcement]))
+            ->middleware('can:post-announcements')->whereNumber('announcement')->name('edit');
 
         // "Ausblenden" on the start page; a plain form, so it also works from the static card
         Route::post('/{announcement}/ausblenden', function (Announcement $announcement, AnnouncementService $announcements) {

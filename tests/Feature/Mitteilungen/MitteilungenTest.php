@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
+use Modules\Mitteilungen\src\Livewire\Editor;
 use Modules\Mitteilungen\src\Livewire\Manage;
 use Modules\Mitteilungen\src\Models\Announcement;
 use Modules\Mitteilungen\src\Notifications\AnnouncementNotification;
@@ -72,7 +73,7 @@ test('a notice is written, shown to its audience and can be mailed', function ()
     $outsider = User::factory()->create();
     $outsider->moduleAccess()->create(['module' => 'mitteilungen']);
 
-    Livewire::actingAs($this->redakteur)->test(Manage::class)
+    Livewire::actingAs($this->redakteur)->test(Editor::class)
         ->set('title', 'Zeltlager-Anmeldung bis Freitag')
         ->set('body', 'Bitte bei Bernd abgeben.')
         ->set('groupIds', [(string) $youth->id])
@@ -114,7 +115,7 @@ test('normal notices can be dismissed on the start page, important ones stay and
 });
 
 test('a period is entered as TT.MM.JJJJ and must be in order', function () {
-    Livewire::actingAs($this->redakteur)->test(Manage::class)
+    Livewire::actingAs($this->redakteur)->test(Editor::class)
         ->set('title', 'Test')->set('visibleFrom', '2027-01-01')->call('save')->assertHasErrors('visibleFrom')
         ->set('visibleFrom', '10.01.2027')->set('visibleUntil', '01.01.2027')->call('save')->assertHasErrors('visibleUntil')
         ->set('visibleUntil', '31.01.2027')->call('save')->assertHasNoErrors();
@@ -153,7 +154,7 @@ test('Mitteilungen for a Funktion, with attachments, Lesebestätigung and remind
     $other = User::factory()->create(['name' => 'Fritz Feuer']);
     $other->moduleAccess()->create(['module' => 'mitteilungen']);
 
-    Livewire::actingAs($this->redakteur)->test(Manage::class)
+    Livewire::actingAs($this->redakteur)->test(Editor::class)
         ->set('title', 'Neue Betriebsanweisung Pumpe')->set('functionIds', [(string) $fn->id])->set('needsAck', true)
         ->set('uploads', [UploadedFile::fake()->createWithContent('Betriebsanweisung.pdf', "%PDF-1.4\n%%EOF")])->call('save')->assertHasNoErrors();
     $a = Announcement::sole();
@@ -194,13 +195,13 @@ test('the text is Markdown: formatted on the start page, in the list and in the 
     Notification::fake();
     $body = "Hallo zusammen,\nzwei Neuerungen:\n\n## Anmelden mit Code\n\n- **Code** aus der Mail\n- [Hilfe](https://example.com/hilfe)\n\n1. erst dies\n2. dann das";
 
-    Livewire::actingAs($this->redakteur)->test(Manage::class)
+    Livewire::actingAs($this->redakteur)->test(Editor::class)
         ->set('title', 'Neu in der App')->set('body', $body)
         ->set('preview', true)
         ->assertSee('So erscheint die Mitteilung auf der Startseite')
         ->assertSeeHtml('<h2>Anmelden mit Code</h2>')->assertSeeHtml('<strong>Code</strong>')->assertDontSee('**Code**')
         ->set('preview', false)->assertSee('Formatieren mit Markdown')
-        ->set('notify', 'mail')->call('save')->assertHasNoErrors()->assertSet('preview', false);
+        ->set('notify', 'mail')->call('save')->assertHasNoErrors()->assertRedirect(route('mitteilungen.manage'));
 
     // Start page and list: rendered, a single line break stays a break
     $this->actingAs($this->member)->get(route('home'))
@@ -227,18 +228,50 @@ test('Markdown never lets HTML, scripts or outside images through', function () 
 
 test('a new notice goes to bell and push by default; an edit notifies nobody unless chosen', function () {
     Notification::fake();
-    $form = Livewire::actingAs($this->redakteur)->test(Manage::class)->assertSet('notify', 'push')
-        ->set('title', 'Dienst heute erst um 19:30')->call('save')->assertHasNoErrors()
-        ->assertSee('in die Glocke und als Push verschickt');
+    Livewire::actingAs($this->redakteur)->test(Editor::class)->assertSet('notify', 'push')
+        ->set('title', 'Dienst heute erst um 19:30')->call('save')->assertHasNoErrors()->assertRedirect(route('mitteilungen.manage'));
+    expect(session('mitteilungen.flash'))->toContain('in die Glocke und als Push verschickt');
     Notification::assertSentTo($this->member, AnnouncementNotification::class, fn ($n, array $channels) => $channels === ['database']);
 
     Notification::fake();
-    $form->call('edit', Announcement::sole()->id)->assertSet('notify', 'none')
+    $a = Announcement::sole();
+    Livewire::actingAs($this->redakteur)->test(Editor::class, ['announcement' => $a])->assertSet('notify', 'none')->assertSet('title', 'Dienst heute erst um 19:30')
         ->set('title', 'Dienst heute erst um 19:45')->call('save')->assertHasNoErrors();
+    expect($a->fresh()->title)->toBe('Dienst heute erst um 19:45');
     Notification::assertNothingSent();
 
-    $form->call('edit', Announcement::sole()->id)->set('notify', 'mail')->call('save');
+    Livewire::actingAs($this->redakteur)->test(Editor::class, ['announcement' => $a])->set('notify', 'mail')->call('save');
     Notification::assertSentTo($this->member, AnnouncementNotification::class, fn ($n, array $channels) => in_array('mail', $channels, true));
 
-    $form->set('title', 'X')->set('notify', 'alle')->call('save')->assertHasErrors('notify');
+    Livewire::actingAs($this->redakteur)->test(Editor::class)->set('title', 'X')->set('notify', 'alle')->call('save')->assertHasErrors('notify');
+});
+
+test('Verwalten is an overview by state; new and edit are pages of their own, linked from the list for the Redakteure', function () {
+    $current = Announcement::create(['title' => 'Grillabend Samstag', 'created_by' => $this->redakteur->id]);
+    Announcement::create(['title' => 'Kommt noch', 'visible_from' => now()->addWeek()]);
+    Announcement::create(['title' => 'Altes Grillfest', 'visible_until' => now()->subDay()]);
+
+    $this->actingAs($this->redakteur)->get(route('mitteilungen.manage'))->assertOk()
+        ->assertSeeInOrder(['Neue Mitteilung', 'Aktuell sichtbar', 'Grillabend Samstag', 'Geplant', 'Kommt noch', 'Abgelaufen', 'Altes Grillfest'])
+        ->assertSee(route('mitteilungen.edit', $current), false)->assertDontSee('wire:model="title"', false);
+    $this->get(route('mitteilungen.create'))->assertOk()->assertSee('Neue Mitteilung')->assertSee('Veröffentlichen');
+    $this->get(route('mitteilungen.edit', $current))->assertOk()->assertSee('Mitteilung bearbeiten')->assertSee('Grillabend Samstag');
+
+    // The list of all Mitteilungen: edit link for Redakteure only
+    $this->get(route('mitteilungen.index'))->assertSee(route('mitteilungen.edit', $current), false)->assertSee(route('mitteilungen.create'), false);
+    $this->actingAs($this->member)->get(route('mitteilungen.index'))->assertOk()->assertDontSee(route('mitteilungen.edit', $current), false);
+    $this->get(route('mitteilungen.edit', $current))->assertForbidden();
+    $this->get(route('mitteilungen.create'))->assertForbidden();
+});
+
+test('Kameraden without the role can not use the editor or the overview, not even through Livewire', function () {
+    $a = Announcement::create(['title' => 'Grillabend Samstag']);
+    Livewire::actingAs($this->member)->test(Editor::class)->assertForbidden();
+    Livewire::actingAs($this->member)->test(Manage::class)->assertForbidden();
+
+    // Attachments of another Mitteilung can't be removed from the editor of this one
+    $other = Announcement::create(['title' => 'Andere']);
+    $file = $other->files()->create(['filename' => 'x.pdf', 'mime' => 'application/pdf', 'size' => 3, 'data' => base64_encode('pdf')]);
+    Livewire::actingAs($this->redakteur)->test(Editor::class, ['announcement' => $a])->call('deleteFile', $file->id);
+    expect($file->fresh())->not->toBeNull();
 });

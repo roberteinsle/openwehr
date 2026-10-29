@@ -16,7 +16,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
-use Modules\Mitteilungen\src\Livewire\Manage;
+use Modules\Mitteilungen\src\Livewire\Editor;
 use Psr\Http\Client\ClientInterface;
 
 /** Records what would go to the push services; the endpoint "gone" is unknown there */
@@ -61,8 +61,8 @@ test('a device is switched on in the profile; every entry under the bell goes to
     $editor = User::factory()->create(['is_admin' => true]);
 
     // A short notice: bell and push, no mail
-    Livewire::actingAs($editor)->test(Manage::class)
-        ->set('title', 'Dienst heute erst um 19:30')->set('notify', 'push')->call('save')->assertSee('als Push verschickt');
+    Livewire::actingAs($editor)->test(Editor::class)
+        ->set('title', 'Dienst heute erst um 19:30')->set('notify', 'push')->call('save')->assertRedirect(route('mitteilungen.manage'));
 
     expect($this->push->sent)->toHaveCount(1)
         ->and($this->push->sent[0]['title'])->toBe('Mitteilung: Dienst heute erst um 19:30')

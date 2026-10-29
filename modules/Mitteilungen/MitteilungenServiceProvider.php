@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Modules\Mitteilungen\src\Livewire\Editor;
 use Modules\Mitteilungen\src\Livewire\Manage;
 use Modules\Mitteilungen\src\Models\Announcement;
 use Modules\Mitteilungen\src\Services\AnnouncementService;
@@ -35,6 +36,7 @@ class MitteilungenServiceProvider extends ServiceProvider
         Gate::define('post-announcements', fn (User $user) => $user->canPostAnnouncements());
 
         Livewire::component('mitteilungen.manage', Manage::class);
+        Livewire::component('mitteilungen.editor', Editor::class);
 
         app(ModuleRegistry::class)->register(
             'mitteilungen',
@@ -60,7 +62,7 @@ class MitteilungenServiceProvider extends ServiceProvider
         app(ModuleRegistry::class)->navigation('mitteilungen', fn (User $u) => [
             'tabs' => [
                 ModuleNav::tab('Mitteilungen', 'mitteilungen.index'),
-                $u->can('post-announcements') ? ModuleNav::tab('Verwalten', 'mitteilungen.manage') : null,
+                $u->can('post-announcements') ? ModuleNav::tab('Verwalten', 'mitteilungen.manage', ['mitteilungen.create', 'mitteilungen.edit']) : null,
             ],
         ]);
     }

@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
             <h1 class="text-xl font-bold text-gray-900">Mitteilungen</h1>
             @can('post-announcements')
-                <a href="{{ route('mitteilungen.manage') }}" class="inline-flex items-center rounded-lg bg-fw-red px-3 py-1.5 text-sm font-semibold text-white hover:bg-fw-red-dark">Mitteilungen verwalten</a>
+                <x-page-action :href="route('mitteilungen.create')">Neue Mitteilung</x-page-action>
             @endcan
         </div>
         <div class="flex flex-wrap items-center gap-3 text-sm">
@@ -26,6 +26,12 @@
                     @if($announcement->visible_until) · bis {{ $announcement->visible_until->setTimezone('Europe/Berlin')->format('d.m.Y') }}@endif
                     @if(in_array($announcement->id, $dismissed, true)) · auf der Startseite ausgeblendet @endif
                 </p>
+                @can('post-announcements')
+                    <a href="{{ route('mitteilungen.edit', $announcement) }}" class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-fw-navy underline hover:text-fw-red">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.2 5.2l3.6 3.6M4 20l4.5-1 10.3-10.3a2.5 2.5 0 00-3.5-3.5L5 15.5 4 20z"/></svg>
+                        Bearbeiten
+                    </a>
+                @endcan
             </article>
         @empty
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-sm text-gray-600">{{ $archive ? 'Keine abgelaufenen Mitteilungen.' : 'Zurzeit gibt es keine Mitteilungen.' }}</div>

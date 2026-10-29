@@ -10,10 +10,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * A notice on the start page; important ones are highlighted and cannot be dismissed. Meant for Abteilungen
  * and/or Funktionen (empty = everyone), with attachments and, on request, a Lesebestätigung.
+ *
+ * @property int $id
+ * @property string $title
+ * @property string|null $body
+ * @property bool $important
+ * @property bool $needs_ack
+ * @property Carbon|null $visible_from
+ * @property Carbon|null $visible_until
+ * @property int|null $created_by
  */
 class Announcement extends Model
 {
