@@ -47,14 +47,20 @@
             @error('body')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="block text-sm text-gray-700">Sichtbar ab (optional)
-                <input type="text" wire:model="visibleFrom" placeholder="TT.MM.JJJJ" maxlength="10" x-mask="99.99.9999" class="mt-1 {{ $input }}">
-                @error('visibleFrom')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
-            </label>
-            <label class="block text-sm text-gray-700">Sichtbar bis einschließlich (optional)
-                <input type="text" wire:model="visibleUntil" placeholder="TT.MM.JJJJ" maxlength="10" x-mask="99.99.9999" class="mt-1 {{ $input }}">
-                @error('visibleUntil')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
-            </label>
+            @php($picker = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-fw-red focus:ring-fw-red')
+            @foreach(['visibleFrom' => ['Sichtbar ab (optional)', 'Ohne Uhrzeit ab 0:00 Uhr'], 'visibleUntil' => ['Sichtbar bis einschließlich (optional)', 'Ohne Uhrzeit bis 23:59 Uhr']] as $field => [$label, $hint])
+                <fieldset>
+                    <legend class="text-sm text-gray-700">{{ $label }}</legend>
+                    {{-- The browser's own pickers: a calendar for the date; the time is typed (e.g. 1930) or picked on the phone --}}
+                    <div class="mt-1 flex gap-2">
+                        <input type="date" wire:model="{{ $field }}" aria-label="{{ $label }}: Datum" class="{{ $picker }} min-w-0 flex-1">
+                        <input type="time" wire:model="{{ $field }}Time" aria-label="{{ $label }}: Uhrzeit" class="{{ $picker }} w-32 shrink-0">
+                    </div>
+                    <p class="mt-0.5 text-xs text-gray-500">{{ $hint }}</p>
+                    @error($field)<span class="text-sm text-red-600">{{ $message }}</span>@enderror
+                    @error($field.'Time')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
+                </fieldset>
+            @endforeach
         </div>
         <div>
             <p class="text-sm text-gray-700 mb-1">Für (leer = alle Kameraden)</p>

@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $visible_from
  * @property Carbon|null $visible_until
  * @property int|null $created_by
+ * @property Carbon $created_at
  */
 class Announcement extends Model
 {
@@ -32,6 +33,18 @@ class Announcement extends Model
     protected function casts(): array
     {
         return ['important' => 'boolean', 'needs_ack' => 'boolean', 'visible_from' => 'datetime', 'visible_until' => 'datetime'];
+    }
+
+    /** "29.10.2026 19:30 – 31.10.2026" in Berlin time; a time only where one was set (not 0:00 at the start, 23:59 at the end) */
+    public function periodLabel(): string
+    {
+        $show = function (Carbon $at, string $wholeDay): string {
+            $at = $at->copy()->setTimezone('Europe/Berlin');
+
+            return $at->format('d.m.Y').($at->format('H:i') !== $wholeDay ? ' '.$at->format('H:i') : '');
+        };
+
+        return $show($this->visible_from ?? $this->created_at, '00:00').($this->visible_until ? ' – '.$show($this->visible_until, '23:59') : '');
     }
 
     public function author(): BelongsTo

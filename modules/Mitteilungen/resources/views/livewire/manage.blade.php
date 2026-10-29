@@ -29,7 +29,7 @@
                                     @if($a->needs_ack)<span class="rounded bg-fw-navy/10 px-1.5 py-0.5 font-medium text-fw-navy">Lesebestätigung</span>@endif
                                     @if($a->files->isNotEmpty())<span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">📎 {{ $a->files->count() }}</span>@endif
                                     <span class="text-gray-500">
-                                        {{ ($a->visible_from ?? $a->created_at)->setTimezone('Europe/Berlin')->format('d.m.Y') }}@if($a->visible_until) – {{ $a->visible_until->setTimezone('Europe/Berlin')->format('d.m.Y') }}@endif
+                                        {{ $a->periodLabel() }}
                                         · {{ $a->groups->isEmpty() && $a->functions->isEmpty() ? 'alle Kameraden' : $a->groups->pluck('name')->merge($a->functions->pluck('name'))->implode(', ') }}
                                         · {{ $a->author?->name ?? 'Wehrführung' }}
                                     </span>

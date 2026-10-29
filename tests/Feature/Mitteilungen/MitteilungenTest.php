@@ -114,15 +114,26 @@ test('normal notices can be dismissed on the start page, important ones stay and
     $this->actingAs($this->member)->get('/mitteilungen')->assertSee('Grillabend Samstag')->assertSee('auf der Startseite ausgeblendet');
 });
 
-test('a period is entered as TT.MM.JJJJ and must be in order', function () {
+test('the period is picked as date with an optional time and must be in order', function () {
     Livewire::actingAs($this->redakteur)->test(Editor::class)
-        ->set('title', 'Test')->set('visibleFrom', '2027-01-01')->call('save')->assertHasErrors('visibleFrom')
-        ->set('visibleFrom', '10.01.2027')->set('visibleUntil', '01.01.2027')->call('save')->assertHasErrors('visibleUntil')
-        ->set('visibleUntil', '31.01.2027')->call('save')->assertHasNoErrors();
+        ->set('title', 'Test')->set('visibleFrom', '10.01.2027')->call('save')->assertHasErrors('visibleFrom')
+        ->set('visibleFrom', '')->set('visibleFromTime', '19:30')->call('save')->assertHasErrors(['visibleFrom' => 'required_with'])
+        ->set('visibleFrom', '2027-01-10')->set('visibleFromTime', '19.30 Uhr')->call('save')->assertHasErrors('visibleFromTime')
+        ->set('visibleFromTime', '19:30')->set('visibleUntil', '2027-01-10')->set('visibleUntilTime', '18:00')->call('save')->assertHasErrors('visibleUntil')
+        ->set('visibleUntil', '2027-01-31')->set('visibleUntilTime', '')->call('save')->assertHasNoErrors();
 
     $a = Announcement::sole();
-    expect($a->visible_from->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('10.01.2027 00:00')
-        ->and($a->visible_until->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('31.01.2027 23:59');
+    expect($a->visible_from->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('10.01.2027 19:30')
+        ->and($a->visible_until->setTimezone('Europe/Berlin')->format('d.m.Y H:i:s'))->toBe('31.01.2027 23:59:59')
+        ->and($a->periodLabel())->toBe('10.01.2027 19:30 – 31.01.2027');
+
+    // Editing shows date and time again; a whole day leaves the time empty
+    Livewire::actingAs($this->redakteur)->test(Editor::class, ['announcement' => $a])
+        ->assertSet('visibleFrom', '2027-01-10')->assertSet('visibleFromTime', '19:30')
+        ->assertSet('visibleUntil', '2027-01-31')->assertSet('visibleUntilTime', '')
+        ->set('visibleUntilTime', '12:00')->call('save')->assertHasNoErrors();
+    expect($a->fresh()->visible_until->setTimezone('Europe/Berlin')->format('d.m.Y H:i'))->toBe('31.01.2027 12:00');
+    $this->actingAs($this->redakteur)->get(route('mitteilungen.create'))->assertSee('type="date"', false)->assertSee('type="time"', false);
 });
 
 test('without access to the module no notices appear', function () {

@@ -27,9 +27,14 @@ class Editor extends Component
 
     public bool $important = false;
 
+    /** Visibility as date (Y-m-d, the browser's date picker) and optional time (H:i): without a time from 0:00, until 23:59 */
     public string $visibleFrom = '';
 
+    public string $visibleFromTime = '';
+
     public string $visibleUntil = '';
+
+    public string $visibleUntilTime = '';
 
     /** @var array<int, string> */
     public array $groupIds = [];
@@ -67,8 +72,12 @@ class Editor extends Component
         $this->title = $announcement->title;
         $this->body = (string) $announcement->body;
         $this->important = (bool) $announcement->important;
-        $this->visibleFrom = $announcement->visible_from?->setTimezone('Europe/Berlin')->format('d.m.Y') ?? '';
-        $this->visibleUntil = $announcement->visible_until?->setTimezone('Europe/Berlin')->format('d.m.Y') ?? '';
+        $from = $announcement->visible_from?->copy()->setTimezone('Europe/Berlin');
+        $until = $announcement->visible_until?->copy()->setTimezone('Europe/Berlin');
+        $this->visibleFrom = $from?->format('Y-m-d') ?? '';
+        $this->visibleFromTime = $from && $from->format('H:i') !== '00:00' ? $from->format('H:i') : '';
+        $this->visibleUntil = $until?->format('Y-m-d') ?? '';
+        $this->visibleUntilTime = $until && $until->format('H:i') !== '23:59' ? $until->format('H:i') : '';
         $this->groupIds = $announcement->groups()->pluck('groups.id')->map(fn ($id) => (string) $id)->all();
         $this->functionIds = $announcement->functions()->pluck('member_functions.id')->map(fn ($id) => (string) $id)->all();
         $this->needsAck = (bool) $announcement->needs_ack;
@@ -81,21 +90,35 @@ class Editor extends Component
             'title' => ['required', 'string', 'max:150'],
             'body' => ['nullable', 'string', 'max:5000'],
             'notify' => ['required', 'in:none,push,mail'],
-            'visibleFrom' => ['nullable', 'date_format:d.m.Y'],
-            'visibleUntil' => ['nullable', 'date_format:d.m.Y'],
+            'visibleFrom' => ['nullable', 'date_format:Y-m-d', 'required_with:visibleFromTime'],
+            'visibleFromTime' => ['nullable', 'date_format:H:i'],
+            'visibleUntil' => ['nullable', 'date_format:Y-m-d', 'required_with:visibleUntilTime'],
+            'visibleUntilTime' => ['nullable', 'date_format:H:i'],
             'groupIds.*' => ['exists:groups,id'],
             'functionIds.*' => ['exists:member_functions,id'],
             'uploads.*' => ['file', 'max:'.AnnouncementFile::MAX_KB],
         ], [
             'uploads.*.max' => 'Eine Datei ist zu groß (höchstens 10 MB).',
             'title.required' => 'Bitte gib einen Titel an.',
-            'visibleFrom.date_format' => 'Bitte im Format TT.MM.JJJJ.',
-            'visibleUntil.date_format' => 'Bitte im Format TT.MM.JJJJ.',
+            'visibleFrom.date_format' => 'Bitte ein gültiges Datum wählen.',
+            'visibleUntil.date_format' => 'Bitte ein gültiges Datum wählen.',
+            'visibleFrom.required_with' => 'Zur Uhrzeit gehört ein Datum.',
+            'visibleUntil.required_with' => 'Zur Uhrzeit gehört ein Datum.',
+            'visibleFromTime.date_format' => 'Bitte als Uhrzeit, z. B. 19:30.',
+            'visibleUntilTime.date_format' => 'Bitte als Uhrzeit, z. B. 19:30.',
         ]);
 
-        // Dates are whole days in Berlin: from the start of the first to the end of the last
-        $from = filled($this->visibleFrom) ? Carbon::createFromFormat('!d.m.Y', $this->visibleFrom, 'Europe/Berlin')->startOfDay()->utc() : null;
-        $until = filled($this->visibleUntil) ? Carbon::createFromFormat('!d.m.Y', $this->visibleUntil, 'Europe/Berlin')->endOfDay()->utc() : null;
+        // Times are Berlin time; without one the whole day counts (from 0:00, until 23:59:59)
+        $from = filled($this->visibleFrom) ? Carbon::createFromFormat('!Y-m-d', $this->visibleFrom, 'Europe/Berlin')->startOfDay() : null;
+        if ($from && filled($this->visibleFromTime)) {
+            $from->setTimeFromTimeString($this->visibleFromTime);
+        }
+        $until = filled($this->visibleUntil) ? Carbon::createFromFormat('!Y-m-d', $this->visibleUntil, 'Europe/Berlin')->endOfDay() : null;
+        if ($until && filled($this->visibleUntilTime)) {
+            $until->setTimeFromTimeString($this->visibleUntilTime)->second(59);
+        }
+        $from = $from?->utc();
+        $until = $until?->utc();
 
         if ($from && $until && $until->lt($from)) {
             $this->addError('visibleUntil', '„Bis“ liegt vor „ab“.');
