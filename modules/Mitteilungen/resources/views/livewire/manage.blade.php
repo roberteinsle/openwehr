@@ -14,7 +14,41 @@
             <input type="text" wire:model="title" maxlength="150" placeholder="Titel" class="{{ $input }}">
             @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
-        <textarea wire:model="body" rows="4" maxlength="5000" placeholder="Text (optional)" class="{{ $input }}"></textarea>
+        <div>
+            <div class="flex items-center gap-1 text-sm" role="tablist">
+                <button type="button" role="tab" wire:click="$set('preview', false)" aria-selected="{{ $preview ? 'false' : 'true' }}" class="rounded-t-lg px-3 py-1.5 {{ $preview ? 'text-gray-500 hover:text-gray-800' : 'bg-gray-100 font-semibold text-gray-900' }}">Schreiben</button>
+                <button type="button" role="tab" wire:click="$set('preview', true)" aria-selected="{{ $preview ? 'true' : 'false' }}" class="rounded-t-lg px-3 py-1.5 {{ $preview ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-500 hover:text-gray-800' }}">Vorschau</button>
+            </div>
+            @if($preview)
+                {{-- As on the start page: orange card, red when important --}}
+                <div class="rounded-b-lg rounded-tr-lg bg-gray-100 p-3">
+                    <article class="rounded-2xl p-4 shadow-sm text-white {{ $important ? 'bg-fw-red-dark' : 'bg-fw-orange' }}">
+                        <p class="text-xs font-bold uppercase tracking-wide text-white/90">{{ $important ? 'Wichtige Mitteilung' : 'Mitteilung' }}</p>
+                        <p class="mt-1 text-base font-bold">{{ filled($title) ? $title : 'Titel' }}</p>
+                        @if(filled($body))
+                            <div class="md mt-1 text-sm font-medium">{{ \App\Support\Markdown::html($body) }}</div>
+                        @else
+                            <p class="mt-1 text-sm text-white/80">Noch kein Text.</p>
+                        @endif
+                    </article>
+                    <p class="mt-2 text-xs text-gray-500">So erscheint die Mitteilung auf der Startseite. In der E-Mail kommt die Formatierung mit.</p>
+                </div>
+            @else
+                <textarea wire:model="body" rows="10" maxlength="5000" placeholder="Text (optional)" class="{{ $input }} rounded-tl-none font-mono"></textarea>
+                <details class="mt-1 text-xs text-gray-500">
+                    <summary class="cursor-pointer select-none">Formatieren mit Markdown</summary>
+                    <div class="mt-1 grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 font-mono">
+                        <span>**fett** · *kursiv* · ~~durchgestrichen~~</span>
+                        <span>## Zwischenüberschrift</span>
+                        <span>- Punkt einer Liste</span>
+                        <span>1. nummerierte Liste</span>
+                        <span>[Linktext](https://…)</span>
+                        <span>Leerzeile = neuer Absatz</span>
+                    </div>
+                </details>
+            @endif
+            @error('body')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label class="block text-sm text-gray-700">Sichtbar ab (optional)
                 <input type="text" wire:model="visibleFrom" placeholder="TT.MM.JJJJ" maxlength="10" x-mask="99.99.9999" class="mt-1 {{ $input }}">

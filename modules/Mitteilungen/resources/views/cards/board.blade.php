@@ -14,7 +14,7 @@
                     </p>
                     <p class="mt-1 text-base font-bold">{{ $announcement->title }}</p>
                     @if(filled($announcement->body))
-                        <p class="mt-1 text-sm font-medium whitespace-pre-line">{{ $announcement->body }}</p>
+                        <div class="md mt-1 text-sm font-medium">{{ \App\Support\Markdown::html($announcement->body) }}</div>
                     @endif
                     @include('mitteilungen::partials.extras', ['announcement' => $announcement, 'acknowledged' => $acknowledged, 'light' => true])
                     <p class="mt-2 text-xs text-white/85">{{ $announcement->author?->name ?? 'Wehrführung' }} · {{ ($announcement->visible_from ?? $announcement->created_at)->setTimezone('Europe/Berlin')->format('d.m.Y') }}</p>

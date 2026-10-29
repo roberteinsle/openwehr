@@ -19,7 +19,7 @@
                     @if($announcement->important)<span class="mr-1 inline-block rounded bg-red-600 px-1.5 py-0.5 text-xs font-bold uppercase text-white">Wichtig</span>@endif
                     {{ $announcement->title }}
                 </p>
-                @if(filled($announcement->body))<p class="mt-1 text-sm whitespace-pre-line {{ $announcement->important ? 'text-red-900' : 'text-gray-700' }}">{{ $announcement->body }}</p>@endif
+                @if(filled($announcement->body))<div class="md mt-1 text-sm {{ $announcement->important ? 'text-red-900' : 'text-gray-700' }}">{{ \App\Support\Markdown::html($announcement->body) }}</div>@endif
                 @include('mitteilungen::partials.extras', ['announcement' => $announcement, 'acknowledged' => $acknowledged])
                 <p class="mt-2 text-xs text-gray-500">
                     {{ $announcement->author?->name ?? 'Wehrführung' }} · {{ ($announcement->visible_from ?? $announcement->created_at)->setTimezone('Europe/Berlin')->format('d.m.Y') }}

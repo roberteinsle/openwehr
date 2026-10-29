@@ -51,6 +51,9 @@ class Manage extends Component
 
     public ?string $flash = null;
 
+    /** The text as the Kameraden will see it (Markdown rendered), instead of the text field */
+    public bool $preview = false;
+
     public function edit(int $id): void
     {
         $a = Announcement::with('groups')->findOrFail($id);
@@ -66,11 +69,12 @@ class Manage extends Component
         $this->uploads = [];
         $this->mail = false;
         $this->push = false;
+        $this->preview = false;
     }
 
     public function cancel(): void
     {
-        $this->reset('editingId', 'title', 'body', 'important', 'visibleFrom', 'visibleUntil', 'groupIds', 'functionIds', 'needsAck', 'uploads', 'mail', 'push');
+        $this->reset('editingId', 'title', 'body', 'important', 'visibleFrom', 'visibleUntil', 'groupIds', 'functionIds', 'needsAck', 'uploads', 'mail', 'push', 'preview');
     }
 
     public function save(AnnouncementService $announcements): void

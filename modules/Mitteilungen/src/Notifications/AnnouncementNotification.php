@@ -4,6 +4,7 @@ namespace Modules\Mitteilungen\src\Notifications;
 
 use App\Notifications\Concerns\InApp;
 use App\Services\OrganizationSettings;
+use App\Support\Markdown;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Modules\Mitteilungen\src\Models\Announcement;
@@ -23,7 +24,8 @@ class AnnouncementNotification extends Notification
             ->line('**'.$this->announcement->title.'**');
 
         if (filled($this->announcement->body)) {
-            $mail->line($this->announcement->body);
+            // Rendered like in the app (line() would join all lines into one paragraph)
+            $mail->line(Markdown::html($this->announcement->body));
         }
 
         if ($this->announcement->files()->exists()) {

@@ -5,6 +5,7 @@ use App\Models\Group;
 use App\Models\MemberFunction;
 use App\Models\Module;
 use App\Models\User;
+use App\Support\Markdown;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -187,4 +188,39 @@ test('the archive shows Mitteilungen whose time is over; a filter shows only imp
     $this->actingAs($this->member)->get(route('mitteilungen.index'))->assertSee('Neue Alarmordnung')->assertSee('Kuchen')->assertDontSee('Altes Grillfest');
     $this->get(route('mitteilungen.index', ['wichtig' => 1]))->assertSee('Neue Alarmordnung')->assertDontSee('Kuchen');
     $this->get(route('mitteilungen.index', ['ansicht' => 'archiv']))->assertSee('Altes Grillfest')->assertDontSee('Kuchen');
+});
+
+test('the text is Markdown: formatted on the start page, in the list and in the mail, with a preview while writing', function () {
+    Notification::fake();
+    $body = "Hallo zusammen,\nzwei Neuerungen:\n\n## Anmelden mit Code\n\n- **Code** aus der Mail\n- [Hilfe](https://example.com/hilfe)\n\n1. erst dies\n2. dann das";
+
+    Livewire::actingAs($this->redakteur)->test(Manage::class)
+        ->set('title', 'Neu in der App')->set('body', $body)
+        ->set('preview', true)
+        ->assertSee('So erscheint die Mitteilung auf der Startseite')
+        ->assertSeeHtml('<h2>Anmelden mit Code</h2>')->assertSeeHtml('<strong>Code</strong>')->assertDontSee('**Code**')
+        ->set('preview', false)->assertSee('Formatieren mit Markdown')
+        ->set('mail', true)->call('save')->assertHasNoErrors()->assertSet('preview', false);
+
+    // Start page and list: rendered, a single line break stays a break
+    $this->actingAs($this->member)->get(route('home'))
+        ->assertSeeHtml('Hallo zusammen,<br>')->assertSeeHtml('<li><strong>Code</strong> aus der Mail</li>')->assertSeeHtml('<ol>');
+    $this->actingAs($this->member)->get(route('mitteilungen.index'))
+        ->assertSeeHtml('<h2>Anmelden mit Code</h2>')
+        ->assertSeeHtml('<a target="_blank" rel="noopener noreferrer nofollow" href="https://example.com/hilfe">Hilfe</a>');
+
+    // Mail: formatted HTML, line breaks kept
+    Notification::assertSentTo($this->member, AnnouncementNotification::class, function ($n) {
+        $html = preg_replace('/ style="[^"]*"/', '', (string) $n->toMail($this->member)->render());
+
+        return str_contains($html, '<strong>Code</strong>') && str_contains($html, 'Hallo zusammen,<br');
+    });
+});
+
+test('Markdown never lets HTML, scripts or outside images through', function () {
+    $html = (string) Markdown::html("<script>alert(1)</script>\n\n<b onmouseover=x>fett</b>\n\n[klick](javascript:alert(1))\n\n![Logo](https://tracker.example.com/pixel.png)");
+
+    expect($html)->not->toContain('<script')->not->toContain('<b ')->not->toContain('javascript:')->not->toContain('<img')
+        ->toContain('&lt;script&gt;')
+        ->toContain('<a target="_blank" rel="noopener noreferrer nofollow" href="https://tracker.example.com/pixel.png">Logo</a>');
 });
