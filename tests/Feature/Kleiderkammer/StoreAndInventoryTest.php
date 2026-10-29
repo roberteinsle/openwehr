@@ -56,7 +56,7 @@ test('a type with code comes in piece by piece with its code, one without code a
         ->and($levels['Handschuhe'])->toMatchArray(['in_store' => 13, 'issued' => 2, 'tracked' => false]);
 });
 
-test('the Lager page books a Zugang and asks for the code only where the Artikeltyp has one', function () {
+test('the Lager page books a Zugang and asks for the code only where the Artikel has one', function () {
     $this->actingAs($this->warden);
 
     Livewire::test(StorePage::class)
@@ -142,9 +142,9 @@ test('the Inventar counts what the Kleiderkammer owns (Lager and issued), with s
 
     $inventory = $this->store->inventory();
     // The issued jacket belongs to the Kleiderkammer too
-    expect($inventory['rows'][0])->toBe(['nr' => 1, 'name' => 'PSA-Jacke', 'quantity' => 3, 'net' => 42000, 'net_sum' => 126000, 'gross' => 49980, 'gross_sum' => 149940])
-        ->and($inventory['rows'][1])->toMatchArray(['name' => 'Handschuhe', 'quantity' => 10, 'net_sum' => 29900, 'gross' => 3558, 'gross_sum' => 35580])
-        ->and($inventory['rows'][2])->toMatchArray(['name' => 'Feuerwehrleine', 'net' => null, 'net_sum' => null])
+    expect($inventory['rows'][2])->toBe(['nr' => 3, 'name' => 'PSA-Jacke', 'quantity' => 3, 'net' => 42000, 'net_sum' => 126000, 'gross' => 49980, 'gross_sum' => 149940])
+        ->and($inventory['rows'][1])->toMatchArray(['nr' => 2, 'name' => 'Handschuhe', 'quantity' => 10, 'net_sum' => 29900, 'gross' => 3558, 'gross_sum' => 35580])
+        ->and($inventory['rows'][0])->toMatchArray(['nr' => 1, 'name' => 'Feuerwehrleine', 'net' => null, 'net_sum' => null])
         ->and($inventory)->toMatchArray(['net_total' => 155900, 'gross_total' => 185520, 'quantity_total' => 16, 'unpriced' => 1]);
 
     $this->actingAs($this->warden);

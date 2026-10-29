@@ -52,15 +52,15 @@ class ItemResource extends Resource
         return $schema->schema([
             Section::make('Teil')->schema([
                 Forms\Components\Select::make('item_type_id')
-                    ->label('Artikeltyp')
+                    ->label('Artikel')
                     ->relationship('itemType', 'name', fn ($query) => $query->where('is_tracked', true)->orderBy('name'))
                     ->required()
                     ->searchable()
                     ->preload()
                     ->live()
                     ->helperText(fn () => ItemType::where('is_tracked', true)->exists()
-                        ? 'Nur Artikeltypen mit „Einzeln erfasst“. Massenbestand wird unter „Bestand“ gepflegt.'
-                        : 'Es gibt noch keinen Artikeltyp mit „Einzeln erfasst“. Lege zuerst unter „Artikeltypen“ einen an oder aktiviere die Option dort.'),
+                        ? 'Nur Artikel mit „Einzeln erfasst“. Massenbestand wird unter „Bestand“ gepflegt.'
+                        : 'Es gibt noch keinen Artikel mit „Einzeln erfasst“. Lege zuerst unter „Artikel“ einen an oder aktiviere die Option dort.'),
 
                 Forms\Components\Select::make('group_id')
                     ->live()
@@ -113,7 +113,7 @@ class ItemResource extends Resource
                     ->copyable(),
 
                 Tables\Columns\TextColumn::make('itemType.name')
-                    ->label('Artikeltyp')
+                    ->label('Artikel')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('size.name')
@@ -148,7 +148,7 @@ class ItemResource extends Resource
             ->defaultSort('code')
             ->filters([
                 Tables\Filters\SelectFilter::make('item_type_id')
-                    ->label('Artikeltyp')
+                    ->label('Artikel')
                     ->options(ItemType::where('is_tracked', true)->orderBy('name')->pluck('name', 'id')),
 
                 Tables\Filters\SelectFilter::make('status')

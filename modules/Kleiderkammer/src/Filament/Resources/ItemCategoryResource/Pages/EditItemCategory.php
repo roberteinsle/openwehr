@@ -20,7 +20,7 @@ class EditItemCategory extends EditRecord
                     if ($this->record->itemTypes()->exists()) {
                         Notification::make()
                             ->title('Kategorie kann nicht gelöscht werden')
-                            ->body('Es existieren Artikeltypen in dieser Kategorie.')
+                            ->body('Es existieren Artikel in dieser Kategorie.')
                             ->danger()
                             ->send();
                         $action->cancel();

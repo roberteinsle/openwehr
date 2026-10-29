@@ -103,7 +103,7 @@ test('duplicate sizes get a readable German message', function () {
     $manager = fn () => Livewire::test(SizesRelationManager::class, ['ownerRecord' => $type, 'pageClass' => EditItemType::class]);
 
     $manager()->callAction(TestAction::make('create')->table(), ['name' => 'M'])
-        ->assertHasFormErrors(['name' => 'Diese Größe gibt es für diesen Artikeltyp schon.']);
+        ->assertHasFormErrors(['name' => 'Diese Größe gibt es für diesen Artikel schon.']);
     $manager()->callAction(TestAction::make('create')->table(), ['name' => '40', 'group_id' => $women->id])
         ->assertHasFormErrors(['name' => 'Diese Größe gibt es in dieser Gruppe schon.']);
     $manager()->callAction(TestAction::make('create')->table(), ['name' => ''])

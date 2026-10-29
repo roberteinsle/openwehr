@@ -34,7 +34,7 @@ test('the Bestandsbericht is part of the Übersicht now; its old address leads t
         ->assertSeeLivewire(OverviewWidget::class)->assertSeeLivewire(ReportWidget::class)
         ->assertDontSee('href="'.url('/admin/kleiderkammer/bestandsbericht').'"', false);
     Livewire::test(OverviewWidget::class)->assertSee('Verfügbar')->assertSee('Offene Leihen');
-    Livewire::test(ReportWidget::class)->assertSee('Einzelteile')->assertSee('Massenbestand')->assertSee('Offene Leihen')->assertSee('Diensthose');
+    Livewire::test(ReportWidget::class)->assertSee('Artikel mit Code')->assertSee('Artikel mit Menge')->assertSee('Letzte Ausleihe')->assertSee('Diensthose');
     $this->get('/admin/kleiderkammer/bestandsbericht')->assertRedirect('/admin/kleiderkammer');
 });
 
@@ -49,7 +49,7 @@ test('the Lager shows Lager, Ausgegeben and Gesamt per Artikel', function () {
         ->assertSee('Gesamt')->assertDontSee('Größen / Gruppen');
 });
 
-test('an Artikeltyp is copied with its groups and sizes, without code prefix; the list has no group column', function () {
+test('an Artikel is copied with its groups and sizes, without code prefix; the list has no group column', function () {
     Livewire::test(ListItemTypes::class)
         ->assertTableColumnDoesNotExist('groups.name')
         ->callTableAction('copy', $this->pants, ['name' => 'Diensthose Sommer'])

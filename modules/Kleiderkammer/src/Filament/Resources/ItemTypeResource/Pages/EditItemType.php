@@ -6,6 +6,7 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource;
+use Modules\Kleiderkammer\src\Models\ItemType;
 
 class EditItemType extends EditRecord
 {
@@ -14,18 +15,22 @@ class EditItemType extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make()
+            Actions\Action::make('delete')
                 ->label('Löschen')
-                ->before(function (Actions\DeleteAction $action) {
-                    // Schwachstelle #3: Löschen sperren wenn Teile oder Vorgänge existieren
-                    if ($this->record->items()->exists() || $this->record->issuedItems()->exists()) {
-                        Notification::make()
-                            ->title('Artikeltyp kann nicht gelöscht werden')
-                            ->body('Es existieren Teile oder Ausgabevorgänge für diesen Artikeltyp.')
-                            ->danger()
-                            ->send();
-                        $action->cancel();
+                ->color('danger')
+                ->icon('heroicon-o-trash')
+                ->requiresConfirmation()
+                ->modalHeading('Artikel löschen?')
+                ->action(function () {
+                    $record = $this->getRecord();
+                    if (! $record instanceof ItemType || ! $record->deleteIfUnused()) {
+                        Notification::make()->title('Artikel kann nicht gelöscht werden')
+                            ->body('Es gibt Teile, Bestand oder Ausgabevorgänge zu diesem Artikel.')->danger()->send();
+
+                        return;
                     }
+                    Notification::make()->title('Artikel gelöscht.')->success()->send();
+                    $this->redirect($this->getResource()::getUrl('index'));
                 }),
         ];
     }

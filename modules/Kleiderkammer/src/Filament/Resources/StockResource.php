@@ -18,6 +18,7 @@ use Modules\Kleiderkammer\src\Models\ItemGroup;
 use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Models\Size;
 use Modules\Kleiderkammer\src\Models\Stock;
+use Modules\Kleiderkammer\src\Models\Store;
 use Modules\Kleiderkammer\src\Services\IssuingService;
 use Modules\Kleiderkammer\src\Services\StoreService;
 
@@ -46,13 +47,15 @@ class StockResource extends Resource
     {
         return $schema->schema([
             Forms\Components\Select::make('item_type_id')
-                ->label('Artikeltyp')
+                ->disabledOn('edit')
+                ->label('Artikel')
                 ->options(ItemType::where('is_tracked', false)->orderBy('name')->pluck('name', 'id'))
                 ->required()
                 ->searchable()
                 ->reactive(),
 
             Forms\Components\Select::make('group_id')
+                ->disabledOn('edit')
                 ->live()
                 ->label('Gruppe')
                 ->options(fn ($get) => ItemGroup::where('item_type_id', $get('item_type_id'))->orderBy('sort_order')->pluck('name', 'id'))
@@ -60,10 +63,25 @@ class StockResource extends Resource
                 ->visible(fn ($get) => filled($get('item_type_id')) && ItemGroup::where('item_type_id', $get('item_type_id'))->exists()),
 
             Forms\Components\Select::make('size_id')
+                ->disabledOn('edit')
                 ->label('Größe')
                 ->options(fn ($get) => Size::where('item_type_id', $get('item_type_id'))->forGroup($get('group_id'))->orderBy('sort_order')->pluck('name', 'id'))
                 ->nullable()
                 ->visible(fn ($get) => filled($get('item_type_id'))),
+
+            Forms\Components\Select::make('store_id')
+                ->disabledOn('edit')
+                ->label('Lager')
+                ->options(fn () => Store::options())
+                ->default(fn () => Store::defaultId())
+                ->visible(fn () => Store::several()),
+
+            Forms\Components\TextInput::make('reason')
+                ->label('Grund der Korrektur')
+                ->placeholder('z. B. nach dem Zählen')
+                ->maxLength(300)
+                ->dehydrated()
+                ->visibleOn('edit'),
 
             Forms\Components\TextInput::make('quantity')
                 ->label('Bestand')
@@ -79,7 +97,7 @@ class StockResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('itemType.name')
-                    ->label('Artikeltyp')
+                    ->label('Artikel')
                     ->sortable()
                     ->searchable(),
 
@@ -99,7 +117,7 @@ class StockResource extends Resource
             ->defaultSort('itemType.name')
             ->filters([
                 Tables\Filters\SelectFilter::make('item_type_id')
-                    ->label('Artikeltyp')
+                    ->label('Artikel')
                     ->options(ItemType::where('is_tracked', false)->orderBy('name')->pluck('name', 'id')),
 
                 Tables\Filters\SelectFilter::make('size_id')
@@ -157,11 +175,12 @@ class StockResource extends Resource
                     $member = User::findOrFail($data['user_id']);
                     app(IssuingService::class)->issueStock(
                         $member,
-                        $record->itemType,
+                        $record->itemType()->firstOrFail(),
                         $record->size,
                         (int) $data['quantity'],
                         $data['notes'] ?? '',
                         $record->group,
+                        $record->store,
                     );
                     Notification::make()->title('Bestand ausgegeben.')->success()->send();
                 }),
@@ -178,7 +197,7 @@ class StockResource extends Resource
                     StorePage::reasonField(),
                 ])
                 ->action(function (Stock $record, array $data) {
-                    app(StoreService::class)->dispose($record->itemType, $record->size, $record->group, null, (int) $data['quantity'], (string) $data['reason'], auth()->user());
+                    app(StoreService::class)->dispose($record->itemType()->firstOrFail(), $record->size, $record->group, null, (int) $data['quantity'], (string) $data['reason'], auth()->user(), $record->store);
                     Notification::make()->title((int) $data['quantity'].' ausgemustert.')->warning()->send();
                 }),
         ];

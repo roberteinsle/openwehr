@@ -7,10 +7,12 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Modules\Kleiderkammer\src\Filament\Pages\StoreTypePage;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemResource;
+use Modules\Kleiderkammer\src\Models\Item;
 use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Services\CodeGenerator;
 use Modules\Kleiderkammer\src\Services\CodeResolver;
 use Modules\Kleiderkammer\src\Services\IssuingService;
+use Modules\Kleiderkammer\src\Services\StoreService;
 
 class CreateItem extends CreateRecord
 {
@@ -59,6 +61,11 @@ class CreateItem extends CreateRecord
 
     protected function afterCreate(): void
     {
+        $record = $this->getRecord();
+        if ($record instanceof Item) {
+            app(StoreService::class)->logReceived($record);
+        }
+
         if ($this->issueTo === null) {
             return;
         }

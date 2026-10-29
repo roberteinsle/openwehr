@@ -9,10 +9,19 @@
         .inv-table .num { text-align: right; white-space: nowrap; }
         .inv-table tfoot td { font-weight: 600; border-top: 2px solid #9ca3af; border-bottom: none; }
         .inv-hint { font-size: .8rem; color: #6b7280; }
+        .inv-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .inv-tile { padding: 1.1rem 1.25rem; border-radius: .75rem; background: #fff; border: 1px solid rgb(0 0 0 / .07); box-shadow: 0 1px 2px rgb(0 0 0 / .05); }
+        .inv-tile-value { font-size: 1.75rem; font-weight: 600; line-height: 1.15; }
+        .inv-tile-label { font-size: .85rem; color: #6b7280; }
+        .dark .inv-tile { background: #18181b; border-color: rgb(255 255 255 / .1); }
         .dark .inv-meta, .dark .inv-hint { color: #9ca3af; }
         .dark .inv-table th { border-color: rgb(255 255 255 / .1); }
         .dark .inv-table td { border-color: rgb(255 255 255 / .05); }
     </style>
+    <div class="inv-tiles">
+        <div class="inv-tile"><div class="inv-tile-value">{{ $euro($inventory['net_total']) }}</div><div class="inv-tile-label">Gesamtsumme netto</div></div>
+        <div class="inv-tile"><div class="inv-tile-value">{{ $inventory['quantity_total'] }}</div><div class="inv-tile-label">Gesamtanzahl</div></div>
+    </div>
     <x-filament::section>
         <p class="inv-meta">Stand: {{ $printedAt->format('d.m.Y H:i') }} Uhr · Erstellt von: {{ $author }} · {{ $org }}</p>
         <div class="inv-scroll">
@@ -38,6 +47,6 @@
                 </tfoot>
             </table>
         </div>
-        <p class="inv-hint">Gezählt wird alles, was der Kleiderkammer gehört – im Lager und an Kameraden ausgegeben, Artikel mit Code wie Artikel mit Menge; ausgemusterte Teile nicht. Preise kommen vom Artikeltyp (netto eingegeben, brutto mit {{ \Modules\Kleiderkammer\src\Models\ItemType::VAT_PERCENT }} % USt.).@if($inventory['unpriced'] > 0) {{ app(\Modules\Kleiderkammer\src\Services\InventoryExport::class)->unpricedHint($inventory['unpriced']) }}@endif</p>
+        <p class="inv-hint">Gezählt wird alles, was der Kleiderkammer gehört – im Lager und an Kameraden ausgegeben, Artikel mit Code wie Artikel mit Menge; ausgemusterte Teile nicht. Preise kommen vom Artikel (netto eingegeben, brutto mit {{ \Modules\Kleiderkammer\src\Models\ItemType::VAT_PERCENT }} % USt.).@if($inventory['unpriced'] > 0) {{ app(\Modules\Kleiderkammer\src\Services\InventoryExport::class)->unpricedHint($inventory['unpriced']) }}@endif</p>
     </x-filament::section>
 </x-filament-panels::page>

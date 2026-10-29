@@ -13,9 +13,9 @@ use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource\Pages\EditItem
 use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource\RelationManagers\SizesRelationManager;
 use Modules\Kleiderkammer\src\Filament\Resources\MemberResource\Pages\EditMember;
 use Modules\Kleiderkammer\src\Filament\Resources\MemberResource\RelationManagers\IssuancesRelationManager;
-use Modules\Kleiderkammer\src\Models\Disposal;
 use Modules\Kleiderkammer\src\Models\IssuedItem;
 use Modules\Kleiderkammer\src\Models\ItemType;
+use Modules\Kleiderkammer\src\Models\Movement;
 use Modules\Kleiderkammer\src\Models\Size;
 use Modules\Kleiderkammer\src\Models\Stock;
 use Modules\Kleiderkammer\src\Services\IssuingService;
@@ -35,7 +35,7 @@ beforeEach(function () {
     $this->actingAs($this->warden);
 });
 
-test('Ausgang from the Lager: a piece by its code or a quantity, always with a reason', function () {
+test('Abgang from the Lager: a piece by its code or a quantity, always with a reason', function () {
     $item = $this->store->receive($this->jacket, $this->size, null, 'WEHRPJA0001');
     $this->store->receive($this->gloves, null, null, null, 5);
 
@@ -50,8 +50,8 @@ test('Ausgang from the Lager: a piece by its code or a quantity, always with a r
 
     expect($item->refresh()->status)->toBe(ItemStatus::Retired)->and($item->notes)->toContain('Ausgemustert: Verschlissen')
         ->and(Stock::where('item_type_id', $this->gloves->id)->value('quantity'))->toBe(3)
-        ->and(Disposal::count())->toBe(2)
-        ->and(Disposal::where('item_id', $item->id)->sole())->user_id->toBe($this->warden->id)->from_user_id->toBeNull();
+        ->and(Movement::where('kind', 'abgang')->count())->toBe(2)
+        ->and(Movement::where('kind', 'abgang')->where('item_id', $item->id)->sole())->by_id->toBe($this->warden->id)->user_id->toBeNull()->reason->toBe('Verschlissen');
 
     // Not more than there is, not a piece twice, not an unknown code
     expect(fn () => $this->store->dispose($this->gloves, null, null, null, 4, 'Verloren', $this->warden))->toThrow(ValidationException::class)
@@ -63,9 +63,9 @@ test('Ausgang from the Lager: a piece by its code or a quantity, always with a r
     app(IssuingService::class)->issueTracked($this->hanna, $issued);
     expect(fn () => $this->store->dispose($this->jacket, null, null, 'WEHRPJA0002', 1, 'Verloren', $this->warden))->toThrow(ValidationException::class);
 
-    // The Artikel page lists the Ausgänge and books them for its Artikel
+    // The Artikel page lists its Buchungen and books an Abgang for its Artikel
     Livewire::test(StoreTypePage::class, ['type' => $this->gloves->id])
-        ->assertSee('Ausgemustert')->assertSee('Defekt / beschädigt')->assertSee('aus dem Lager')
+        ->assertSee('Protokoll')->assertSee('Abgang')->assertSee('Defekt / beschädigt')->assertSee('gebucht von Karla Kleiderwart')
         ->callAction('dispose', ['quantity' => 1, 'reason' => 'Verloren'])->assertHasNoActionErrors();
     expect(Stock::where('item_type_id', $this->gloves->id)->value('quantity'))->toBe(2);
 });
@@ -85,7 +85,7 @@ test('in a Kamerad\'s Ausrüstung a piece is retired instead of taken back; it d
     expect($loan->refresh()->returned_at)->not->toBeNull()->and($item->refresh()->status)->toBe(ItemStatus::Retired)
         ->and($gloves->refresh()->returned_at)->not->toBeNull()
         ->and(Stock::where('item_type_id', $this->gloves->id)->value('quantity'))->toBe(3)
-        ->and(Disposal::where('from_user_id', $this->hanna->id)->orderBy('id')->pluck('quantity')->all())->toBe([1, 2])
+        ->and(Movement::where('kind', 'abgang')->where('user_id', $this->hanna->id)->orderBy('id')->pluck('quantity')->all())->toBe([1, 2])
         ->and(IssuedItem::whereNull('returned_at')->count())->toBe(0);
 
     // The Inventar no longer counts them

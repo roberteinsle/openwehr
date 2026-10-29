@@ -15,24 +15,15 @@ beforeEach(function () {
     $this->actingAs(User::factory()->admin()->create());
 });
 
-test('categories can be reordered by drag and drop', function () {
+test('categories are listed by name A–Z and sorted by their columns, without reordering', function () {
     $a = ItemCategory::create(['name' => 'Schutzkleidung', 'sort_order' => 1]);
     $b = ItemCategory::create(['name' => 'Dienstkleidung', 'sort_order' => 2]);
     $c = ItemCategory::create(['name' => 'Sonstiges', 'sort_order' => 3]);
 
     Livewire::test(ListItemCategories::class)
-        ->call('toggleTableReordering')
-        ->call('reorderTable', [(string) $c->id, (string) $a->id, (string) $b->id]);
-
-    expect(ItemCategory::orderBy('sort_order')->pluck('name')->all())
-        ->toBe(['Sonstiges', 'Schutzkleidung', 'Dienstkleidung']);
-});
-
-test('category list shows a labelled reorder button', function () {
-    ItemCategory::create(['name' => 'Schutzkleidung', 'sort_order' => 1]);
-
-    Livewire::test(ListItemCategories::class)
-        ->assertSee('Reihenfolge ändern')
-        ->call('toggleTableReordering')
-        ->assertSee('Fertig');
+        ->assertCanSeeTableRecords([$b, $a, $c], inOrder: true)
+        ->sortTable('name', 'desc')
+        ->assertCanSeeTableRecords([$c, $a, $b], inOrder: true)
+        ->assertTableColumnExists('item_types_count')
+        ->assertDontSee('Reihenfolge ändern');
 });

@@ -10,9 +10,12 @@ use Modules\Kleiderkammer\src\Models\IssuedItem;
 use Modules\Kleiderkammer\src\Models\Item;
 use Modules\Kleiderkammer\src\Models\ItemGroup;
 use Modules\Kleiderkammer\src\Models\ItemType;
+use Modules\Kleiderkammer\src\Models\Movement;
 use Modules\Kleiderkammer\src\Models\Size;
 use Modules\Kleiderkammer\src\Models\Stock;
+use Modules\Kleiderkammer\src\Models\Store;
 
+/** Ausgabe and Rücknahme to and from the Kameraden; both are written to the Protokoll (kk_movements) */
 class IssuingService
 {
     /**
@@ -39,6 +42,7 @@ class IssuingService
             ]);
 
             $fresh->update(['status' => ItemStatus::Issued]);
+            Movement::log('ausgabe', $fresh->itemType()->firstOrFail(), 1, $fresh, storeId: $fresh->store_id, user: $member, by: auth()->user(), reason: $notes);
 
             return $issuedItem;
         });
@@ -46,9 +50,10 @@ class IssuingService
 
     /**
      * Issue stock items (non-tracked) to a member.
-     * Decreases the stock quantity accordingly.
+     * Decreases the stock quantity accordingly: in the given Lager, otherwise in the Artikel's Lager when it
+     * has enough, otherwise in the Lager with the most.
      */
-    public function issueStock(User $member, ItemType $itemType, ?Size $size, int $quantity, string $notes = '', ?ItemGroup $group = null): IssuedItem
+    public function issueStock(User $member, ItemType $itemType, ?Size $size, int $quantity, string $notes = '', ?ItemGroup $group = null, ?Store $store = null): IssuedItem
     {
         $this->ensureCanReceive($member);
 
@@ -56,14 +61,17 @@ class IssuingService
             throw new \InvalidArgumentException('Quantity must be greater than zero.');
         }
 
-        return DB::transaction(function () use ($member, $itemType, $size, $quantity, $notes, $group) {
-            $stock = Stock::lockForUpdate()
+        return DB::transaction(function () use ($member, $itemType, $size, $quantity, $notes, $group, $store) {
+            $rows = Stock::lockForUpdate()
                 ->where('item_type_id', $itemType->id)
                 ->where('size_id', $size?->id)
                 ->where('group_id', $group?->id)
-                ->first();
+                ->when($store, fn ($q) => $q->where('store_id', $store->id))
+                ->get();
+            $stock = $rows->first(fn (Stock $row) => $row->store_id === $itemType->store_id && $row->quantity >= $quantity)
+                ?? $rows->sortByDesc('quantity')->first();
 
-            $available = $stock?->quantity ?? 0;
+            $available = $stock ? (int) $stock->quantity : 0;
 
             if ($available < $quantity) {
                 throw new \DomainException("Not enough stock (available: {$available}, requested: {$quantity}).");
@@ -74,12 +82,14 @@ class IssuingService
                 'item_type_id' => $itemType->id,
                 'size_id' => $size?->id,
                 'group_id' => $group?->id,
+                'store_id' => $stock->store_id,
                 'quantity' => $quantity,
                 'issued_at' => now(),
                 'notes' => $notes,
             ]);
 
             $stock->decrement('quantity', $quantity);
+            Movement::log('ausgabe', $itemType, $quantity, null, $size, $group, $stock->store_id, $member, auth()->user(), $notes);
 
             return $issuedItem;
         });
@@ -103,11 +113,17 @@ class IssuingService
 
             if ($fresh->item_id !== null) {
                 Item::where('id', $fresh->item_id)->update(['status' => ItemStatus::Available->value]);
+                $item = Item::findOrFail($fresh->item_id);
+                Movement::log('ruecknahme', $item->itemType()->firstOrFail(), 1, $item, storeId: $item->store_id, user: User::find($fresh->user_id), by: auth()->user());
             } elseif ($fresh->item_type_id !== null) {
+                // Back into the Lager it came from
+                $type = ItemType::findOrFail($fresh->item_type_id);
+                $storeId = $fresh->store_id ?? $type->store_id ?? Store::defaultId();
                 Stock::firstOrCreate(
-                    ['item_type_id' => $fresh->item_type_id, 'size_id' => $fresh->size_id, 'group_id' => $fresh->group_id],
+                    ['item_type_id' => $fresh->item_type_id, 'size_id' => $fresh->size_id, 'group_id' => $fresh->group_id, 'store_id' => $storeId],
                     ['quantity' => 0],
                 )->increment('quantity', $fresh->quantity);
+                Movement::log('ruecknahme', $type, (int) $fresh->quantity, null, $fresh->size()->first(), $fresh->group()->first(), $storeId, User::find($fresh->user_id), auth()->user());
             }
         });
     }
@@ -149,6 +165,7 @@ class IssuingService
             }
 
             $fresh->update($update);
+            Movement::log('abgang', $fresh->itemType()->firstOrFail(), 1, $fresh, by: auth()->user(), reason: $notes ?: null);
         });
     }
 }

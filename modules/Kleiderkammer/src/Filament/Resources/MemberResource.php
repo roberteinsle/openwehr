@@ -6,6 +6,7 @@ use App\Enums\MemberStatus;
 use App\Models\User;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -32,11 +33,11 @@ class MemberResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'Mitglieder';
+    protected static ?string $navigationLabel = 'Kameraden';
 
-    protected static ?string $modelLabel = 'Mitglied';
+    protected static ?string $modelLabel = 'Kamerad';
 
-    protected static ?string $pluralModelLabel = 'Mitglieder';
+    protected static ?string $pluralModelLabel = 'Kameraden';
 
     protected static ?int $navigationSort = 10;
 
@@ -48,9 +49,13 @@ class MemberResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Mitglied')
+            Section::make('Kamerad')
                 ->description('Abteilungen, Funktionen, Dienstgrad und Status pflegen Admins in der Kameradenverwaltung.')
                 ->schema([
+                    // The photo from the personal profile, when there is one
+                    ImageEntry::make('avatar')->hiddenLabel()->circular()->imageSize(72)
+                        ->state(fn (User $record) => $record->avatarUrl())
+                        ->visible(fn (User $record) => $record->avatarUrl() !== null),
                     TextEntry::make('name')->label('Name'),
                     TextEntry::make('groups_list')->label('Abteilungen')->state(fn (User $record) => $record->groups->pluck('name')->implode(', '))->placeholder('–'),
                     TextEntry::make('functions_list')->label('Funktionen')->state(fn (User $record) => $record->functions->map->fullLabel()->implode(', '))->placeholder('–'),
@@ -86,30 +91,16 @@ class MemberResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->withCount('kleiderkammerItems')->with('groups'))
             ->columns([
+                Tables\Columns\ImageColumn::make('avatar')
+                    ->label('')
+                    ->circular()
+                    ->imageSize(32)
+                    ->state(fn (User $record) => $record->avatarUrl()),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->searchable()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('groups.name')
-                    ->label('Abteilungen')
-                    ->badge()
-                    ->placeholder('–'),
-
-                Tables\Columns\TextColumn::make('rank')
-                    ->label('Dienstgrad')
-                    ->placeholder('–')
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (MemberStatus $state) => $state->label())
-                    ->color(fn (MemberStatus $state) => match ($state) {
-                        MemberStatus::Active => 'success',
-                        MemberStatus::Inactive => 'warning',
-                        MemberStatus::Left => 'danger',
-                    }),
 
                 Tables\Columns\TextColumn::make('kleiderkammer_items_count')
                     ->label('Ausgeliehen')
@@ -145,7 +136,7 @@ class MemberResource extends Resource
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->requiresConfirmation()
                     ->modalHeading('Alle Teile zurückfordern?')
-                    ->modalDescription('Alle offenen Leihvorgänge dieses Mitglieds werden als zurückgegeben markiert.')
+                    ->modalDescription('Alle offenen Leihvorgänge dieses Kameraden werden als zurückgegeben markiert.')
                     ->visible(fn (User $record) => $record->kleiderkammer_items_count > 0)
                     ->action(function (User $record) {
                         app(IssuingService::class)->takeBack($record);

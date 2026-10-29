@@ -115,12 +115,12 @@ class DataTransferPage extends Page implements HasForms
                     ->visible(fn () => ! empty($this->fileInfo['parts'])),
 
                 Forms\Components\Select::make('types')
-                    ->label('Nur diese Artikeltypen')
+                    ->label('Nur diese Artikel')
                     ->options(fn () => collect($this->fileInfo['types'] ?? [])->mapWithKeys(fn ($name) => [$name => $name])->all())
                     ->multiple()
                     ->searchable()
-                    ->placeholder('Alle Artikeltypen')
-                    ->helperText('Leer lassen, um alle zu importieren. Gilt für Artikeltypen, Einzelteile, Bestand, Behandlungen, Ausgaben und Größen.')
+                    ->placeholder('Alle Artikel')
+                    ->helperText('Leer lassen, um alle zu importieren. Gilt für Artikel, Einzelteile, Bestand, Behandlungen, Ausgaben und Größen.')
                     ->visible(fn () => ! empty($this->fileInfo['types'])),
             ])->columnSpanFull(),
         ])->statePath('importData');

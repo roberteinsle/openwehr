@@ -20,6 +20,7 @@ class Item extends Model
     protected $table = 'kk_items';
 
     protected $fillable = [
+        'store_id',
         'item_type_id',
         'size_id',
         'group_id',
@@ -28,11 +29,25 @@ class Item extends Model
         'notes',
     ];
 
+    // Without a Lager a piece or stock row goes into the Lager of its Artikel, or the first one
+    protected static function booted(): void
+    {
+        static::creating(function (self $row) {
+            $row->store_id ??= ItemType::whereKey($row->item_type_id)->value('store_id') ?? Store::defaultId();
+        });
+    }
+
     protected function casts(): array
     {
         return [
             'status' => ItemStatus::class,
         ];
+    }
+
+    /** @return BelongsTo<Store, $this> */
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class, 'store_id');
     }
 
     /** @return BelongsTo<ItemType, $this> */

@@ -88,7 +88,7 @@ test('clothing sizes are stored per item type, once per type', function () {
 
     profileSizes($this->hanna)
         ->callAction(TestAction::make('create')->table(), ['item_type_id' => $trousers->id, 'group_id' => $women->id, 'size_id' => $w40->id])
-        ->assertHasFormErrors(['item_type_id' => 'Für diesen Artikeltyp ist schon eine Größe hinterlegt.']);
+        ->assertHasFormErrors(['item_type_id' => 'Für diesen Artikel ist schon eine Größe hinterlegt.']);
 });
 
 // ─── equipping ───────────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ use Filament\Pages\Page;
 use Modules\Kleiderkammer\src\Filament\Concerns\KleiderkammerArea;
 use Modules\Kleiderkammer\src\Services\InventoryExport;
 
-/** Inventar: the Lager valued with the prices of the Artikeltypen, to print (PDF) or export (Excel), both DIN A4 */
+/** Inventar: the Lager valued with the prices of the Artikel, to print (PDF) or export (Excel), both DIN A4 */
 class InventoryPage extends Page
 {
     use KleiderkammerArea;

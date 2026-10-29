@@ -16,6 +16,7 @@ use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource\Pages;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource\RelationManagers;
 use Modules\Kleiderkammer\src\Models\ItemCategory;
 use Modules\Kleiderkammer\src\Models\ItemType;
+use Modules\Kleiderkammer\src\Models\Store;
 
 class ItemTypeResource extends Resource
 {
@@ -27,11 +28,11 @@ class ItemTypeResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-squares-2x2';
 
-    protected static ?string $navigationLabel = 'Artikeltypen';
+    protected static ?string $navigationLabel = 'Artikel';
 
-    protected static ?string $modelLabel = 'Artikeltyp';
+    protected static ?string $modelLabel = 'Artikel';
 
-    protected static ?string $pluralModelLabel = 'Artikeltypen';
+    protected static ?string $pluralModelLabel = 'Artikel';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Katalog';
 
@@ -43,7 +44,7 @@ class ItemTypeResource extends Resource
             Section::make('Stammdaten')->schema([
                 Forms\Components\Select::make('category_id')
                     ->label('Kategorie')
-                    ->options(ItemCategory::orderBy('sort_order')->pluck('name', 'id'))
+                    ->options(fn () => ItemCategory::orderBy('name')->pluck('name', 'id'))
                     ->searchable()
                     ->nullable(),
 
@@ -51,6 +52,13 @@ class ItemTypeResource extends Resource
                     ->label('Name')
                     ->required()
                     ->maxLength(255),
+
+                // With several Lager: where this Artikel is kept (preset for Zugang, Abgang and Rücknahme)
+                Forms\Components\Select::make('store_id')
+                    ->label('Lager')
+                    ->options(fn () => Store::options())
+                    ->placeholder('Erstes Lager')
+                    ->visible(fn () => Store::several()),
 
                 Forms\Components\TextInput::make('code_prefix')
                     ->label('Code-Präfix')
@@ -107,53 +115,23 @@ class ItemTypeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with(['category', 'store']))
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Name')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('category.name')
-                    ->label('Kategorie')
-                    ->sortable()
-                    ->placeholder('–'),
-
-                Tables\Columns\TextColumn::make('code_prefix')
-                    ->label('Präfix')
-                    ->placeholder('–'),
-
-                Tables\Columns\TextColumn::make('price_net_cents')
-                    ->label('Netto')
-                    ->formatStateUsing(fn ($state) => Money::format((int) $state))
-                    ->placeholder('–')
-                    ->alignEnd(),
-
-                Tables\Columns\TextColumn::make('price_gross')
-                    ->label('Brutto')
+                Tables\Columns\TextColumn::make('name')->label('Name')->searchable()->sortable()->weight('medium'),
+                Tables\Columns\TextColumn::make('category.name')->label('Kategorie')->sortable()->placeholder('–')->toggleable(),
+                Tables\Columns\TextColumn::make('store.name')->label('Lager')->sortable()->placeholder('Standard')->toggleable()->visible(fn () => Store::several()),
+                Tables\Columns\TextColumn::make('code_prefix')->label('Präfix')->sortable()->placeholder('–')->toggleable(),
+                Tables\Columns\TextColumn::make('price_net_cents')->label('Netto')->sortable()->toggleable()
+                    ->formatStateUsing(fn ($state) => Money::format((int) $state))->placeholder('–')->alignEnd(),
+                Tables\Columns\TextColumn::make('price_gross')->label('Brutto')->toggleable()
                     ->state(fn (ItemType $record) => $record->priceGrossCents())
-                    ->formatStateUsing(fn ($state) => Money::format((int) $state))
-                    ->placeholder('–')
-                    ->alignEnd(),
-
-                Tables\Columns\IconColumn::make('is_tracked')
-                    ->label('Einzeln')
-                    ->boolean(),
-
-                Tables\Columns\IconColumn::make('has_size')
-                    ->label('Größe')
-                    ->boolean(),
-
-                Tables\Columns\IconColumn::make('is_washable')
-                    ->label('Wäsche')
-                    ->boolean(),
-
-                Tables\Columns\IconColumn::make('is_chainsaw_protection')
-                    ->label('Kettensäge')
-                    ->boolean(),
-
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->label('Reihenf.')
-                    ->sortable(),
+                    ->sortable(query: fn ($query, string $direction) => $query->orderBy('price_net_cents', $direction))
+                    ->formatStateUsing(fn ($state) => Money::format((int) $state))->placeholder('–')->alignEnd(),
+                Tables\Columns\IconColumn::make('is_tracked')->label('Einzeln')->boolean()->sortable()->toggleable(),
+                Tables\Columns\IconColumn::make('has_size')->label('Größe')->boolean()->sortable()->toggleable(),
+                Tables\Columns\IconColumn::make('is_washable')->label('Wäsche')->boolean()->sortable()->toggleable(),
+                Tables\Columns\IconColumn::make('is_chainsaw_protection')->label('Kettensäge')->boolean()->sortable()->toggleable(),
+                Tables\Columns\TextColumn::make('sort_order')->label('Reihenf.')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category_id')
@@ -196,7 +174,35 @@ class ItemTypeResource extends Resource
                         return redirect(self::getUrl('edit', ['record' => $copy]));
                     }),
             ])
-            ->bulkActions([]);
+            ->toolbarActions([
+                Actions\BulkActionGroup::make([
+                    Actions\BulkAction::make('copySelected')
+                        ->label('Kopieren')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->requiresConfirmation()
+                        ->modalHeading('Markierte Artikel kopieren?')
+                        ->modalDescription('Jeder bekommt eine Kopie „… (Kopie)“ mit Kategorie, Preis, Eigenschaften, Gruppen und Größen, ohne Code-Präfix.')
+                        ->action(function ($records) {
+                            $records->each(fn (ItemType $type) => $type->copyAs($type->name.' (Kopie)'));
+                            Notification::make()->title($records->count().' Artikel kopiert.')->success()->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    Actions\BulkAction::make('deleteSelected')
+                        ->label('Löschen')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Markierte Artikel löschen?')
+                        ->modalDescription('Artikel mit Teilen, Bestand oder Ausgaben bleiben erhalten.')
+                        ->action(function ($records) {
+                            [$deleted, $kept] = $records->partition(fn (ItemType $type) => $type->deleteIfUnused());
+                            $note = Notification::make()->title($deleted->count().' Artikel gelöscht.');
+                            $kept->isEmpty() ? $note->success() : $note->warning()->body('Noch verwendet und deshalb nicht gelöscht: '.$kept->pluck('name')->implode(', ').'.');
+                            $note->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array

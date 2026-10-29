@@ -31,14 +31,14 @@ class GroupsRelationManager extends RelationManager
                 ->required()
                 ->maxLength(50)
                 ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => $rule->where('item_type_id', $this->getOwnerRecord()->getKey()))
-                ->validationMessages(['unique' => 'Diese Gruppe gibt es für diesen Artikeltyp schon.']),
+                ->validationMessages(['unique' => 'Diese Gruppe gibt es für diesen Artikel schon.']),
         ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->description('Gruppen gelten nur für diesen Artikeltyp, z. B. Damen/Herren oder Hersteller.')
+            ->description('Gruppen gelten nur für diesen Artikel, z. B. Damen/Herren oder Hersteller.')
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Gruppe'),

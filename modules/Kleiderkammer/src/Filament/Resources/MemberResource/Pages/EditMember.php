@@ -2,7 +2,9 @@
 
 namespace Modules\Kleiderkammer\src\Filament\Resources\MemberResource\Pages;
 
+use App\Models\User;
 use Filament\Resources\Pages\EditRecord;
+use Modules\Kleiderkammer\src\Filament\Pages\StorePage;
 use Modules\Kleiderkammer\src\Filament\Resources\MemberResource;
 
 class EditMember extends EditRecord
@@ -20,8 +22,14 @@ class EditMember extends EditRecord
         return ['notes' => $data['notes'] ?? null];
     }
 
+    /** The same Zugang and Abgang as in the Lager; a Zugang can go to this Kamerad straight away */
     protected function getHeaderActions(): array
     {
-        return [];
+        $member = $this->getRecord();
+
+        return [
+            StorePage::receiveAction(for: $member instanceof User && $member->is_active ? $member : null),
+            StorePage::disposeAction(),
+        ];
     }
 }

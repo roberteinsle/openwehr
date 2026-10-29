@@ -17,6 +17,7 @@ class IssuedItem extends Model
     protected $table = 'kk_issued_items';
 
     protected $fillable = [
+        'store_id',
         'user_id',
         'item_id',
         'item_type_id',
@@ -44,6 +45,12 @@ class IssuedItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id');
+    }
+
+    /** @return BelongsTo<Store, $this> */
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class, 'store_id');
     }
 
     /** @return BelongsTo<ItemType, $this> */

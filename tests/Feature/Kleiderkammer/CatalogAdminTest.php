@@ -38,7 +38,7 @@ test('item form explains when no tracked item type exists', function () {
     ItemType::create(['name' => 'Handschuhe', 'is_tracked' => false]);
 
     Livewire::test(CreateItem::class)
-        ->assertSee('Es gibt noch keinen Artikeltyp mit „Einzeln erfasst“');
+        ->assertSee('Es gibt noch keinen Artikel mit „Einzeln erfasst“');
 });
 
 test('item type list can be filtered by category and washing', function () {

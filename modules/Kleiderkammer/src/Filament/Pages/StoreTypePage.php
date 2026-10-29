@@ -16,10 +16,11 @@ use Modules\Kleiderkammer\src\Filament\Concerns\KleiderkammerArea;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemResource;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemTypeResource;
 use Modules\Kleiderkammer\src\Filament\Resources\StockResource;
-use Modules\Kleiderkammer\src\Models\Disposal;
 use Modules\Kleiderkammer\src\Models\Item;
 use Modules\Kleiderkammer\src\Models\ItemType;
+use Modules\Kleiderkammer\src\Models\Movement;
 use Modules\Kleiderkammer\src\Models\Stock;
+use Modules\Kleiderkammer\src\Models\Store;
 use Modules\Kleiderkammer\src\Services\LabelSheetGenerator;
 use Modules\Kleiderkammer\src\Services\StoreService;
 
@@ -75,7 +76,8 @@ class StoreTypePage extends Page implements HasTable
     {
         return [
             'levels' => app(StoreService::class)->levels()->where('type_id', $this->itemType->id)->values(),
-            'disposals' => Disposal::where('item_type_id', $this->itemType->id)->with(['item', 'size', 'group', 'fromUser', 'user'])->latest('created_at')->limit(20)->get(),
+            'movements' => Movement::where('item_type_id', $this->itemType->id)->with('store')->latest('created_at')->latest('id')->limit(20)->get(),
+            'several' => Store::several(),
         ];
     }
 
@@ -84,7 +86,7 @@ class StoreTypePage extends Page implements HasTable
         return [
             StorePage::receiveAction($this->itemType),
             StorePage::disposeAction($this->itemType),
-            Actions\Action::make('editType')->label('Artikeltyp bearbeiten')->icon('heroicon-o-pencil-square')->color('gray')
+            Actions\Action::make('editType')->label('Artikel bearbeiten')->icon('heroicon-o-pencil-square')->color('gray')
                 ->url(ItemTypeResource::getUrl('edit', ['record' => $this->itemType])),
         ];
     }
@@ -97,12 +99,13 @@ class StoreTypePage extends Page implements HasTable
     private function itemsTable(Table $table): Table
     {
         return $table
-            ->query(Item::query()->where('item_type_id', $this->itemType->id)->with(['size', 'group', 'currentIssuance.user']))
+            ->query(Item::query()->where('item_type_id', $this->itemType->id)->with(['size', 'group', 'store', 'currentIssuance.user']))
             ->heading('Teile')
             ->columns([
                 Tables\Columns\TextColumn::make('code')->label('Code')->searchable()->sortable()->copyable(),
                 Tables\Columns\TextColumn::make('group.name')->label('Gruppe')->placeholder('–'),
                 Tables\Columns\TextColumn::make('size.name')->label('Größe')->placeholder('–'),
+                Tables\Columns\TextColumn::make('store.name')->label('Lager')->visible(fn () => Store::several()),
                 Tables\Columns\TextColumn::make('status')->label('Status')->badge()
                     ->formatStateUsing(fn ($state) => $state instanceof ItemStatus ? $state->label() : $state)
                     ->color(fn ($state) => match ($state) {
@@ -139,11 +142,12 @@ class StoreTypePage extends Page implements HasTable
     private function stockTable(Table $table): Table
     {
         return $table
-            ->query(Stock::query()->where('item_type_id', $this->itemType->id)->with(['size', 'group']))
+            ->query(Stock::query()->where('item_type_id', $this->itemType->id)->with(['size', 'group', 'store']))
             ->heading('Mengen im Lager')
             ->columns([
                 Tables\Columns\TextColumn::make('group.name')->label('Gruppe')->placeholder('–'),
                 Tables\Columns\TextColumn::make('size.name')->label('Größe')->placeholder('–'),
+                Tables\Columns\TextColumn::make('store.name')->label('Lager')->visible(fn () => Store::several()),
                 Tables\Columns\TextColumn::make('quantity')->label('Im Lager')->alignEnd()->sortable()
                     ->color(fn ($state) => $state <= 0 ? 'danger' : ($state <= 2 ? 'warning' : 'success')),
             ])

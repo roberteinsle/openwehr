@@ -3211,18 +3211,6 @@ parameters:
 			path: modules/Kleiderkammer/src/Filament/Resources/ItemResource/Pages/CreateItem.php
 
 		-
-			message: '#^Cannot call method issuedItems\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Kleiderkammer/src/Filament/Resources/ItemTypeResource/Pages/EditItemType.php
-
-		-
-			message: '#^Cannot call method items\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: modules/Kleiderkammer/src/Filament/Resources/ItemTypeResource/Pages/EditItemType.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:groups\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -3439,32 +3427,8 @@ parameters:
 			path: modules/Kleiderkammer/src/Services/EquipmentMessageService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kleiderkammer/src/Services/InventoryReport.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$size\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kleiderkammer/src/Services/InventoryReport.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:withTrashed\(\)\.$#'
 			identifier: method.notFound
-			count: 1
-			path: modules/Kleiderkammer/src/Services/InventoryReport.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: modules/Kleiderkammer/src/Services/InventoryReport.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Modules\\Kleiderkammer\\src\\Models\\ItemType\>\:\:flatMap\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
 			count: 1
 			path: modules/Kleiderkammer/src/Services/InventoryReport.php
 
@@ -3477,12 +3441,6 @@ parameters:
 		-
 			message: '#^Strict comparison using \!\=\= between string and App\\Enums\\MemberStatus\:\:Active will always evaluate to true\.$#'
 			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: modules/Kleiderkammer/src/Services/IssuingService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>quantity" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: modules/Kleiderkammer/src/Services/IssuingService.php
 

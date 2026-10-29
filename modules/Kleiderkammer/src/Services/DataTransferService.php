@@ -29,7 +29,7 @@ class DataTransferService
     /** Selectable parts of an export or import, in dependency order */
     public const PARTS = [
         'categories' => 'Kategorien',
-        'item_types' => 'Artikeltypen (mit Gruppen und Größen)',
+        'item_types' => 'Artikel (mit Gruppen und Größen)',
         'items' => 'Einzelteile',
         'stock' => 'Massenbestand',
         'treatments' => 'Behandlungen (Wäsche, Prüfungen)',
@@ -313,7 +313,8 @@ class DataTransferService
             // The category comes with the file, or is found by name in the target database
             $row['category_id'] = (isset($row['category_id']) ? ($categoryMap[$row['category_id']] ?? null) : null)
                 ?? (filled($row['category_name'] ?? null) ? ItemCategory::where('name', $row['category_name'])->value('id') : null);
-            unset($row['id'], $row['created_at'], $row['updated_at'], $row['category_name']);
+            // Lager are local to an installation; an imported Artikel goes into the first one
+            unset($row['id'], $row['created_at'], $row['updated_at'], $row['category_name'], $row['store_id']);
             $type = ItemType::updateOrCreate(['name' => $row['name']], $row);
             if ($originalId !== null) {
                 $typeMap[$originalId] = $type->id;

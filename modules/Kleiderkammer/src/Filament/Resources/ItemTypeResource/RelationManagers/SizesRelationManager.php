@@ -45,7 +45,7 @@ class SizesRelationManager extends RelationManager
                 ->validationMessages([
                     'unique' => fn (Get $get) => filled($get('group_id'))
                         ? 'Diese Größe gibt es in dieser Gruppe schon.'
-                        : 'Diese Größe gibt es für diesen Artikeltyp schon.',
+                        : 'Diese Größe gibt es für diesen Artikel schon.',
                 ]),
 
             Forms\Components\Select::make('group_id')

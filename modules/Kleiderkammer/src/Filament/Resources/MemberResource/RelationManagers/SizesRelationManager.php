@@ -34,7 +34,7 @@ class SizesRelationManager extends RelationManager
     {
         return $schema->components([
             Forms\Components\Select::make('item_type_id')
-                ->label('Artikeltyp')
+                ->label('Artikel')
                 ->options(fn () => ItemType::where('has_size', true)->orderBy('sort_order')->orderBy('name')->pluck('name', 'id'))
                 ->required()
                 ->searchable()
@@ -44,7 +44,7 @@ class SizesRelationManager extends RelationManager
                     $set('size_id', null);
                 })
                 ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => $rule->where('user_id', $this->getOwnerRecord()->getKey()))
-                ->validationMessages(['unique' => 'Für diesen Artikeltyp ist schon eine Größe hinterlegt.']),
+                ->validationMessages(['unique' => 'Für diesen Artikel ist schon eine Größe hinterlegt.']),
 
             Forms\Components\Select::make('group_id')
                 ->label('Gruppe')
@@ -65,7 +65,7 @@ class SizesRelationManager extends RelationManager
         return $table
             ->description('Die hinterlegte Größe wird beim Ausgeben aus dem Bestand vorgeschlagen.')
             ->columns([
-                Tables\Columns\TextColumn::make('itemType.name')->label('Artikeltyp')->sortable(),
+                Tables\Columns\TextColumn::make('itemType.name')->label('Artikel')->sortable(),
                 Tables\Columns\TextColumn::make('group.name')->label('Gruppe')->placeholder('–'),
                 Tables\Columns\TextColumn::make('size.name')->label('Größe'),
             ])

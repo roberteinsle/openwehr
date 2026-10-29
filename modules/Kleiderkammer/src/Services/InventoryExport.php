@@ -104,7 +104,7 @@ class InventoryExport
 
     public function unpricedHint(int $count): string
     {
-        return $count === 1 ? '1 Artikel ohne Preis – zählt nicht zur Summe (Preis beim Artikeltyp eintragen).' : $count.' Artikel ohne Preis – zählen nicht zur Summe (Preis beim Artikeltyp eintragen).';
+        return $count === 1 ? '1 Artikel ohne Preis – zählt nicht zur Summe (Preis beim Artikel eintragen).' : $count.' Artikel ohne Preis – zählen nicht zur Summe (Preis beim Artikel eintragen).';
     }
 
     public static function euro(?int $cents): string

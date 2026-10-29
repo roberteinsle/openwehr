@@ -13,7 +13,7 @@ class ListItemTypes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('Artikeltyp anlegen'),
+            Actions\CreateAction::make()->label('Artikel anlegen'),
         ];
     }
 }

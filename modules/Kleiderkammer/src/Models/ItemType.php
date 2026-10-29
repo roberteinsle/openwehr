@@ -12,6 +12,7 @@ class ItemType extends Model
     protected $table = 'kk_item_types';
 
     protected $fillable = [
+        'store_id',
         'category_id',
         'name',
         'code_prefix',
@@ -45,7 +46,7 @@ class ItemType extends Model
 
     /**
      * A copy with its groups and sizes (each size keeps its group); the code prefix stays empty,
-     * because the scanner guesses the Artikeltyp from it and it must stay unique.
+     * because the scanner guesses the Artikel from it and it must stay unique.
      */
     public function copyAs(string $name): self
     {
@@ -67,9 +68,36 @@ class ItemType extends Model
         });
     }
 
+    /** No pieces (also archived), no issues and nothing in stock: then it can go (empty stock rows go with it) */
+    public function isDeletable(): bool
+    {
+        return ! Item::withTrashed()->where('item_type_id', $this->id)->exists()
+            && ! $this->issuedItems()->exists()
+            && ! $this->stock()->where('quantity', '>', 0)->exists();
+    }
+
+    public function deleteIfUnused(): bool
+    {
+        if (! $this->isDeletable()) {
+            return false;
+        }
+        DB::transaction(function () {
+            $this->stock()->delete();
+            $this->delete();
+        });
+
+        return true;
+    }
+
     public function priceGrossCents(): ?int
     {
         return self::gross($this->price_net_cents);
+    }
+
+    /** @return BelongsTo<Store, $this> */
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class, 'store_id');
     }
 
     /** @return BelongsTo<ItemCategory, $this> */

@@ -59,7 +59,7 @@ class IssuancesRelationManager extends RelationManager
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->with(['item.itemType', 'item.size', 'item.group', 'itemType', 'size', 'group'])
-                ->withCount(['messages as open_messages_count' => fn (Builder $q) => $q->whereNull('handled_at')]))
+                ->withCount(['messages', 'messages as open_messages_count' => fn (Builder $q) => $q->whereNull('handled_at')]))
             ->columns([
                 Tables\Columns\TextColumn::make('article')
                     ->label('Artikel')
@@ -73,13 +73,16 @@ class IssuancesRelationManager extends RelationManager
                     ->label('Größe')
                     ->state(fn (IssuedItem $record) => ($record->item?->size ?? $record->size)?->name)
                     ->placeholder('–'),
-                Tables\Columns\TextColumn::make('open_messages_count')
-                    ->label('Nachricht')
+                // Only when this Kamerad wrote about one of his pieces; a click shows the messages
+                Tables\Columns\TextColumn::make('messages_count')
+                    ->label('Nachrichten')
                     ->badge()
-                    ->color('danger')
+                    ->color(fn (IssuedItem $record) => $record->getAttribute('open_messages_count') > 0 ? 'danger' : 'gray')
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                    ->formatStateUsing(fn ($state) => $state > 0 ? $state.' offen' : null)
-                    ->placeholder('–'),
+                    ->formatStateUsing(fn ($state, IssuedItem $record) => $state > 0 ? $state.($record->getAttribute('open_messages_count') > 0 ? ' ('.$record->getAttribute('open_messages_count').' offen)' : '') : null)
+                    ->placeholder('')
+                    ->action($this->messagesAction())
+                    ->visible(fn () => EquipmentMessage::where('user_id', $this->getOwnerRecord()->getKey())->whereNotNull('issued_item_id')->exists()),
                 Tables\Columns\TextColumn::make('quantity')->label('Menge'),
                 Tables\Columns\TextColumn::make('issued_at')->label('Ausgegeben')->date('d.m.Y')->timezone('Europe/Berlin')->sortable(),
                 Tables\Columns\TextColumn::make('returned_at')->label('Zurück')->date('d.m.Y')->timezone('Europe/Berlin')->placeholder('–'),
@@ -103,19 +106,6 @@ class IssuancesRelationManager extends RelationManager
                 $this->issueStockAction(),
             ])
             ->recordActions([
-                Actions\Action::make('messages')
-                    ->label('Nachrichten')
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                    ->color('gray')
-                    ->visible(fn (IssuedItem $record) => $record->messages()->exists())
-                    ->modalHeading('Nachrichten zu diesem Artikel')
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Schließen')
-                    ->modalContent(fn (IssuedItem $record) => new HtmlString(
-                        $record->messages()->latest()->get()->map(fn (EquipmentMessage $m) => '<div style="margin-bottom:1rem">'
-                            .'<p style="font-size:.75rem;opacity:.7">'.e($m->created_at->setTimezone('Europe/Berlin')->format('d.m.Y H:i')).' · '.e($m->kindLabel()).' · '.e($m->stateLabel()).'</p>'
-                            .'<p style="white-space:pre-line">'.e($m->body).'</p></div>')->implode('')
-                    )),
                 Actions\Action::make('return')
                     ->label('Zurücknehmen')
                     ->icon('heroicon-o-arrow-uturn-left')
@@ -140,6 +130,19 @@ class IssuancesRelationManager extends RelationManager
                         Notification::make()->title('Ausgemustert.')->warning()->send();
                     }),
             ]);
+    }
+
+    private function messagesAction(): Actions\Action
+    {
+        return Actions\Action::make('messages')
+            ->modalHeading('Nachrichten zu diesem Artikel')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Schließen')
+            ->modalContent(fn (IssuedItem $record) => new HtmlString(
+                $record->messages()->latest()->get()->map(fn (EquipmentMessage $m) => '<div style="margin-bottom:1rem">'
+                    .'<p style="font-size:.75rem;opacity:.7">'.e($m->created_at->setTimezone('Europe/Berlin')->format('d.m.Y H:i')).' · '.e($m->kindLabel()).' · '.e($m->stateLabel()).'</p>'
+                    .'<p style="white-space:pre-line">'.e($m->body).'</p></div>')->implode('')
+            ));
     }
 
     private function issueTrackedAction(): Actions\Action
@@ -180,7 +183,7 @@ class IssuancesRelationManager extends RelationManager
             ->visible(fn () => $this->getOwnerRecord()->status === MemberStatus::Active)
             ->schema([
                 Forms\Components\Select::make('item_type_id')
-                    ->label('Artikeltyp')
+                    ->label('Artikel')
                     ->options(fn () => ItemType::where('is_tracked', false)->orderBy('sort_order')->orderBy('name')->pluck('name', 'id'))
                     ->required()
                     ->searchable()
@@ -259,6 +262,6 @@ class IssuancesRelationManager extends RelationManager
 
     private static function stockOf(mixed $typeId, int $sizeId, mixed $groupId): int
     {
-        return (int) Stock::where('item_type_id', $typeId)->where('size_id', $sizeId)->where('group_id', $groupId ?: null)->value('quantity');
+        return (int) Stock::where('item_type_id', $typeId)->where('size_id', $sizeId)->where('group_id', $groupId ?: null)->sum('quantity');
     }
 }

@@ -40,10 +40,6 @@ class ItemCategoryResource extends Resource
                 ->required()
                 ->maxLength(255),
 
-            Forms\Components\TextInput::make('sort_order')
-                ->label('Reihenfolge')
-                ->numeric()
-                ->default(0),
         ]);
     }
 
@@ -57,18 +53,11 @@ class ItemCategoryResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('item_types_count')
-                    ->label('Artikeltypen')
-                    ->counts('itemTypes'),
-
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->label('Reihenfolge')
+                    ->label('Artikel')
+                    ->counts('itemTypes')
                     ->sortable(),
             ])
-            ->defaultSort('sort_order')
-            ->reorderable('sort_order')
-            ->reorderRecordsTriggerAction(fn (Actions\Action $action, bool $isReordering) => $action
-                ->button()
-                ->label($isReordering ? 'Fertig' : 'Reihenfolge ändern'))
+            ->defaultSort('name')
             ->actions([
                 Actions\EditAction::make(),
             ])

@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Modules\Kleiderkammer\src\Enums\ItemStatus;
 use Modules\Kleiderkammer\src\Models\IssuedItem;
 use Modules\Kleiderkammer\src\Models\ItemType;
+use Modules\Kleiderkammer\src\Models\Stock;
 
 class InventoryReport
 {
@@ -30,29 +31,32 @@ class InventoryReport
     }
 
     /**
-     * Stock quantities for non-tracked item types, grouped by type + size.
+     * Stock quantities for non-tracked item types by type, group and size (all Lager together).
      */
     public function stockByType(): Collection
     {
-        return ItemType::where('is_tracked', false)
-            ->with(['stock.size'])
+        return Stock::with(['itemType', 'size', 'group'])
+            ->whereHas('itemType', fn ($q) => $q->where('is_tracked', false))
             ->get()
-            ->flatMap(fn (ItemType $type) => $type->stock->map(fn ($row) => (object) [
-                'item_type_id' => $type->id,
-                'name' => $type->name,
-                'size' => $row->size?->name,
-                'quantity' => $row->quantity,
-            ]));
+            ->groupBy(fn (Stock $row) => $row->item_type_id.'-'.$row->group_id.'-'.$row->size_id)
+            ->map(fn ($rows) => (object) [
+                'item_type_id' => $rows->first()->item_type_id,
+                'name' => $rows->first()->itemType?->name,
+                'size' => collect([$rows->first()->group?->name, $rows->first()->size?->name])->filter()->implode(' · ') ?: null,
+                'quantity' => (int) $rows->sum('quantity'),
+            ])
+            ->values();
     }
 
     /**
-     * Open issuance records (items still out with members), ordered by issued_at.
+     * Open issuance records (items still out with members), the latest first.
      */
     public function openLoans(): Collection
     {
         return IssuedItem::with(['user', 'item.itemType', 'itemType', 'size'])
             ->whereNull('returned_at')
-            ->orderBy('issued_at')
+            ->orderByDesc('issued_at')
+            ->orderByDesc('id')
             ->get();
     }
 

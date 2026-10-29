@@ -20,6 +20,8 @@
         .ir-table td { padding: .6rem .75rem .6rem 0; border-bottom: 1px solid #f3f4f6; }
         .ir-table .num { text-align: right; padding-right: 0; }
         .ir-mono { font-family: ui-monospace, monospace; font-size: .75rem; }
+        .ir-zero td { color: #dc2626; font-weight: 600; }
+        .ir-link { color: rgb(var(--primary-600, 37 99 235)); text-decoration: underline; }
         .ir-badge { display: inline-block; min-width: 1.75rem; padding: .1rem .5rem; border-radius: .4rem; font-size: .8rem; font-weight: 600; text-align: center; }
         .dark .ir-bar { background: rgb(255 255 255 / .1); }
         .dark .ir-table th { border-color: rgb(255 255 255 / .1); }
@@ -32,9 +34,9 @@
     <div class="ir">
         <div class="ir-cols">
             {{-- Einzelteile --}}
-            <x-filament::section icon="heroicon-o-qr-code" heading="Einzelteile" description="Einzeln erfasste Artikel nach Typ">
+            <x-filament::section icon="heroicon-o-qr-code" heading="Artikel mit Code" description="Die fünf mit den meisten Teilen">
                 @if($trackedByType->isEmpty())
-                    <p class="ir-muted">Noch keine einzeln erfassten Teile.</p>
+                    <p class="ir-muted">Noch keine Artikel mit Code.</p>
                 @else
                     <div class="ir-list">
                         @foreach($trackedByType as $row)
@@ -61,22 +63,22 @@
             </x-filament::section>
 
             {{-- Massenbestand --}}
-            <x-filament::section icon="heroicon-o-cube" heading="Massenbestand" description="Stückzahlen nach Typ und Größe">
+            <x-filament::section icon="heroicon-o-cube" heading="Artikel mit Menge" description="Die fünf mit dem kleinsten Bestand">
                 @if($stockByType->isEmpty())
-                    <p class="ir-muted">Noch kein Massenbestand.</p>
+                    <p class="ir-muted">Noch keine Artikel mit Menge.</p>
                 @else
                     <div class="ir-scroll">
                         <table class="ir-table">
                             <thead>
                                 <tr>
-                                    <th>Artikeltyp</th>
-                                    <th>Größe</th>
+                                    <th>Artikel</th>
+                                    <th>Gruppe / Größe</th>
                                     <th class="num">Bestand</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($stockByType as $row)
-                                    <tr>
+                                    <tr @class(['ir-zero' => $row->quantity <= 0])>
                                         <td>{{ $row->name }}</td>
                                         <td class="ir-muted">{{ $row->size ?? '–' }}</td>
                                         <td class="num">
@@ -92,15 +94,15 @@
         </div>
 
         {{-- Offene Leihen --}}
-        <x-filament::section icon="heroicon-o-clock" heading="Offene Leihen" description="Teile, die noch bei Mitgliedern sind">
+        <x-filament::section icon="heroicon-o-clock" heading="Letzte Ausleihe" description="Die fünf neuesten Ausgaben, die noch bei Kameraden sind">
             @if($openLoans->isEmpty())
-                <p class="ir-muted">Es sind keine Leihen offen.</p>
+                <p class="ir-muted">Es ist nichts ausgeliehen.</p>
             @else
                 <div class="ir-scroll">
                     <table class="ir-table">
                         <thead>
                             <tr>
-                                <th>Mitglied</th>
+                                <th>Kamerad</th>
                                 <th>Artikel</th>
                                 <th>Code / Größe</th>
                                 <th>Ausgegeben am</th>
@@ -109,7 +111,7 @@
                         <tbody>
                             @foreach($openLoans as $loan)
                                 <tr>
-                                    <td>{{ $loan->user?->name ?? '–' }}</td>
+                                    <td>@if($loan->user)<a href="{{ \Modules\Kleiderkammer\src\Filament\Resources\MemberResource::getUrl('edit', ['record' => $loan->user]) }}" class="ir-link">{{ $loan->user->name }}</a>@else – @endif</td>
                                     <td>{{ $loan->item?->itemType?->name ?? $loan->itemType?->name ?? '–' }}</td>
                                     <td class="ir-mono">{{ $loan->item?->code ?? ($loan->size?->name ?? '–') }}</td>
                                     <td class="ir-muted">{{ $loan->issued_at->setTimezone('Europe/Berlin')->format('d.m.Y') }}</td>
