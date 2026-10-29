@@ -1,5 +1,5 @@
 # Pinned to the patch release: PHP 8.4.27 fixes CVE-2026-109618/-109619 (remote code execution via PHP-FPM)
-FROM serversideup/php:8.4.27-fpm-nginx-alpine
+FROM serversideup/php:8.5.0-fpm-nginx-alpine
 
 USER root
 
