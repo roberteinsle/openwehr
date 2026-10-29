@@ -85,8 +85,22 @@
         </div>
         <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="needsAck" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Lesebestätigung: jeder Empfänger bestätigt „gelesen“ – du siehst, wer noch fehlt, und kannst erinnern</label>
         <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="important" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Wichtig (rot, oben, nicht ausblendbar)</label>
-        <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="mail" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Zusätzlich per E-Mail an alle Empfänger schicken (auch in die Glocke und als Push)</label>
-        <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="push" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Ohne E-Mail nur in die Glocke und als Push aufs Handy – für kurzfristige Ansagen</label>
+        <fieldset>
+            <legend class="text-sm text-gray-700 mb-1">Benachrichtigen – auf der Startseite und unter „Mitteilungen“ steht sie immer</legend>
+            <div class="space-y-1.5">
+                @foreach([
+                    'push' => ['Glocke und Push', 'In der Glocke und als Nachricht aufs Handy (wer Push eingeschaltet hat).'],
+                    'mail' => ['Glocke, Push und E-Mail', 'Zusätzlich eine E-Mail an jeden Empfänger – für alle, die nicht regelmäßig in die App schauen.'],
+                    'none' => ['Nicht benachrichtigen', $editingId ? 'Z. B. für eine kleine Korrektur, die nicht noch einmal an alle gehen soll.' : 'Nur auf der Startseite.'],
+                ] as $value => [$label, $hint])
+                    <label class="flex items-start gap-2 text-sm text-gray-700">
+                        <input type="radio" wire:model="notify" value="{{ $value }}" class="mt-0.5 border-gray-300 text-fw-red focus:ring-fw-red">
+                        <span><span class="font-medium text-gray-900">{{ $label }}</span>@if($value === 'push' && ! $editingId) <span class="text-xs text-gray-500">(Standard)</span>@endif<br><span class="text-xs text-gray-500">{{ $hint }}</span></span>
+                    </label>
+                @endforeach
+            </div>
+            @error('notify')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </fieldset>
         <div class="flex gap-3">
             <button type="submit" class="inline-flex items-center rounded-lg bg-fw-red px-4 py-2 text-sm font-semibold text-white hover:bg-fw-red-dark">{{ $editingId ? 'Speichern' : 'Veröffentlichen' }}</button>
             @if($editingId)<button type="button" wire:click="cancel" class="text-sm text-gray-500 underline">Abbrechen</button>@endif

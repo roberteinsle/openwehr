@@ -62,7 +62,7 @@ test('a device is switched on in the profile; every entry under the bell goes to
 
     // A short notice: bell and push, no mail
     Livewire::actingAs($editor)->test(Manage::class)
-        ->set('title', 'Dienst heute erst um 19:30')->set('push', true)->call('save')->assertSee('als Push verschickt');
+        ->set('title', 'Dienst heute erst um 19:30')->set('notify', 'push')->call('save')->assertSee('als Push verschickt');
 
     expect($this->push->sent)->toHaveCount(1)
         ->and($this->push->sent[0]['title'])->toBe('Mitteilung: Dienst heute erst um 19:30')

@@ -44,10 +44,11 @@ class Manage extends Component
     /** @var array<int, string> */
     public array $groupIds = [];
 
-    public bool $mail = false;
-
-    /** Only bell and push, no mail: a short notice to the phones */
-    public bool $push = false;
+    /**
+     * Who learns about it besides the start page: none, push (bell and push, the default for new ones)
+     * or mail (bell, push and e-mail). Editing starts at none, so a correction doesn't go out again.
+     */
+    public string $notify = 'push';
 
     public ?string $flash = null;
 
@@ -67,14 +68,13 @@ class Manage extends Component
         $this->functionIds = $a->functions()->pluck('member_functions.id')->map(fn ($id) => (string) $id)->all();
         $this->needsAck = $a->needs_ack;
         $this->uploads = [];
-        $this->mail = false;
-        $this->push = false;
+        $this->notify = 'none';
         $this->preview = false;
     }
 
     public function cancel(): void
     {
-        $this->reset('editingId', 'title', 'body', 'important', 'visibleFrom', 'visibleUntil', 'groupIds', 'functionIds', 'needsAck', 'uploads', 'mail', 'push', 'preview');
+        $this->reset('editingId', 'title', 'body', 'important', 'visibleFrom', 'visibleUntil', 'groupIds', 'functionIds', 'needsAck', 'uploads', 'notify', 'preview');
     }
 
     public function save(AnnouncementService $announcements): void
@@ -82,6 +82,7 @@ class Manage extends Component
         $this->validate([
             'title' => ['required', 'string', 'max:150'],
             'body' => ['nullable', 'string', 'max:5000'],
+            'notify' => ['required', 'in:none,push,mail'],
             'visibleFrom' => ['nullable', 'date_format:d.m.Y'],
             'visibleUntil' => ['nullable', 'date_format:d.m.Y'],
             'groupIds.*' => ['exists:groups,id'],
@@ -110,8 +111,8 @@ class Manage extends Component
                 ['title' => trim($this->title), 'body' => trim($this->body) ?: null, 'important' => $this->important, 'needs_ack' => $this->needsAck, 'visible_from' => $from, 'visible_until' => $until],
                 array_map('intval', $this->groupIds),
                 auth()->user(),
-                $this->mail,
-                $this->push,
+                $this->notify === 'mail',
+                $this->notify === 'push',
                 array_map('intval', $this->functionIds),
                 $this->uploads,
             );
@@ -121,7 +122,11 @@ class Manage extends Component
             return;
         }
 
-        $this->flash = 'Mitteilung „'.$announcement->title.'“ gespeichert'.($this->mail ? ' und per E-Mail verschickt.' : ($this->push ? ' und als Push verschickt.' : '.'));
+        $this->flash = 'Mitteilung „'.$announcement->title.'“ gespeichert'.match ($this->notify) {
+            'mail' => ' und per E-Mail, in die Glocke und als Push verschickt.',
+            'push' => ' und in die Glocke und als Push verschickt.',
+            default => '.',
+        };
         $this->cancel();
     }
 

@@ -76,7 +76,7 @@ test('a notice is written, shown to its audience and can be mailed', function ()
         ->set('title', 'Zeltlager-Anmeldung bis Freitag')
         ->set('body', 'Bitte bei Bernd abgeben.')
         ->set('groupIds', [(string) $youth->id])
-        ->set('mail', true)
+        ->set('notify', 'mail')
         ->call('save')
         ->assertHasNoErrors();
 
@@ -200,7 +200,7 @@ test('the text is Markdown: formatted on the start page, in the list and in the 
         ->assertSee('So erscheint die Mitteilung auf der Startseite')
         ->assertSeeHtml('<h2>Anmelden mit Code</h2>')->assertSeeHtml('<strong>Code</strong>')->assertDontSee('**Code**')
         ->set('preview', false)->assertSee('Formatieren mit Markdown')
-        ->set('mail', true)->call('save')->assertHasNoErrors()->assertSet('preview', false);
+        ->set('notify', 'mail')->call('save')->assertHasNoErrors()->assertSet('preview', false);
 
     // Start page and list: rendered, a single line break stays a break
     $this->actingAs($this->member)->get(route('home'))
@@ -223,4 +223,22 @@ test('Markdown never lets HTML, scripts or outside images through', function () 
     expect($html)->not->toContain('<script')->not->toContain('<b ')->not->toContain('javascript:')->not->toContain('<img')
         ->toContain('&lt;script&gt;')
         ->toContain('<a target="_blank" rel="noopener noreferrer nofollow" href="https://tracker.example.com/pixel.png">Logo</a>');
+});
+
+test('a new notice goes to bell and push by default; an edit notifies nobody unless chosen', function () {
+    Notification::fake();
+    $form = Livewire::actingAs($this->redakteur)->test(Manage::class)->assertSet('notify', 'push')
+        ->set('title', 'Dienst heute erst um 19:30')->call('save')->assertHasNoErrors()
+        ->assertSee('in die Glocke und als Push verschickt');
+    Notification::assertSentTo($this->member, AnnouncementNotification::class, fn ($n, array $channels) => $channels === ['database']);
+
+    Notification::fake();
+    $form->call('edit', Announcement::sole()->id)->assertSet('notify', 'none')
+        ->set('title', 'Dienst heute erst um 19:45')->call('save')->assertHasNoErrors();
+    Notification::assertNothingSent();
+
+    $form->call('edit', Announcement::sole()->id)->set('notify', 'mail')->call('save');
+    Notification::assertSentTo($this->member, AnnouncementNotification::class, fn ($n, array $channels) => in_array('mail', $channels, true));
+
+    $form->set('title', 'X')->set('notify', 'alle')->call('save')->assertHasErrors('notify');
 });
