@@ -397,3 +397,122 @@ test('an Einladung on screen holds for half an hour, by mail for two days', func
     expect(app(Invitation::class)->send($user, $admin)->equalTo(now()->addHours(Invitation::MAIL_HOURS)))->toBeTrue();
     Notification::assertSentTo($user, InvitationNotification::class);
 });
+
+/** The code of the last login mail to $user */
+function loginCode(User $user): string
+{
+    $code = null;
+    Notification::assertSentTo($user, MagicLinkNotification::class, function ($n) use (&$code) {
+        $code = (fn () => $this->code)->call($n);
+
+        return true;
+    });
+
+    return $code;
+}
+
+test('the mail carries a code that logs in inside the app on the home screen', function () {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'hanna@example.com', 'last_login_at' => now()->subDay()]);
+
+    $form = Livewire::test(LoginForm::class)->set('email', 'Hanna@example.com')->call('submit')->assertSet('sent', true)
+        ->assertSee('Oder den Code aus der Mail eingeben');
+    $code = loginCode($user);
+    expect($code)->toMatch('/^\d{6}$/');
+
+    $mail = (new MagicLinkNotification('x', $code))->toMail($user);
+    expect(implode(' ', $mail->introLines).implode(' ', $mail->outroLines))->toContain($code)
+        ->and($mail->subject)->not->toContain($code);
+    expect(LoginToken::sole()->code_hash)->not->toBe($code)->not->toBeNull();
+
+    $form->set('code', substr($code, 0, 3).' '.substr($code, 3))->call('verify')->assertHasNoErrors()->assertRedirect(route('home'));
+    $this->assertAuthenticatedAs($user);
+    // Code and link are the same token: both are used up now
+    expect(LoginToken::whereNull('used_at')->count())->toBe(0);
+});
+
+test('a wrong code does not log in, and after five wrong tries the code is dead but the link still works', function () {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'hanna@example.com', 'last_login_at' => now()->subDay()]);
+    $form = Livewire::test(LoginForm::class)->set('email', 'hanna@example.com')->call('submit');
+    $code = loginCode($user);
+    $wrong = str_pad((string) (((int) $code + 1) % 1000000), 6, '0', STR_PAD_LEFT);
+
+    foreach (range(1, MagicLinkService::CODE_ATTEMPTS) as $i) {
+        $form->set('code', $wrong)->call('verify')->assertHasErrors('code');
+    }
+    $form->set('code', $code)->call('verify')->assertHasErrors('code');
+    $this->assertGuest();
+
+    $raw = null;
+    Notification::assertSentTo($user, MagicLinkNotification::class, function ($n) use (&$raw) {
+        $raw = (fn () => $this->rawToken)->call($n);
+
+        return true;
+    });
+    $this->post(route('auth.magic-link.consume', $raw))->assertRedirect(route('home'));
+    $this->assertAuthenticatedAs($user);
+});
+
+test('a code only works with the address it was sent to, not after expiry and not twice', function () {
+    Notification::fake();
+    $hanna = User::factory()->create(['email' => 'hanna@example.com', 'last_login_at' => now()->subDay()]);
+    User::factory()->create(['email' => 'bernd@example.com']);
+    $form = Livewire::test(LoginForm::class)->set('email', 'hanna@example.com')->call('submit');
+    $code = loginCode($hanna);
+
+    Livewire::test(LoginForm::class)->set('email', 'bernd@example.com')->set('sent', true)->set('code', $code)->call('verify')->assertHasErrors('code');
+    Livewire::test(LoginForm::class)->set('email', 'niemand@example.com')->set('sent', true)->set('code', $code)->call('verify')->assertHasErrors('code');
+    $this->assertGuest();
+
+    $this->travel(16)->minutes();
+    $form->set('code', $code)->call('verify')->assertHasErrors('code');
+    $this->assertGuest();
+    $this->travelBack();
+
+    // A fresh request: works once
+    RateLimiter::clear('magic-code:email:'.hash('sha256', 'hanna@example.com'));
+    Notification::fake();
+    $form = Livewire::test(LoginForm::class)->set('email', 'hanna@example.com')->call('submit');
+    $code = loginCode($hanna);
+    $form->set('code', $code)->call('verify')->assertHasNoErrors();
+    auth()->logout();
+    Livewire::test(LoginForm::class)->set('email', 'hanna@example.com')->set('sent', true)->set('code', $code)->call('verify')->assertHasErrors('code');
+    $this->assertGuest();
+});
+
+test('malformed codes never reach the database', function () {
+    foreach (["' OR '1'='1", '12345', '1234567', 'abcdef', "1' UNION SELECT NULL--"] as $bad) {
+        $queries = 0;
+        DB::listen(function () use (&$queries) {
+            $queries++;
+        });
+        expect(fn () => app(MagicLinkService::class)->consumeCode('hanna@example.com', $bad, Request::create('/', 'POST')))->toThrow(ValidationException::class);
+        expect($queries)->toBe(0);
+    }
+});
+
+test('after ten tries per hour even the right code is refused', function () {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'hanna@example.com']);
+    $form = Livewire::test(LoginForm::class)->set('email', 'hanna@example.com')->call('submit');
+    $code = loginCode($user);
+    foreach (range(1, 10) as $i) {
+        RateLimiter::hit('magic-code:email:'.hash('sha256', 'hanna@example.com'), 3600);
+    }
+
+    $form->set('code', $code)->call('verify')->assertHasErrors(['code' => 'Zu viele Versuche. Bitte warte etwas oder nutze den Link aus der Mail.']);
+    $this->assertGuest();
+});
+
+test('the first login by code leads to the Willkommen page; Einladungen have no code', function () {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'nina@example.com', 'last_login_at' => null]);
+    app(Invitation::class)->create($user);
+    expect(LoginToken::sole()->code_hash)->toBeNull();
+
+    $form = Livewire::test(LoginForm::class)->set('email', 'nina@example.com')->call('submit');
+    $form->set('code', loginCode($user))->call('verify')->assertRedirect(route('welcome'));
+    $this->assertAuthenticatedAs($user);
+    expect(LoginToken::whereNull('used_at')->count())->toBe(0);
+});

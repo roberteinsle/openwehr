@@ -12,6 +12,9 @@ class LoginForm extends Component
 
     public bool $sent = false;
 
+    /** The code from the mail, for the app on the home screen (a link from the mail opens the browser instead) */
+    public string $code = '';
+
     public function submit(MagicLinkService $service): void
     {
         // Livewire skips the TrimStrings middleware
@@ -32,6 +35,31 @@ class LoginForm extends Component
         }
 
         $this->sent = true;
+    }
+
+    public function verify(MagicLinkService $service): void
+    {
+        try {
+            $service->consumeCode($this->email, $this->code, request());
+        } catch (ValidationException $e) {
+            $this->addError('code', $e->errors()['code'][0] ?? $e->errors()['token'][0] ?? 'Der Code stimmt nicht.');
+
+            return;
+        }
+
+        session()->regenerate();
+        if (session()->pull('first_login')) {
+            $this->redirectRoute('welcome');
+        } else {
+            $this->redirectIntended(route('home'));
+        }
+    }
+
+    /** Back to the address field, e.g. after a typo */
+    public function restart(): void
+    {
+        $this->reset('sent', 'code');
+        $this->resetErrorBag();
     }
 
     public function render()

@@ -23,6 +23,8 @@ class LoginToken extends Model
         'ip',
         'user_agent',
         'created_at',
+        'code_hash',
+        'code_attempts',
     ];
 
     protected function casts(): array

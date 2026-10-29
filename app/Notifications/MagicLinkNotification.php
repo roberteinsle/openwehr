@@ -11,7 +11,8 @@ class MagicLinkNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private readonly string $rawToken) {}
+    /** The code goes only into the mail text, never into the subject (the mail log keeps subjects) */
+    public function __construct(private readonly string $rawToken, private readonly ?string $code = null) {}
 
     public function via(object $notifiable): array
     {
@@ -25,12 +26,18 @@ class MagicLinkNotification extends Notification
 
         $org = app(OrganizationSettings::class);
 
-        return (new MailMessage)
+        $mail = (new MailMessage)
             ->subject('Dein Login-Link für '.$org->shortName())
             ->greeting('Hallo '.$notifiable->name.',')
             ->line('Jemand hat einen Login-Link für dein Konto angefordert.')
-            ->action('Jetzt anmelden', $url)
-            ->line("Dieser Link ist {$ttl} Minuten gültig und kann nur einmal verwendet werden.")
+            ->action('Jetzt anmelden', $url);
+        if ($this->code !== null) {
+            // For the app on the home screen (iPhone): a link from the mail opens Safari, not the app
+            $mail->line('Du nutzt die App auf dem Home-Bildschirm? Dann gib dort diesen Code ein: **'.$this->code.'**');
+        }
+
+        return $mail
+            ->line("Link und Code sind {$ttl} Minuten gültig und funktionieren nur einmal.")
             ->line('Falls du keinen Link angefordert hast, kannst du diese E-Mail ignorieren.')
             ->salutation($org->salutation());
     }
