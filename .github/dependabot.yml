@@ -33,7 +33,8 @@ updates:
         update-types: [minor, patch]
     labels: [dependencies]
 
-  # The base image (PHP, nginx, Alpine) of the Dockerfile
+  # The base image (PHP, nginx, Alpine) of the Dockerfile. PHP stays on 8.4 with its patch releases
+  # (security fixes); a new PHP minor version (8.5) is a planned upgrade, tried on the test instance first.
   - package-ecosystem: docker
     directory: /
     schedule:
@@ -42,6 +43,8 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: [version-update:semver-major]
+      - dependency-name: serversideup/php
+        update-types: [version-update:semver-minor]
     labels: [dependencies]
 
   - package-ecosystem: github-actions
