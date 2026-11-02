@@ -337,9 +337,9 @@ test('CSA-Träger: ready with Atemschutz, CSA training and a CSA-Übung of the l
         ['user_id' => $this->hanna->id, 'start_pressure' => 300], ['user_id' => $this->bernd->id, 'start_pressure' => 300, 'override' => true]], true);
     expect($team->csa)->toBeTrue()->and($team->members()->where('user_id', $this->bernd->id)->value('override_reason'))->toBe('kein CSA-Träger');
 
-    // The CSA-Übung runs out: reminder
+    // The CSA-Übung runs out: reminder (20 days before, whatever the months' lengths)
     Notification::fake();
-    $this->travel(11)->months();
+    $this->travelTo(now()->addMonths(ReadinessService::VALID_MONTHS)->subDays(20));
     Training::where('user_id', $this->hanna->id)->whereIn('kind', ['belastungsuebung', 'unterweisung'])->update(['done_on' => now()->toDateString()]);
     $this->artisan('atemschutz:remind')->assertSuccessful();
     Notification::assertSentTo($this->hanna, DeadlineNotification::class, fn ($n, $c, $u) => str_contains(implode(' ', $n->toMail($u)->introLines), 'CSA-Übung läuft ab am'));
