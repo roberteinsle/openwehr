@@ -1255,7 +1255,7 @@ parameters:
 			path: modules/Ausruestung/src/Services/LoadPlanService.php
 
 		-
-			message: '#^Method Modules\\Ausruestung\\src\\Services\\LoadPlanService\:\:compare\(\) should return Illuminate\\Support\\Collection\<int, array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection, unplanned\: Illuminate\\Support\\Collection\}\> but returns Illuminate\\Support\\Collection\<int, array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection\<int, array\{category\: mixed, target\: mixed, present\: int\<0, max\>, usable\: int\<0, max\>, missing\: float\|int\<0, max\>, surplus\: float\|int\<0, max\>, problems\: Illuminate\\Support\\Collection\<int, non\-falsy\-string\>\}\>, unplanned\: Illuminate\\Support\\Collection\<int, mixed\>\}\>\.$#'
+			message: '#^Method Modules\\Ausruestung\\src\\Services\\LoadPlanService\:\:compare\(\) should return Illuminate\\Support\\Collection\<int, array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection, unplanned\: Illuminate\\Support\\Collection\}\> but returns Illuminate\\Support\\Collection\<int, array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection\<int, array\{category\: mixed, target\: mixed, present\: int, usable\: int, missing\: float\|int, surplus\: float\|int, problems\: Illuminate\\Support\\Collection\<int, mixed\>\}\>, unplanned\: Illuminate\\Support\\Collection\<int, mixed\>\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: modules/Ausruestung/src/Services/LoadPlanService.php
@@ -1267,7 +1267,7 @@ parameters:
 			path: modules/Ausruestung/src/Services/LoadPlanService.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection\<int, array\{category\: mixed, target\: mixed, present\: int\<0, max\>, usable\: int\<0, max\>, missing\: float\|int\<0, max\>, surplus\: float\|int\<0, max\>, problems\: Illuminate\\Support\\Collection\<int, non\-falsy\-string\>\}\>, unplanned\: Illuminate\\Support\\Collection\<int, mixed\>\}, Closure\(Modules\\Ausruestung\\src\\Models\\Compartment\)\: array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection\<int, array\{category\: mixed, target\: mixed, present\: int\<0, max\>, usable\: int\<0, max\>, missing\: float\|int\<0, max\>, surplus\: float\|int\<0, max\>, problems\: Illuminate\\Support\\Collection\<int, non\-falsy\-string\>\}\>, unplanned\: Illuminate\\Support\\Collection\<int, mixed\>\} given\.$#'
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection\<int, array\{category\: mixed, target\: mixed, present\: int, usable\: int, missing\: float\|int, surplus\: float\|int, problems\: Illuminate\\Support\\Collection\<int, string\>\}\>, unplanned\: Illuminate\\Support\\Collection\<int, mixed\>\}, Closure\(Modules\\Ausruestung\\src\\Models\\Compartment\)\: array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection\<int, array\{category\: mixed, target\: mixed, present\: int, usable\: int, missing\: float\|int, surplus\: float\|int, problems\: Illuminate\\Support\\Collection\<int, mixed\>\}\>, unplanned\: Illuminate\\Support\\Collection\<int, mixed\>\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: modules/Ausruestung/src/Services/LoadPlanService.php
@@ -1639,7 +1639,7 @@ parameters:
 			path: modules/Einsatzbericht/src/Services/ReportService.php
 
 		-
-			message: '#^Method Modules\\Einsatzbericht\\src\\Services\\ReportService\:\:consumption\(\) should return Illuminate\\Support\\Collection\<string, array\{label\: string, items\: Illuminate\\Support\\Collection\}\> but returns Illuminate\\Support\\Collection\<\(int\|string\), array\{label\: \(int\|string\), items\: Illuminate\\Support\\Collection\<int, array\{name\: string, unit\: string, quantity\: mixed, reports\: int\<0, max\>\}\>\}\>\.$#'
+			message: '#^Method Modules\\Einsatzbericht\\src\\Services\\ReportService\:\:consumption\(\) should return Illuminate\\Support\\Collection\<string, array\{label\: string, items\: Illuminate\\Support\\Collection\}\> but returns Illuminate\\Support\\Collection\<\(int\|string\), array\{label\: \(int\|string\), items\: Illuminate\\Support\\Collection\<int, array\{name\: string, unit\: string, quantity\: mixed, reports\: int\}\>\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: modules/Einsatzbericht/src/Services/ReportService.php
@@ -1873,7 +1873,7 @@ parameters:
 			path: modules/Fahrtenbuch/src/Services/LogbookService.php
 
 		-
-			message: '#^Method Modules\\Fahrtenbuch\\src\\Services\\LogbookService\:\:statistics\(\) should return Illuminate\\Support\\Collection\<int, array\{vehicle\: Modules\\Fahrzeugbuchung\\src\\Models\\Vehicle, trips\: int, km\: int, by_purpose\: array\<string, int\>, liters\: float, cost\: int, per100\: float\|null\}\> but returns Illuminate\\Support\\Collection\<int, array\{vehicle\: Modules\\Fahrzeugbuchung\\src\\Models\\Vehicle, trips\: int\<0, max\>, km\: int, by_purpose\: array\<int\>, liters\: float, cost\: int, per100\: float\|null\}\>\.$#'
+			message: '#^Method Modules\\Fahrtenbuch\\src\\Services\\LogbookService\:\:statistics\(\) should return Illuminate\\Support\\Collection\<int, array\{vehicle\: Modules\\Fahrzeugbuchung\\src\\Models\\Vehicle, trips\: int, km\: int, by_purpose\: array\<string, int\>, liters\: float, cost\: int, per100\: float\|null\}\> but returns Illuminate\\Support\\Collection\<int, array\{vehicle\: Modules\\Fahrzeugbuchung\\src\\Models\\Vehicle, trips\: int, km\: int, by_purpose\: array\<int\>, liters\: float, cost\: int, per100\: float\|null\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: modules/Fahrtenbuch/src/Services/LogbookService.php
@@ -2515,7 +2515,7 @@ parameters:
 			path: modules/Fahrzeuge/src/Services/FleetService.php
 
 		-
-			message: '#^Method Modules\\Fahrzeuge\\src\\Services\\FleetService\:\:runningAssignments\(\) should return Illuminate\\Support\\Collection\<int, array\{vehicle_id\: int\|null, name\: string, report_id\: int, number\: string, keyword\: string\|null, departed_at\: Illuminate\\Support\\Carbon\|null, crew\: int\}\> but returns Illuminate\\Support\\Collection\<int, array\{vehicle_id\: int\<0, max\>\|null, name\: string, report_id\: int\<0, max\>, number\: mixed, keyword\: mixed, departed_at\: string\|null, crew\: int\<0, max\>\}\>\.$#'
+			message: '#^Method Modules\\Fahrzeuge\\src\\Services\\FleetService\:\:runningAssignments\(\) should return Illuminate\\Support\\Collection\<int, array\{vehicle_id\: int\|null, name\: string, report_id\: int, number\: string, keyword\: string\|null, departed_at\: Illuminate\\Support\\Carbon\|null, crew\: int\}\> but returns Illuminate\\Support\\Collection\<int, array\{vehicle_id\: int\|null, name\: string, report_id\: int, number\: mixed, keyword\: mixed, departed_at\: string\|null, crew\: int\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: modules/Fahrzeuge/src/Services/FleetService.php
@@ -3061,7 +3061,7 @@ parameters:
 			path: modules/Kalender/src/Services/EventService.php
 
 		-
-			message: '#^Method Modules\\Kalender\\src\\Services\\EventService\:\:participantRows\(\) should return Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, groups\: string, status\: string, comment\: string, attended\: string\}\> but returns Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, groups\: string, status\: mixed, comment\: mixed, attended\: ''''\|''ja''\|''nein''\}\>\.$#'
+			message: '#^Method Modules\\Kalender\\src\\Services\\EventService\:\:participantRows\(\) should return Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, groups\: string, status\: string, comment\: string, attended\: string\}\> but returns Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, groups\: string, status\: mixed, comment\: mixed, attended\: string\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: modules/Kalender/src/Services/EventService.php
@@ -3469,7 +3469,7 @@ parameters:
 			path: modules/Lehrgaenge/LehrgaengeServiceProvider.php
 
 		-
-			message: '#^Parameter \#3 \$rows of method App\\Services\\HoursRegistry\:\:register\(\) expects callable\(list\<int\>, Illuminate\\Support\\Carbon, Illuminate\\Support\\Carbon\)\: iterable\<array\{user_id\: int, date\: Illuminate\\Support\\Carbon, title\: string, minutes\: int\}\>, Closure\(array, Illuminate\\Support\\Carbon, Illuminate\\Support\\Carbon\)\: Illuminate\\Support\\Collection\<int, array\{user_id\: mixed, date\: string, title\: non\-falsy\-string, minutes\: int\<0, max\>\}\> given\.$#'
+			message: '#^Parameter \#3 \$rows of method App\\Services\\HoursRegistry\:\:register\(\) expects callable\(list\<int\>, Illuminate\\Support\\Carbon, Illuminate\\Support\\Carbon\)\: iterable\<array\{user_id\: int, date\: Illuminate\\Support\\Carbon, title\: string, minutes\: int\}\>, Closure\(array, Illuminate\\Support\\Carbon, Illuminate\\Support\\Carbon\)\: Illuminate\\Support\\Collection\<int, array\{user_id\: mixed, date\: string, title\: string, minutes\: int\}\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: modules/Lehrgaenge/LehrgaengeServiceProvider.php
@@ -4453,7 +4453,7 @@ parameters:
 			path: modules/Schichtplan/src/Livewire/PlanEditor.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, array\<int\<0, max\>, mixed\>\>, Closure\(Modules\\Schichtplan\\src\\Models\\Slot\)\: non\-empty\-array\<int\<0, max\>, array\<int\<0, max\>, mixed\>\> given\.$#'
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, array\<int, mixed\>\>, Closure\(Modules\\Schichtplan\\src\\Models\\Slot\)\: non\-empty\-array\<int\<0, max\>, array\<int, mixed\>\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: modules/Schichtplan/src/Livewire/PlanEditor.php
