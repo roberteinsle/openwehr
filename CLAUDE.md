@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-openwehr (repo `roberteinsle/openwehr`, name always written in lowercase): a web app for volunteer fire brigades: a core plus modules that each Wehr switches on (Laravel 12, Livewire 4, Filament 5 admin, Tailwind 4 + Alpine + FullCalendar 6 via Vite, Pest 3). Licensed under AGPL-3.0. The UI, emails, validation messages and README are German; code, comments and commit messages are English. The README documents every user-facing behaviour in detail. Read it before changing booking or decision logic, and update it when behaviour changes.
+openwehr (repo `roberteinsle/openwehr`, name always written in lowercase): a web app for volunteer fire brigades: a core plus modules that each Wehr switches on (Laravel 12, Livewire 4, Filament 5 admin, Tailwind 4 + Alpine + FullCalendar 6 via Vite, Pest 3). Licensed under AGPL-3.0. The UI, emails, validation messages and README are German; code, comments and commit messages are English. `HANDBUCH.md` documents every user-facing behaviour in detail and is the source of the GitHub wiki. Read it before changing booking or decision logic, and update it when behaviour changes. `README.md` is the short overview for newcomers (pitch, quick start, module table linking to the wiki): touch it only for new modules or changes to installation and the overall picture, never for details.
 
 ## Commands
 
@@ -18,7 +18,7 @@ composer test                  # config:clear + artisan test
 composer audit && npm audit --omit=dev           # known vulnerabilities, enforced in CI
 npm run build                  # production assets
 docker compose up --build      # full stack on :8080, mails go to storage/logs/laravel.log
-python3 scripts/build-wiki.py <dir> <version>   # GitHub wiki pages from README.md; copy into a clone of openwehr.wiki.git and push
+python3 scripts/build-wiki.py <dir> <version>   # GitHub wiki pages from HANDBUCH.md; copy into a clone of openwehr.wiki.git and push
 ```
 
 **PostgreSQL is mandatory, including for tests.** SQLite and MySQL won't work. `phpunit.xml` expects `pgsql` at `127.0.0.1:5432` with db `openwehr_test`, user `openwehr`, password `secret`. Feature tests use `RefreshDatabase` (see `tests/Pest.php`). CI runs `pest --parallel` against Postgres 18.
@@ -155,4 +155,4 @@ CI (`deploy.yml`, job "Security Checks", on every push and pull request): `compo
 ## Deployment
 The app version (`config/app.php` → `version`, e.g. `V.0.5.8`) is bumped by hand and shown small behind the admin title in the top bar (`brandLogo` → `resources/views/filament/brand.blade.php`). Each version gets a GitHub release with the tag in lowercase semver form (`v0.5.8`) and the title as written (`V.0.5.8`); versions may have two to four parts (`V.0.9`, `V.0.8.9.1` → tags `v0.9`, `v0.8.9.1`), which `release.yml` accepts.
 
-A push to `main` runs the tests, builds the image and pushes it to `ghcr.io/roberteinsle/openwehr` (tags `latest` and `sha-<commit>`). If `COOLIFY_DEPLOY_ENABLED` is set, a Coolify webhook then redeploys a test instance (`latest`, sample data only). Production instances run a pinned release tag and are updated by hand after a DB backup, never by a push. Migrations run automatically on container start (`AUTORUN_ENABLED=true`), so every migration must also work on a fresh database and on existing installs (`tests/Unit/FreshInstallTest.php`). The installation guide for operators is in the README (UpCloud VM + Coolify).
+A push to `main` runs the tests, builds the image and pushes it to `ghcr.io/roberteinsle/openwehr` (tags `latest` and `sha-<commit>`). If `COOLIFY_DEPLOY_ENABLED` is set, a Coolify webhook then redeploys a test instance (`latest`, sample data only). Production instances run a pinned release tag and are updated by hand after a DB backup, never by a push. Migrations run automatically on container start (`AUTORUN_ENABLED=true`), so every migration must also work on a fresh database and on existing installs (`tests/Unit/FreshInstallTest.php`). The installation guide for operators is in HANDBUCH.md, section Installation (UpCloud VM + Coolify), published as the wiki page Installation.

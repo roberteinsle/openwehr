@@ -3,8 +3,9 @@
 > Kostenlose Open-Source-Web-App (AGPL-3.0) für Freiwillige Feuerwehren in Deutschland: ein gemeinsamer Kern mit Anmeldung ohne Passwort, Kameraden, Startseite, Benachrichtigungen und Admin-Bereich, dazu 24 Module, die jede Wehr einzeln einschaltet. Für das Handy gemacht, Oberfläche auf Deutsch, Betrieb auf dem eigenen Server (Docker-Image mit PostgreSQL).
 
 - Projektseite: https://www.openwehr.de/
-- Quellcode und ausführliche Dokumentation (README): https://github.com/roberteinsle/openwehr
-- Installationsanleitung: https://github.com/roberteinsle/openwehr#installation
+- Quellcode: https://github.com/roberteinsle/openwehr
+- Ausführliche Dokumentation (Wiki): https://github.com/roberteinsle/openwehr/wiki
+- Installationsanleitung: https://github.com/roberteinsle/openwehr/wiki/Installation
 - Docker-Image: ghcr.io/roberteinsle/openwehr
 - Versionen: https://github.com/roberteinsle/openwehr/releases
 - YouTube: https://www.youtube.com/@openwehr

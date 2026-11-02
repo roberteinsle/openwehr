@@ -20,7 +20,7 @@ Bitte keine echten Daten einer Wehr in die Meldung schreiben und keine fremden I
 
 ## Unterstützte Versionen
 
-Sicherheitskorrekturen gibt es für das jeweils **neueste Release**. Betreiber sollten mindestens monatlich aktualisieren (README → Installation → „Updates einspielen“).
+Sicherheitskorrekturen gibt es für das jeweils **neueste Release**. Betreiber sollten mindestens monatlich aktualisieren (Wiki → Installation → „Updates einspielen“).
 
 ## Wie openwehr abgesichert wird
 

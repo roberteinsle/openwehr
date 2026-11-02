@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Builds the GitHub wiki pages from README.md.
+"""Builds the GitHub wiki pages from HANDBUCH.md (the full documentation; README.md is the short overview).
 
 Usage: python3 scripts/build-wiki.py <output-dir> <version>
 Then copy the pages into a clone of https://github.com/roberteinsle/openwehr.wiki.git and push.
-The README stays the source; the wiki is a snapshot per version.
+The Handbuch stays the source; the wiki is a snapshot per version.
 """
 import os
 import re
@@ -11,7 +11,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = 'https://github.com/roberteinsle/openwehr'
-src = open(os.path.join(ROOT, 'README.md'), encoding='utf-8').read().split('\n')
+src = open(os.path.join(ROOT, 'HANDBUCH.md'), encoding='utf-8').read().split('\n')
 out, version = sys.argv[1], sys.argv[2]
 
 
@@ -110,7 +110,7 @@ overview = fix('\n'.join(S['Module im Überblick']['lines']).strip('\n'))
 intro_text = fix(' '.join(l for l in intro if l.strip()))
 open(f'{out}/Home.md', 'w', encoding='utf-8').write(f"""**openwehr** – {intro_text}
 
-Dieses Wiki beschreibt, was openwehr kann und wie es eingerichtet wird – für Wehrführung, Admins, Rollenträger und Mitglieder. Stand: **{version}**. Die Grundlage ist die [README]({REPO}#readme) im Repository; bei Abweichungen gilt sie.
+Dieses Wiki beschreibt, was openwehr kann und wie es eingerichtet wird – für Wehrführung, Admins, Rollenträger und Mitglieder. Stand: **{version}**. Die Grundlage ist das [Handbuch]({REPO}/blob/main/HANDBUCH.md) im Repository; bei Abweichungen gilt es.
 
 ## Einstieg
 - [[Installation]] – Server, Coolify, Datenbank, erste Schritte, Updates und Sicherungen
