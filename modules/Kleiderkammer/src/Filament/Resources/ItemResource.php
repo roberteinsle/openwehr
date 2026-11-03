@@ -182,7 +182,20 @@ class ItemResource extends Resource
                             return app(LabelSheetGenerator::class)
                                 ->download($records);
                         }),
-                    Actions\DeleteBulkAction::make()->label('Archivieren'),
+                    Actions\BulkAction::make('archive')
+                        ->label('Archivieren')
+                        ->icon('heroicon-o-archive-box')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalDescription('Ausgegebene Teile bleiben: Sie werden erst beim Kameraden zurückgenommen oder ausgemustert.')
+                        ->action(function ($records) {
+                            [$issued, $free] = $records->partition(fn (Item $item) => $item->isIssued());
+                            $free->each->delete();
+                            $note = Notification::make()->title($free->count().' Teil(e) archiviert.');
+                            $issued->isEmpty() ? $note->success() : $note->warning()->body('Ausgegeben und deshalb nicht archiviert: '.$issued->pluck('code')->implode(', ').'.');
+                            $note->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

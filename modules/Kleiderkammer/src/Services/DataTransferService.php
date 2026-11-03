@@ -15,6 +15,7 @@ use Modules\Kleiderkammer\src\Models\ItemGroup;
 use Modules\Kleiderkammer\src\Models\ItemTreatment;
 use Modules\Kleiderkammer\src\Models\ItemType;
 use Modules\Kleiderkammer\src\Models\MemberSize;
+use Modules\Kleiderkammer\src\Models\Movement;
 use Modules\Kleiderkammer\src\Models\Size;
 use Modules\Kleiderkammer\src\Models\Stock;
 
@@ -119,12 +120,12 @@ class DataTransferService
      * @param  array<string, mixed>  $data
      * @param  string[]|null  $parts  only these parts are imported; null = everything in the file
      * @param  string[]|null  $types  only rows of these item type names; null or empty = all
-     * @return array{skipped_members: string[], issued_items: int, skipped_issued_items: int}
+     * @return array{skipped_members: string[], issued_items: int, skipped_issued_items: int, corrected_items: int}
      */
     public function import(array $data, ?array $parts = null, ?array $types = null): array
     {
         $groups = $this->filter($data, $parts, $types)['groups'] ?? [];
-        $report = ['skipped_members' => [], 'issued_items' => 0, 'skipped_issued_items' => 0];
+        $report = ['skipped_members' => [], 'issued_items' => 0, 'skipped_issued_items' => 0, 'corrected_items' => 0];
 
         DB::transaction(function () use ($groups, &$report) {
             $catalog = $this->importCatalog($groups['catalog'] ?? []);
@@ -458,6 +459,9 @@ class DataTransferService
                 'notes' => $row['notes'] ?? null,
             ]);
             $this->syncTrashed($item, $deletedAt);
+            if ($item->wasRecentlyCreated) {
+                Movement::log('zugang', $type, 1, $item, by: auth()->user(), reason: 'Datentransfer');
+            }
 
             if (isset($row['id'])) {
                 $itemMap[$row['id']] = $item->id;
@@ -510,6 +514,10 @@ class DataTransferService
             $this->syncTrashed($issued, $row['deleted_at'] ?? null);
             $report['issued_items']++;
         }
+
+        // The status follows the issues, not the file: "ausgegeben" only with an open issue to a Kamerad
+        // (an issue is skipped when its Kamerad isn't found), "verfügbar" otherwise
+        $report['corrected_items'] = app(StoreService::class)->repairStatus(array_values($itemMap), 'Datentransfer');
 
         foreach ($data['treatments'] ?? [] as $row) {
             $itemId = $itemMap[$row['item_id'] ?? null] ?? Item::withTrashed()->where('code', $row['item_code'] ?? null)->value('id');

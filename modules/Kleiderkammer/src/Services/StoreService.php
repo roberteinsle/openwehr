@@ -162,6 +162,34 @@ class StoreService
         });
     }
 
+    /**
+     * The status of pieces with code follows the issues: "ausgegeben" only with an open issue to a Kamerad,
+     * "verfügbar" when an issued piece has none (e.g. after a Datentransfer); retired pieces stay. Every
+     * change is a Korrektur in the Protokoll. Returns how many were corrected.
+     *
+     * @param  ?list<int>  $itemIds  only these pieces (archived ones included); null = all
+     */
+    public function repairStatus(?array $itemIds = null, string $why = 'Status bereinigt'): int
+    {
+        $open = fn ($q) => $q->select(DB::raw(1))->from('kk_issued_items')->whereColumn('kk_issued_items.item_id', 'kk_items.id')
+            ->whereNull('kk_issued_items.returned_at')->whereNull('kk_issued_items.deleted_at');
+        $scope = fn () => Item::withTrashed()->when($itemIds !== null, fn ($q) => $q->whereIn('id', $itemIds ?: [0]));
+        $fixed = 0;
+
+        foreach ($scope()->where('status', ItemStatus::Issued->value)->whereNotExists($open)->get() as $item) {
+            $item->update(['status' => ItemStatus::Available]);
+            Movement::log('korrektur', $item->itemType()->firstOrFail(), 0, $item, by: auth()->user(), reason: $why.': als ausgegeben geführt, aber bei keinem Kameraden – jetzt verfügbar');
+            $fixed++;
+        }
+        foreach ($scope()->where('status', ItemStatus::Available->value)->whereExists($open)->get() as $item) {
+            $item->update(['status' => ItemStatus::Issued]);
+            Movement::log('korrektur', $item->itemType()->firstOrFail(), 0, $item, by: auth()->user(), reason: $why.': offene Ausgabe an einen Kameraden – jetzt ausgegeben');
+            $fixed++;
+        }
+
+        return $fixed;
+    }
+
     private function stockRow(ItemType $type, ?Size $size, ?ItemGroup $group, int $storeId): Stock
     {
         return Stock::lockForUpdate()->where('item_type_id', $type->id)->where('size_id', $size?->id)->where('group_id', $group?->id)->where('store_id', $storeId)->first()

@@ -3427,12 +3427,6 @@ parameters:
 			path: modules/Kleiderkammer/src/Services/EquipmentMessageService.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:withTrashed\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Kleiderkammer/src/Services/InventoryReport.php
-
-		-
 			message: '#^Call to an undefined method App\\Models\\User\:\:kleiderkammerItems\(\)\.$#'
 			identifier: method.notFound
 			count: 1

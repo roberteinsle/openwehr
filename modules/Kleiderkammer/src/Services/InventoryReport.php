@@ -17,8 +17,9 @@ class InventoryReport
      */
     public function trackedByType(): Collection
     {
+        // Archived pieces don't count, as in the Lager
         return ItemType::where('is_tracked', true)
-            ->with(['items' => fn ($q) => $q->withTrashed()])
+            ->with('items')
             ->get()
             ->map(fn (ItemType $type) => (object) [
                 'item_type_id' => $type->id,

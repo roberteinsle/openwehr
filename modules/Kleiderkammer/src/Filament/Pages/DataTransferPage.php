@@ -187,9 +187,12 @@ class DataTransferPage extends Page implements HasForms
             if ($report['skipped_issued_items'] > 0) {
                 $body .= " {$report['skipped_issued_items']} Ausgabe(n) konnten keinem Mitglied oder Teil zugeordnet werden.";
             }
+            if ($report['corrected_items'] > 0) {
+                $body .= " Bei {$report['corrected_items']} Teil(en) passte der Status aus der Datei nicht zu den Ausgaben (z. B. „ausgegeben“, aber kein Kamerad gefunden) – er wurde angepasst, siehe Protokoll.";
+            }
 
             $notification = Notification::make()->title('Import erfolgreich')->body($body);
-            ($report['skipped_members'] === [] && $report['skipped_issued_items'] === 0)
+            ($report['skipped_members'] === [] && $report['skipped_issued_items'] === 0 && $report['corrected_items'] === 0)
                 ? $notification->success()
                 : $notification->warning()->persistent();
             $notification->send();

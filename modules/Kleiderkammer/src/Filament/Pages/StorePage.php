@@ -70,9 +70,12 @@ class StorePage extends Page implements HasTable
                     }));
 
                 $column = in_array($sortColumn, ['type', 'category', 'tracked', 'in_store', 'issued', 'total'], true) ? $sortColumn : 'type';
-                $sorted = $rows->sortBy(fn (array $row) => is_string($row[$column]) ? mb_strtolower($row[$column]) : $row[$column], SORT_NATURAL);
+                // Equal values in Artikel order (A–Z), whatever the direction
+                $sortValue = fn (array $row) => is_string($row[$column]) ? mb_strtolower($row[$column]) : $row[$column];
+                $sorted = $rows->sort(fn (array $a, array $b) => ($sortDirection === 'desc' ? $sortValue($b) <=> $sortValue($a) : $sortValue($a) <=> $sortValue($b))
+                    ?: strcmp(mb_strtolower($a['type']), mb_strtolower($b['type'])));
 
-                return ($sortDirection === 'desc' ? $sorted->reverse() : $sorted)->all();
+                return $sorted->all();
             })
             ->columns([
                 TextColumn::make('type')->label('Artikel')->description(fn (array $record) => $record['category'] ?: null)->searchable()->sortable()->weight('medium'),
