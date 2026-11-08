@@ -23,8 +23,11 @@ WORKDIR /var/www/html
 # Copy application files
 COPY --chown=www-data:www-data . .
 
-# Install PHP dependencies
-RUN composer install \
+# Install PHP dependencies. CI passes its GitHub token as a build secret, so the package downloads from
+# GitHub count as authenticated (anonymous ones run into rate limits and timeouts); without it they stay anonymous
+RUN --mount=type=secret,id=github_token,required=false \
+    if [ -s /run/secrets/github_token ]; then export COMPOSER_AUTH="{\"github-oauth\":{\"github.com\":\"$(cat /run/secrets/github_token)\"}}"; fi && \
+    composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \

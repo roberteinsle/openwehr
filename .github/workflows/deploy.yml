@@ -175,6 +175,7 @@ jobs:
       - name: Build Image
         uses: docker/build-push-action@v7
         with:
+          secrets: github_token=${{ secrets.GITHUB_TOKEN }}
           context: .
           load: true
           tags: openwehr:scan
@@ -194,6 +195,7 @@ jobs:
       - name: Push Image
         uses: docker/build-push-action@v7
         with:
+          secrets: github_token=${{ secrets.GITHUB_TOKEN }}
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
