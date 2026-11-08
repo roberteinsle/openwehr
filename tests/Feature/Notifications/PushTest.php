@@ -90,7 +90,7 @@ test('app manifest, service worker and offline page', function () {
     $this->get('/manifest.webmanifest')->assertOk()->assertHeader('Content-Type', 'application/manifest+json')
         ->assertJsonPath('display', 'standalone')->assertJsonPath('start_url', '/')->assertJsonPath('icons.0.src', '/images/icon-192.png');
     $this->get('/offline')->assertOk()->assertSee('Keine Verbindung');
-    expect(file_exists(public_path('sw.js')))->toBeTrue();
+    $this->get('/sw.js')->assertOk()->assertHeader('Content-Type', 'application/javascript; charset=utf-8')->assertSee("addEventListener('push'", false);
     $this->actingAs($this->hanna)->get(route('profile'))->assertSee('manifest.webmanifest', false)->assertSee('Push-Benachrichtigungen');
 });
 

@@ -13,6 +13,13 @@ test('page requests to an alias go permanently to the same path under APP_URL', 
     $this->get('https://MUSTERSTADT.openwehr.de/')->assertStatus(301);
 });
 
+test('an alias serves a service worker that removes itself instead of a redirect', function () {
+    $this->get('https://musterstadt.openwehr.de/sw.js')->assertOk()
+        ->assertHeader('Content-Type', 'application/javascript; charset=utf-8')
+        ->assertSee('self.registration.unregister()', false)->assertDontSee('OFFLINE_PAGES', false);
+    $this->get('https://openwehr.ff-musterstadt.de/sw.js')->assertOk()->assertSee('OFFLINE_PAGES', false);
+});
+
 test('the main address, other hosts and POSTs are not redirected', function () {
     $this->get('https://openwehr.ff-musterstadt.de/anmelden')->assertOk();
     $this->get('http://localhost/anmelden')->assertOk(); // e.g. the container's own healthcheck

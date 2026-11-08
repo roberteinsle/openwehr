@@ -9,7 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * A Wehr reaches openwehr under its own domain (APP_URL) and under more addresses (APP_ALIAS_URLS, e.g.
  * musterstadt.openwehr.de). Page requests to an alias go permanently to the same path under APP_URL, so
- * login, push and the home-screen app live under one address. Everything else passes: POSTs (webhooks,
+ * login, push and the home-screen app live under one address; /sw.js there is a worker that removes itself
+ * (resources/js/sw-alias.js), because browsers never follow a redirect for it. Everything else passes: POSTs (webhooks,
  * Livewire) and hosts that are neither, such as the container's own healthcheck.
  */
 class RedirectAliasHost
@@ -21,6 +22,15 @@ class RedirectAliasHost
 
         if ($target !== '' && in_array($request->getMethod(), ['GET', 'HEAD'], true)
             && in_array($host, self::aliasHosts(), true) && $host !== strtolower((string) parse_url($target, PHP_URL_HOST))) {
+            // A service worker script may not be redirected (the browser would keep the old worker for good):
+            // the alias gets one that removes itself, so installed apps follow the redirect afterwards
+            if ($request->path() === 'sw.js') {
+                return response((string) file_get_contents(resource_path('js/sw-alias.js')), 200, [
+                    'Content-Type' => 'application/javascript; charset=utf-8',
+                    'Cache-Control' => 'no-cache',
+                ]);
+            }
+
             return redirect()->away($target.$request->getRequestUri(), 301);
         }
 

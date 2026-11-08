@@ -136,6 +136,11 @@ Route::get('/manifest.webmanifest', function (OrganizationSettings $org) {
     ], 200, ['Content-Type' => 'application/manifest+json', 'Cache-Control' => 'public, max-age=3600'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 })->name('manifest');
 Route::view('/offline', 'pages.offline')->name('offline');
+// Served by the app, not as a static file, so an alias address can get its own worker (RedirectAliasHost)
+Route::get('/sw.js', fn () => response(file_get_contents(resource_path('js/sw.js')), 200, [
+    'Content-Type' => 'application/javascript; charset=utf-8',
+    'Cache-Control' => 'no-cache',
+]))->name('service-worker');
 
 Route::get('/organisation/logo', function () {
     $org = app(OrganizationSettings::class);

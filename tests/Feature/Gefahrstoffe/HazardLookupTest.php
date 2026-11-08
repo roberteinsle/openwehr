@@ -60,5 +60,5 @@ test('Warntafeln in the Einsatzbericht are explained; reports without Gefahrstof
 });
 
 test('the service worker keeps the Gefahrstoffe page for offline use', function () {
-    expect(file_get_contents(public_path('sw.js')))->toContain("const OFFLINE_PAGES = ['/gefahrstoffe']");
+    expect(file_get_contents(resource_path('js/sw.js')))->toContain("const OFFLINE_PAGES = ['/gefahrstoffe']");
 });

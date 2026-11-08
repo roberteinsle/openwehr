@@ -1,4 +1,4 @@
-// openwehr app: offline page when there is no network, and push notifications.
+// openwehr app: offline page when there is no network, and push notifications. Served by the route `service-worker` (/sw.js).
 // Pages are always loaded from the network. Only the offline page and the look-up pages below are cached:
 // each time such a page loads, its copy and its scripts and styles (Vite build, Livewire) are renewed, so
 // it can be read without network (Gefahrstoffe at the Einsatzstelle).
