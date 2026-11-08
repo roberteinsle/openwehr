@@ -149,7 +149,7 @@ CI (`deploy.yml`, job "Security Checks", on every push and pull request): `compo
 - CSV exports use `App\Support\Csv::put()` instead of `fputcsv()` (formula injection).
 - Outbound requests to user-entered URLs go through `App\Support\SafeUrl::get()` (public IPs only, pinned, redirects re-checked); tests resolve hosts via `SafeUrl::resolveUsing()` (set in `tests/Pest.php`).
 - Login links shown on screen: `Invitation::createForScreen($member, $by)`; mails carrying login or action links belong in `LogSentMail::SENSITIVE`.
-- `App\Http\Middleware\SecurityHeaders` sets the headers (CSP report-only; pages meant for iframes go into `EMBEDDABLE`). URLs are forced to `APP_URL` in `AppServiceProvider`; Livewire updates re-run `active` and `module:` via `addPersistentMiddleware`.
+- `App\Http\Middleware\SecurityHeaders` sets the headers (CSP report-only; pages meant for iframes go into `EMBEDDABLE`). URLs are forced to `APP_URL` in `AppServiceProvider` (further addresses in `APP_ALIAS_URLS`, `config('app.alias_urls')`, get their GET/HEAD requests redirected there with 301 by the global `RedirectAliasHost`; POSTs such as webhooks pass); Livewire updates re-run `active` and `module:` via `addPersistentMiddleware`.
 - Livewire props holding ids of records the user must not switch get `#[Locked]`; components that load a record by id authorize it.
 
 ## Deployment

@@ -733,6 +733,8 @@ Beim Anbieter der Domain (oder bei dem, der die Domain der Wehr verwaltet) zwei 
 
 Alternativ ein Platzhalter-Eintrag `*.ff-musterstadt.de`, dann sind alle Unterdomains sofort erreichbar. Bis die Einträge überall bekannt sind, kann es einige Minuten dauern; prüfen lässt sich das mit `ping openwehr.ff-musterstadt.de`.
 
+**Zweite Adresse und Cloudflare (optional).** Soll openwehr zusätzlich unter einer weiteren Adresse erreichbar sein (z. B. einer gemeinsamen Domain mehrerer Wehren), beide Adressen in Coolify unter **Domains** eintragen, die eigene Domain der Wehr als `APP_URL` und die weitere als `APP_ALIAS_URLS` (siehe [Konfiguration](#konfiguration)). Läuft der Server hinter **Cloudflare** und lässt die Firewall Port 80/443 nur noch für Cloudflare zu, ist eine Domain, die nicht im eigenen Cloudflare-Konto liegt, direkt nicht mehr erreichbar. Dann hilft **Cloudflare for SaaS** (SSL/TLS → Custom Hostnames, im Free-Plan 100 Domains inklusive): im eigenen Cloudflare-Konto einen Eintrag `fallback` (A/AAAA auf den Server, Proxy an) als **Fallback Origin** und einen Eintrag `kunden` (CNAME auf `fallback`, Proxy an) anlegen, die Domain der Wehr als **Custom Hostname** hinzufügen und bei der Wehr `openwehr.ff-musterstadt.de` als **CNAME** auf `kunden.<eigene Domain>` eintragen (statt des A-Eintrags). Cloudflare bestätigt die Domain und stellt das Zertifikat aus, sobald der CNAME ankommt; das kann je nach Gültigkeit des alten Eintrags bis zu einem Tag dauern. SSL-Modus in Cloudflare: „Full“.
+
 ### 4. Coolify installieren
 
 Coolify ist eine freie Oberfläche, mit der sich Apps und Datenbanken per Klick betreiben lassen; sie kümmert sich auch um die HTTPS-Zertifikate (Let's Encrypt).
@@ -864,6 +866,7 @@ Alle Einstellungen laufen über Umgebungsvariablen (in Coolify unter **Environme
 | Variable                 | Beschreibung                                            |
 |--------------------------|---------------------------------------------------------|
 | `APP_URL`                | Öffentliche URL. Alle Links in Mails (Login, Einladung) werden daraus gebaut, nie aus dem Host der Anfrage. Mit `https://` sind die Session-Cookies automatisch `Secure`. |
+| `APP_ALIAS_URLS`         | Weitere Adressen derselben Installation, kommagetrennt (z. B. `https://musterstadt.beispiel-hosting.de` neben der eigenen Domain der Wehr in `APP_URL`). Seitenaufrufe dort werden dauerhaft (301) auf denselben Pfad unter `APP_URL` umgeleitet, damit Anmeldung, Push und die App auf dem Startbildschirm an einer Adresse hängen; Webhooks und andere POST-Anfragen werden nicht umgeleitet. Jede Adresse muss in Coolify zusätzlich unter **Domains** stehen. |
 | `DB_*`                   | Zugangsdaten für PostgreSQL                             |
 | `MAIL_*`                 | SMTP-Server für alle Mails. Für Port 465 gilt `MAIL_SCHEME=smtps`. |
 | `ADMIN_EMAILS`           | Kommagetrennte Adressen, die beim Container-Start als Admin angelegt bzw. aktiviert werden |

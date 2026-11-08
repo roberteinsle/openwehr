@@ -66,6 +66,10 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Further addresses of the same installation (e.g. musterstadt.openwehr.de next to the Wehr's own
+    // domain in APP_URL), comma separated; page requests to them are redirected to APP_URL
+    'alias_urls' => array_values(array_filter(array_map('trim', explode(',', (string) env('APP_ALIAS_URLS', ''))))),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

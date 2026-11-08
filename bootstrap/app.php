@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\NoIndex;
 use App\Http\Middleware\RecordRequestMetrics;
+use App\Http\Middleware\RedirectAliasHost;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\ServeLinkPreview;
 use App\Services\ErrorRecorder;
@@ -25,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
         // Page requests per hour and area, with response times and server errors (admin "Analyse")
         $middleware->append(RecordRequestMetrics::class);
+        // Further addresses of the installation lead to APP_URL (APP_ALIAS_URLS); after the proxies are trusted
+        $middleware->append(RedirectAliasHost::class);
         $middleware->redirectGuestsTo('/anmelden');
         // Before "auth" redirects a messenger's link preview to the login page
         $middleware->appendToGroup('web', ServeLinkPreview::class);
