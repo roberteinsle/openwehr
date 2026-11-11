@@ -12,6 +12,7 @@ use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Livewire\Features\SupportFileUploads\MissingFileUploadsTraitException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -38,6 +39,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // A crafted "_startUpload" call to a component without uploads – scanners probe the public login form for
+        // Livewire upload flaws. Livewire refuses it before anything happens: a bad request, not an error of ours
+        $exceptions->dontReport(MissingFileUploadsTraitException::class);
+        $exceptions->render(fn (MissingFileUploadsTraitException $e) => response('', 400));
+
         // Every reported error also goes to the admin "Analyse" (grouped, admins told once a day per place)
         $exceptions->report(function (Throwable $e) {
             app(ErrorRecorder::class)->record($e);

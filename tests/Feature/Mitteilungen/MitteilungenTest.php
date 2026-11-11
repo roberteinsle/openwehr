@@ -263,7 +263,7 @@ test('Verwalten is an overview by state; new and edit are pages of their own, li
     Announcement::create(['title' => 'Altes Grillfest', 'visible_until' => now()->subDay()]);
 
     $this->actingAs($this->redakteur)->get(route('mitteilungen.manage'))->assertOk()
-        ->assertSeeInOrder(['Neue Mitteilung', 'Aktuell sichtbar', 'Grillabend Samstag', 'Geplant', 'Kommt noch', 'Abgelaufen', 'Altes Grillfest'])
+        ->assertSeeInOrder(['Neue Mitteilung', 'Aktuell sichtbar', 'Grillabend Samstag', 'Geplant', 'Kommt noch', 'Archiv', 'Altes Grillfest'])
         ->assertSee(route('mitteilungen.edit', $current), false)->assertDontSee('wire:model="title"', false);
     $this->get(route('mitteilungen.create'))->assertOk()->assertSee('Neue Mitteilung')->assertSee('Veröffentlichen');
     $this->get(route('mitteilungen.edit', $current))->assertOk()->assertSee('Mitteilung bearbeiten')->assertSee('Grillabend Samstag');
@@ -285,4 +285,30 @@ test('Kameraden without the role can not use the editor or the overview, not eve
     $file = $other->files()->create(['filename' => 'x.pdf', 'mime' => 'application/pdf', 'size' => 3, 'data' => base64_encode('pdf')]);
     Livewire::actingAs($this->redakteur)->test(Editor::class, ['announcement' => $a])->call('deleteFile', $file->id);
     expect($file->fresh())->not->toBeNull();
+});
+
+test('a Mitteilung is archived by hand: off the start page, into the archive, and back again', function () {
+    $a = Announcement::create(['title' => 'Grillabend Samstag', 'visible_until' => now()->addMonth(), 'created_by' => $this->redakteur->id]);
+    $until = $a->visible_until->toIso8601String();
+
+    Livewire::actingAs($this->redakteur)->test(Manage::class)
+        ->assertSeeHtml('title="Archivieren"')->assertSeeHtml('title="Bearbeiten"')->assertSeeHtml('title="Löschen"')
+        ->call('archive', $a->id)->assertSee('archiviert.')->assertSee('archiviert am')->assertSeeHtml('title="Wiederherstellen"');
+    expect($a->fresh()->archived_at)->not->toBeNull()
+        ->and($a->fresh()->visible_until->toIso8601String())->toBe($until);
+
+    Livewire::actingAs($this->member)->test(Home::class)->assertDontSee('Grillabend Samstag');
+    $this->actingAs($this->member)->get(route('mitteilungen.index'))->assertDontSee('Grillabend Samstag');
+    $this->get(route('mitteilungen.index', ['ansicht' => 'archiv']))->assertSee('Grillabend Samstag');
+
+    Livewire::actingAs($this->redakteur)->test(Manage::class)->call('restore', $a->id)->assertSee('wiederhergestellt.');
+    expect($a->fresh()->archived_at)->toBeNull();
+    Livewire::actingAs($this->member)->test(Home::class)->assertSee('Grillabend Samstag');
+
+    // Expired by its period: in the archive without an archive or restore button
+    $a->update(['visible_until' => now()->subDay()]);
+    Livewire::actingAs($this->redakteur)->test(Manage::class)->assertSee('Zeitraum vorbei')
+        ->assertDontSeeHtml('title="Archivieren"')->assertDontSeeHtml('title="Wiederherstellen"');
+
+    Livewire::actingAs($this->member)->test(Manage::class)->assertForbidden();
 });

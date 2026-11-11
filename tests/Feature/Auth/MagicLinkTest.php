@@ -1,12 +1,14 @@
 <?php
 
 use App\Livewire\Auth\LoginForm;
+use App\Models\AppError;
 use App\Models\LoginToken;
 use App\Models\User;
 use App\Notifications\InvitationNotification;
 use App\Notifications\MagicLinkNotification;
 use App\Services\Invitation;
 use App\Services\MagicLinkService;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Defer\DeferredCallbackCollection;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Features\SupportFileUploads\MissingFileUploadsTraitException;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -515,4 +518,18 @@ test('the first login by code leads to the Willkommen page; Einladungen have no 
     $form->set('code', loginCode($user))->call('verify')->assertRedirect(route('welcome'));
     $this->assertAuthenticatedAs($user);
     expect(LoginToken::whereNull('used_at')->count())->toBe(0);
+});
+
+test('an upload probe against the login form is a bad request, not an error for the Analyse', function () {
+    $e = new MissingFileUploadsTraitException(new LoginForm);
+    $handler = app(ExceptionHandler::class);
+
+    expect($handler->shouldReport($e))->toBeFalse()
+        ->and($handler->render(request(), $e)->getStatusCode())->toBe(400);
+    $handler->report($e);
+    expect(AppError::count())->toBe(0);
+
+    // What a scanner sends: the internal upload call to the login form
+    expect(fn () => Livewire::test(LoginForm::class)->call('_startUpload', 'email', [['name' => 'x.php', 'size' => 1, 'type' => 'text/plain']], false))
+        ->toThrow(MissingFileUploadsTraitException::class);
 });

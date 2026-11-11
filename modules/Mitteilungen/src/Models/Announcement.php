@@ -25,14 +25,15 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $visible_until
  * @property int|null $created_by
  * @property Carbon $created_at
+ * @property Carbon|null $archived_at
  */
 class Announcement extends Model
 {
-    protected $fillable = ['title', 'body', 'important', 'needs_ack', 'visible_from', 'visible_until', 'created_by'];
+    protected $fillable = ['title', 'body', 'important', 'needs_ack', 'visible_from', 'visible_until', 'created_by', 'archived_at'];
 
     protected function casts(): array
     {
-        return ['important' => 'boolean', 'needs_ack' => 'boolean', 'visible_from' => 'datetime', 'visible_until' => 'datetime'];
+        return ['important' => 'boolean', 'needs_ack' => 'boolean', 'visible_from' => 'datetime', 'visible_until' => 'datetime', 'archived_at' => 'datetime'];
     }
 
     /** "29.10.2026 19:30 – 31.10.2026" in Berlin time; a time only where one was set (not 0:00 at the start, 23:59 at the end) */
@@ -44,7 +45,10 @@ class Announcement extends Model
             return $at->format('d.m.Y').($at->format('H:i') !== $wholeDay ? ' '.$at->format('H:i') : '');
         };
 
-        return $show($this->visible_from ?? $this->created_at, '00:00').($this->visible_until ? ' – '.$show($this->visible_until, '23:59') : '');
+        // Without "ab" it counts from its creation: the date is enough there
+        $start = $this->visible_from ? $show($this->visible_from, '00:00') : $this->created_at->copy()->setTimezone('Europe/Berlin')->format('d.m.Y');
+
+        return $start.($this->visible_until ? ' – '.$show($this->visible_until, '23:59') : '');
     }
 
     public function author(): BelongsTo
@@ -82,8 +86,20 @@ class Announcement extends Model
 
     public function scopeCurrent(Builder $query): Builder
     {
-        return $query->where(fn ($q) => $q->whereNull('visible_from')->orWhere('visible_from', '<=', now()))
+        return $query->whereNull('archived_at')
+            ->where(fn ($q) => $q->whereNull('visible_from')->orWhere('visible_from', '<=', now()))
             ->where(fn ($q) => $q->whereNull('visible_until')->orWhere('visible_until', '>=', now()));
+    }
+
+    /** In the archive: archived by hand or its period is over */
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->where(fn ($q) => $q->whereNotNull('archived_at')->orWhere('visible_until', '<', now()));
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null || (bool) $this->visible_until?->isPast();
     }
 
     /** Meant for this Kamerad: no audience set, member of one of the Abteilungen, or holding one of the Funktionen */

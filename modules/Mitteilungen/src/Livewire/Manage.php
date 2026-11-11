@@ -37,6 +37,22 @@ class Manage extends Component
         $this->flash = $count ? $count.' Kameraden erinnert.' : 'Alle haben schon bestätigt.';
     }
 
+    /** Off the start page and into the archive at once, without touching the planned period */
+    public function archive(int $id): void
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->update(['archived_at' => now()]);
+        $this->flash = 'Mitteilung „'.$announcement->title.'“ archiviert.';
+    }
+
+    /** Back from a manual archiving (a period that is over stays over – change it under Bearbeiten) */
+    public function restore(int $id): void
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->update(['archived_at' => null]);
+        $this->flash = 'Mitteilung „'.$announcement->title.'“ wiederhergestellt.'.($announcement->isArchived() ? ' Ihr Zeitraum ist allerdings vorbei – zum Anzeigen unter „Bearbeiten“ verlängern.' : '');
+    }
+
     public function delete(int $id): void
     {
         Announcement::findOrFail($id)->delete();
@@ -49,9 +65,9 @@ class Manage extends Component
 
         return view('mitteilungen::livewire.manage', [
             'sections' => [
-                'Aktuell sichtbar' => $all->filter(fn (Announcement $a) => ! $a->visible_from?->isFuture() && ! $a->visible_until?->isPast()),
-                'Geplant' => $all->filter(fn (Announcement $a) => (bool) $a->visible_from?->isFuture()),
-                'Abgelaufen' => $all->filter(fn (Announcement $a) => (bool) $a->visible_until?->isPast()),
+                'Aktuell sichtbar' => $all->filter(fn (Announcement $a) => ! $a->isArchived() && ! $a->visible_from?->isFuture()),
+                'Geplant' => $all->filter(fn (Announcement $a) => ! $a->isArchived() && $a->visible_from?->isFuture()),
+                'Archiv' => $all->filter(fn (Announcement $a) => $a->isArchived()),
             ],
             'stats' => $this->statsFor && ($a = $all->firstWhere('id', $this->statsFor)) ? $announcements->stats($a) : null,
         ]);

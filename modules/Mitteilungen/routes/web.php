@@ -14,7 +14,7 @@ Route::prefix('mitteilungen')->name('mitteilungen.')
         Route::get('/', function (AnnouncementService $announcements) {
             $archive = request('ansicht') === 'archiv';
             $list = Announcement::for(auth()->user())->with(['author', 'files'])
-                ->when($archive, fn ($q) => $q->where('visible_until', '<', now()), fn ($q) => $q->current())
+                ->when($archive, fn ($q) => $q->archived(), fn ($q) => $q->current())
                 ->when(request()->boolean('wichtig'), fn ($q) => $q->where('important', true))
                 ->orderByDesc('important')->latest()->get();
             if (! $archive) {

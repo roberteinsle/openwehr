@@ -32,12 +32,27 @@
                                         {{ $a->periodLabel() }}
                                         · {{ $a->groups->isEmpty() && $a->functions->isEmpty() ? 'alle Kameraden' : $a->groups->pluck('name')->merge($a->functions->pluck('name'))->implode(', ') }}
                                         · {{ $a->author?->name ?? 'Wehrführung' }}
+                                        @if($a->archived_at) · archiviert am {{ $a->archived_at->setTimezone('Europe/Berlin')->format('d.m.Y') }}@elseif($a->isArchived()) · Zeitraum vorbei @endif
                                     </span>
                                 </div>
                             </div>
-                            <div class="flex shrink-0 items-center gap-3 text-sm">
-                                <a href="{{ route('mitteilungen.edit', $a) }}" class="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 font-medium text-fw-navy hover:border-fw-navy">Bearbeiten</a>
-                                <button type="button" wire:click="delete({{ $a->id }})" wire:confirm="Mitteilung „{{ $a->title }}“ löschen?" class="text-red-600 underline">Löschen</button>
+                            {{-- Icons with a tooltip and a label for screen readers --}}
+                            <div class="flex shrink-0 items-center gap-1.5">
+                                <a href="{{ route('mitteilungen.edit', $a) }}" title="Bearbeiten" aria-label="„{{ $a->title }}“ bearbeiten" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:border-fw-navy hover:text-fw-navy">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.2 5.2l3.6 3.6M4 20l4.5-1 10.3-10.3a2.5 2.5 0 00-3.5-3.5L5 15.5 4 20z"/></svg>
+                                </a>
+                                @if($a->archived_at)
+                                    <button type="button" wire:click="restore({{ $a->id }})" title="Wiederherstellen" aria-label="„{{ $a->title }}“ wiederherstellen" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:border-fw-navy hover:text-fw-navy">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9l5-5M4 9h11a5 5 0 010 10h-3"/></svg>
+                                    </button>
+                                @elseif(! $a->isArchived())
+                                    <button type="button" wire:click="archive({{ $a->id }})" wire:confirm="„{{ $a->title }}“ archivieren? Sie verschwindet von der Startseite und steht im Archiv." title="Archivieren" aria-label="„{{ $a->title }}“ archivieren" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:border-fw-navy hover:text-fw-navy">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M10 12h4"/></svg>
+                                    </button>
+                                @endif
+                                <button type="button" wire:click="delete({{ $a->id }})" wire:confirm="Mitteilung „{{ $a->title }}“ endgültig löschen?" title="Löschen" aria-label="„{{ $a->title }}“ löschen" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-red-600 hover:border-red-400 hover:bg-red-50">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>
+                                </button>
                             </div>
                         </div>
                         <button type="button" wire:click="showStats({{ $a->id }})" class="mt-2 text-xs text-fw-navy underline">{{ $statsFor === $a->id ? 'Ausblenden' : ($a->needs_ack ? 'Lesebestätigungen' : 'Gelesen von') }}</button>

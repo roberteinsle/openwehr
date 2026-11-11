@@ -11,7 +11,7 @@
             <a href="{{ route('mitteilungen.index', ['wichtig' => 1]) }}" class="rounded-full px-3 py-1 {{ ! $archive && request()->boolean('wichtig') ? 'bg-fw-navy text-white' : 'border border-gray-200 bg-white text-gray-700' }}">Nur wichtige</a>
             <a href="{{ route('mitteilungen.index', ['ansicht' => 'archiv']) }}" class="rounded-full px-3 py-1 {{ $archive ? 'bg-fw-navy text-white' : 'border border-gray-200 bg-white text-gray-700' }}">Archiv</a>
         </div>
-        <p class="text-sm text-gray-500">{{ $archive ? 'Mitteilungen, deren Zeitraum vorbei ist.' : 'Alle aktuellen Mitteilungen für dich, auch die auf der Startseite ausgeblendeten.' }}</p>
+        <p class="text-sm text-gray-500">{{ $archive ? 'Archivierte Mitteilungen und solche, deren Zeitraum vorbei ist.' : 'Alle aktuellen Mitteilungen für dich, auch die auf der Startseite ausgeblendeten.' }}</p>
 
         @forelse($announcements as $announcement)
             <article class="rounded-2xl border p-4 {{ $announcement->important ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-white shadow-sm' }}">
@@ -34,7 +34,7 @@
                 @endcan
             </article>
         @empty
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-sm text-gray-600">{{ $archive ? 'Keine abgelaufenen Mitteilungen.' : 'Zurzeit gibt es keine Mitteilungen.' }}</div>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-sm text-gray-600">{{ $archive ? 'Keine archivierten Mitteilungen.' : 'Zurzeit gibt es keine Mitteilungen.' }}</div>
         @endforelse
     </div>
 </x-layouts.app>
