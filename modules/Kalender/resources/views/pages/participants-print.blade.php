@@ -28,7 +28,7 @@
     <table>
         <tr><th>Name</th><th>Abteilungen</th><th>Rückmeldung</th><th>Kommentar</th><th>Unterschrift / anwesend</th></tr>
         @foreach($people as $row)
-            <tr><td>{{ $row['user']->name }}</td><td>{{ $row['groups'] }}</td><td>{{ $row['status'] }}</td><td>{{ $row['comment'] }}</td><td class="sign">{{ $row['attended'] }}</td></tr>
+            <tr><td>{{ $row['user']->name }}</td><td>{{ $row['groups'] }}</td><td>{{ $row['status'] }}@if($row['guardian'])<br><small>Eltern: {{ $row['guardian'] }}@if($row['own']) · Kind: {{ $row['own'] }}@endif</small>@endif @if($row['mismatch'])<br><strong>passt nicht zusammen</strong>@endif</td><td>{{ $row['comment'] }}</td><td class="sign">{{ $row['attended'] }}</td></tr>
         @endforeach
     </table>
 </body>

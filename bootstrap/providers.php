@@ -2,6 +2,7 @@
 
 use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
+use Modules\Anmeldungen\AnmeldungenServiceProvider;
 use Modules\Atemschutz\AtemschutzServiceProvider;
 use Modules\Ausruestung\AusruestungServiceProvider;
 use Modules\Einsatzbericht\EinsatzberichtServiceProvider;
@@ -54,4 +55,5 @@ return [
     FuehrerscheineServiceProvider::class,
     UnterweisungenServiceProvider::class,
     GefahrstoffeServiceProvider::class,
+    AnmeldungenServiceProvider::class,
 ];

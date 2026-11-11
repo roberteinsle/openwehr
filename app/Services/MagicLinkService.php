@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Guardian;
 use App\Models\LoginToken;
 use App\Models\User;
 use App\Notifications\MagicLinkNotification;
@@ -41,9 +42,22 @@ class MagicLinkService
         return mb_strtolower(trim($email));
     }
 
+    /** A Kamerad with this address; otherwise an Erziehungsberechtigte(r) of an active child (Eltern-Login) */
+    private function account(string $email): User|Guardian|null
+    {
+        return User::whereRaw('lower(email) = ?', [$email])->where('is_active', true)->orderBy('id')->first()
+            ?? Guardian::whereRaw('lower(email) = ?', [$email])->whereHas('user', fn ($q) => $q->where('is_active', true))->orderBy('id')->first();
+    }
+
+    /** @return array{user_id?: int, guardian_id?: int} */
+    private static function owner(User|Guardian $account): array
+    {
+        return $account instanceof User ? ['user_id' => $account->id] : ['guardian_id' => $account->id];
+    }
+
     private function issue(string $email): void
     {
-        $user = User::whereRaw('lower(email) = ?', [$email])->where('is_active', true)->orderBy('id')->first();
+        $user = $this->account($email);
         if (! $user) {
             return;
         }
@@ -53,7 +67,7 @@ class MagicLinkService
         $code = str_pad((string) random_int(0, 10 ** self::CODE_LENGTH - 1), self::CODE_LENGTH, '0', STR_PAD_LEFT);
 
         LoginToken::create([
-            'user_id' => $user->id,
+            ...self::owner($user),
             'token_hash' => $tokenHash,
             'code_hash' => self::codeHash($code),
             'expires_at' => now()->addMinutes(config('magic-link.ttl_minutes', 15)),
@@ -68,7 +82,7 @@ class MagicLinkService
         }
     }
 
-    public function consumeToken(string $rawToken, Request $request): User
+    public function consumeToken(string $rawToken, Request $request): User|Guardian
     {
         // Not even the format: refused without a database query (and without a log entry)
         if (! preg_match('/^'.self::TOKEN_PATTERN.'$/', $rawToken)) {
@@ -96,7 +110,7 @@ class MagicLinkService
      * the mail never opens. Only together with the address; wrong codes count against the token and against
      * address and IP, so the 10^6 possibilities can't be tried out.
      */
-    public function consumeCode(string $email, string $code, Request $request): User
+    public function consumeCode(string $email, string $code, Request $request): User|Guardian
     {
         $email = self::normalize($email);
         $code = preg_replace('/\D/', '', $code) ?? '';
@@ -116,8 +130,8 @@ class MagicLinkService
             RateLimiter::hit($key, 3600);
         }
 
-        $user = User::whereRaw('lower(email) = ?', [$email])->where('is_active', true)->orderBy('id')->first();
-        $open = $user ? LoginToken::where('user_id', $user->id)->whereNotNull('code_hash')->whereNull('used_at')
+        $user = $this->account($email);
+        $open = $user ? LoginToken::where(self::owner($user))->whereNotNull('code_hash')->whereNull('used_at')
             ->where('expires_at', '>', now())->where('code_attempts', '<', self::CODE_ATTEMPTS)->get() : collect();
         $hash = self::codeHash($code);
         $loginToken = $open->first(fn (LoginToken $t) => hash_equals((string) $t->code_hash, $hash));
@@ -132,7 +146,7 @@ class MagicLinkService
     }
 
     /** @param  callable(): never  $taken  when the token was claimed in the meantime */
-    private function login(LoginToken $loginToken, Request $request, callable $taken): User
+    private function login(LoginToken $loginToken, Request $request, callable $taken): User|Guardian
     {
         // Claimed atomically: of two simultaneous clicks only one logs in
         $claimed = LoginToken::whereKey($loginToken->id)->whereNull('used_at')->update([
@@ -142,6 +156,10 @@ class MagicLinkService
         ]);
         if ($claimed === 0) {
             $taken();
+        }
+
+        if ($loginToken->guardian_id !== null) {
+            return $this->loginGuardian($loginToken);
         }
 
         /** @var User $user */
@@ -167,6 +185,31 @@ class MagicLinkService
         Auth::login($user, remember: true);
 
         return $user;
+    }
+
+    /**
+     * Eltern-Login: only while a child with this address is still active. Ends the other open links of the
+     * address and signs in with the guard "guardian" – the Eltern-Bereich, never the Kamerad pages.
+     */
+    private function loginGuardian(LoginToken $loginToken): Guardian
+    {
+        /** @var Guardian $guardian */
+        $guardian = $loginToken->guardian;
+
+        if (ParentAccess::childrenOf((string) $guardian->email)->isEmpty()) {
+            app(ActivityRecorder::class)->record('login_failed', Guardian::class, $guardian->id, 'Eltern-Login ohne aktives Kind');
+            throw ValidationException::withMessages(['token' => ['Für diese Adresse gibt es keinen Zugang mehr. Bitte wende dich an die Jugendfeuerwehr.']]);
+        }
+
+        $siblings = Guardian::whereRaw('lower(email) = ?', [self::normalize((string) $guardian->email)])->pluck('id');
+        LoginToken::whereIn('guardian_id', $siblings)->whereNull('used_at')->delete();
+
+        $guardian->forceFill(['last_login_at' => now()])->save();
+        app(ActivityRecorder::class)->record('login', Guardian::class, $guardian->id, 'Eltern-Login: '.$guardian->name);
+
+        Auth::guard('guardian')->login($guardian, remember: true);
+
+        return $guardian;
     }
 
     /** Codes are short, so they are stored as HMAC with the app key: a copy of the table alone doesn't reveal them */

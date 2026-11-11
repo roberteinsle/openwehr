@@ -50,12 +50,16 @@
                 <div class="flex flex-wrap gap-2">
                     @foreach(['yes' => ['Zusagen', 'bg-green-600'], 'maybe' => ['Vielleicht', 'bg-amber-500'], 'no' => ['Absagen', 'bg-gray-600']] as $status => [$label, $color])
                         <button type="button" wire:click="respond('{{ $status }}')"
-                                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white {{ $color }} {{ $mine?->status === $status ? 'ring-2 ring-offset-2 ring-gray-900' : 'opacity-80 hover:opacity-100' }}">{{ $label }}</button>
+                                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white {{ $color }} {{ ($mine?->own_status ?? $mine?->status) === $status ? 'ring-2 ring-offset-2 ring-gray-900' : 'opacity-80 hover:opacity-100' }}">{{ $label }}</button>
                     @endforeach
                 </div>
             @endif
             <p class="text-sm text-gray-600">
-                @if($mine?->status)
+                @if($mine?->guardian_status)
+                    {{-- The Erziehungsberechtigten answered: theirs counts --}}
+                    {{ $mine->guardian_name }} (Erziehungsberechtigte) hat für dich <strong>{{ $mine->label() }}</strong> gemeldet – das zählt.
+                    @if($mine->own_status) Deine eigene Antwort: {{ \Modules\Kalender\src\Models\Response::labelOf($mine->own_status) }}.@endif
+                @elseif($mine?->status)
                     Du hast <strong class="{{ ['yes' => 'text-green-700', 'no' => 'text-gray-900', 'maybe' => 'text-amber-700'][$mine->status] ?? '' }}">{{ $mine->label() }}</strong>
                     – am {{ $mine->updated_at->copy()->setTimezone('Europe/Berlin')->format('d.m.Y') }} um {{ $mine->updated_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }} Uhr{{ $event->rsvp_deadline && $mine->updated_at->gt($event->rsvp_deadline) ? ' (nach der Frist)' : '' }}{{ $mine->set_by && $mine->set_by !== auth()->id() ? ', eingetragen von '.($mine->setter?->name ?? 'der Terminverwaltung') : '' }}.
                     @if($event->acceptsResponses()) Ändern geht bis zum Beginn.@endif
@@ -81,7 +85,7 @@
                     @if($summary[$key]->isNotEmpty())
                         <div>
                             <p class="font-medium text-gray-700">{{ $title }}</p>
-                            <ul class="text-gray-600">@foreach($summary[$key] as $r)<li>{{ $r->user->name }}@if($r->comment) <span class="text-gray-400">– {{ $r->comment }}</span>@endif</li>@endforeach</ul>
+                            <ul class="text-gray-600">@foreach($summary[$key] as $r)<li>{{ $r->user->name }}@if($r->comment) <span class="text-gray-400">– {{ $r->comment }}</span>@endif @if($manager)@include('kalender::partials.response-sources', ['r' => $r])@endif</li>@endforeach</ul>
                         </div>
                     @endif
                 @endforeach
@@ -137,7 +141,7 @@
                         @foreach($people as $person)
                             @php($r = $responses->get($person->id))
                             <tr wire:key="pp-{{ $person->id }}">
-                                <td class="py-1.5 pr-3">{{ $person->name }}@if($r?->comment)<span class="block text-xs text-gray-500">{{ $r->comment }}</span>@endif</td>
+                                <td class="py-1.5 pr-3">{{ $person->name }}@if($r?->comment)<span class="block text-xs text-gray-500">{{ $r->comment }}</span>@endif @include('kalender::partials.response-sources', ['r' => $r])</td>
                                 @if($event->rsvp)
                                     <td class="py-1.5 pr-3">
                                         @if($manager)

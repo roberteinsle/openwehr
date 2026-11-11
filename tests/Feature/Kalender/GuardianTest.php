@@ -43,7 +43,9 @@ test('Erziehungsberechtigte get the Kalender mails of the child and answer for i
 
     $this->post($url, ['status' => 'no', 'comment' => 'krank'])->assertRedirect();
     $response = $event->responses()->sole();
-    expect($response->user_id)->toBe($this->kid->id)->and($response->status)->toBe('no')->and($response->comment)->toBe('krank (Rückmeldung von Petra Pumpe)');
+    expect($response->user_id)->toBe($this->kid->id)->and($response->status)->toBe('no')
+        ->and($response->guardian_status)->toBe('no')->and($response->guardian_comment)->toBe('krank')->and($response->guardian_name)->toBe('Petra Pumpe')
+        ->and($response->own_status)->toBeNull()->and($response->comment)->toBeNull();
     $this->get($url)->assertSee('Abgesagt');
 
     $this->get(route('kalender.guardian', ['event' => $event->id, 'guardian' => $this->mum->id]))->assertForbidden();

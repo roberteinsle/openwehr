@@ -17,6 +17,7 @@ class LoginToken extends Model
 
     protected $fillable = [
         'user_id',
+        'guardian_id',
         'token_hash',
         'expires_at',
         'used_at',
@@ -39,6 +40,12 @@ class LoginToken extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** Eltern-Login: the token of an Erziehungsberechtigte(r) instead of a Kamerad */
+    public function guardian(): BelongsTo
+    {
+        return $this->belongsTo(Guardian::class);
     }
 
     public function isExpired(): bool

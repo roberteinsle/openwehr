@@ -110,7 +110,7 @@ test('the participant list downloads as CSV for the Terminverwalter only', funct
 
     $csv = $this->actingAs($this->manager)->get(route('kalender.participants', $event))->assertOk()->getContent();
 
-    expect($csv)->toStartWith("\xEF\xBB\xBF")->toContain('Name;Abteilungen;Rückmeldung;Kommentar;Anwesend')->toContain('Anna;;Zugesagt;"komme mit Auto";');
+    expect($csv)->toStartWith("\xEF\xBB\xBF")->toContain('Name;Abteilungen;Rückmeldung;Kommentar;"Eigene Rückmeldung";"Rückmeldung Erziehungsberechtigte";"Passt nicht zusammen";Anwesend')->toContain('Anna;;Zugesagt;"komme mit Auto";');
     $this->actingAs($anna)->get(route('kalender.participants', $event))->assertForbidden();
 });
 

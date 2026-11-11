@@ -5,6 +5,7 @@ namespace Modules\Kleiderkammer;
 use App\Models\User;
 use App\Services\InventoryRegistry;
 use App\Services\ModuleRegistry;
+use App\Services\ParentRegistry;
 use App\Services\ScanRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,7 @@ use Modules\Kleiderkammer\src\Filament\Pages\KleiderkammerDashboard;
 use Modules\Kleiderkammer\src\Filament\Resources\ItemResource;
 use Modules\Kleiderkammer\src\Filament\Resources\MemberResource;
 use Modules\Kleiderkammer\src\Livewire\EquipmentMessageForm;
+use Modules\Kleiderkammer\src\Livewire\ParentEquipment;
 use Modules\Kleiderkammer\src\Livewire\WashingRequestForm;
 use Modules\Kleiderkammer\src\Models\IssuedItem;
 use Modules\Kleiderkammer\src\Models\Item;
@@ -59,6 +61,11 @@ class KleiderkammerServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom($base.'/database/migrations');
 
         Livewire::component('kleiderkammer.equipment-message-form', EquipmentMessageForm::class);
+        Livewire::component('kleiderkammer.parent-equipment', ParentEquipment::class);
+
+        // Eltern-Bereich: the child's Ausrüstung, once something is issued to it
+        app(ParentRegistry::class)->section('kleiderkammer', 'Ausrüstung', 'kleiderkammer.parent-equipment', order: 30,
+            visible: fn (User $child) => IssuedItem::where('user_id', $child->id)->whereNull('returned_at')->exists());
         Livewire::component('kleiderkammer.washing-request-form', WashingRequestForm::class);
 
         app(ModuleRegistry::class)->register(

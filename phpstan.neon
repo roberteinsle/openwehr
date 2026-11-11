@@ -31,6 +31,7 @@ parameters:
         - modules/Objektplaene/database/migrations
         - modules/Personalverwaltung/database/migrations
         - modules/Schichtplan/database/migrations
+        - modules/Anmeldungen/database/migrations
         - modules/Schluessel/database/migrations
         - modules/Uebungsdienste/database/migrations
         - modules/Unterweisungen/database/migrations

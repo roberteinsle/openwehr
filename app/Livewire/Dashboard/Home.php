@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Models\User;
 use App\Services\Birthdays;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleOverview;
@@ -48,7 +49,9 @@ class Home extends Component
     /** Locked: the own order stays; unlocked: the most used modules move up */
     public function toggleLock(ModuleOverview $overview): void
     {
-        $overview->setLocked(auth()->user(), ! auth()->user()->modules_locked);
+        /** @var User $user */
+        $user = auth()->user();
+        $overview->setLocked($user, ! $user->modules_locked);
     }
 
     public function resetOrder(ModuleOverview $overview): void
@@ -69,6 +72,7 @@ class Home extends Component
 
     public function render(ModuleOverview $overview, DashboardRegistry $dashboard)
     {
+        /** @var User $user */
         $user = auth()->user();
         $modules = $overview->for($user);
 

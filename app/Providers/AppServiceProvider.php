@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Middleware\EnsureModuleAccess;
+use App\Http\Middleware\EnsureParent;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Models\User;
 use App\Services\ActivityRecorder;
@@ -15,6 +16,7 @@ use App\Services\HoursRegistry;
 use App\Services\InventoryRegistry;
 use App\Services\ModuleRegistry;
 use App\Services\OrganizationSettings;
+use App\Services\ParentRegistry;
 use App\Services\PersonnelFileRegistry;
 use App\Services\PushService;
 use App\Services\ScanRegistry;
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(HoursRegistry::class);
         $this->app->singleton(DriverRegistry::class);
         $this->app->singleton(BadgeRegistry::class);
+        $this->app->singleton(ParentRegistry::class);
     }
 
     public function boot(): void
@@ -75,7 +78,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Livewire actions (/livewire/update) run the same checks as the page: still active, module
         // still on and still allowed – a Kamerad who left can't keep acting from an open tab
-        Livewire::addPersistentMiddleware([EnsureUserIsActive::class, EnsureModuleAccess::class]);
+        Livewire::addPersistentMiddleware([EnsureUserIsActive::class, EnsureModuleAccess::class, EnsureParent::class]);
 
         // Every change of a record goes to the admin "Logs"
         foreach (['created', 'updated', 'deleted'] as $event) {

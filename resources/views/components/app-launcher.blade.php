@@ -5,9 +5,11 @@
 @php
     $launcherModules = app(\App\Services\ModuleOverview::class)->for(auth()->user());
 @endphp
-<div class="relative" x-data="{ open: false }" x-on:keydown.escape.window="open = false" x-on:click.outside="open = false">
+{{-- On the phone the button sits in the tab bar at the bottom (x-bottom-nav, event "toggle-launcher") and the menu opens above it --}}
+<div class="relative" x-data="{ open: false }" x-on:keydown.escape.window="open = false" x-on:toggle-launcher.window="open = ! open"
+     x-on:click.outside="if (! $event.target.closest('[data-launcher-toggle]')) open = false">
     <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-haspopup="true" aria-label="Alle Module"
-            title="Alle Module" class="relative flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40">
+            title="Alle Module" class="relative hidden sm:flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40">
         {{-- Phone: the feedback dot of "Profil" sits on the menu --}}
         @if($unreadFeedback)<span class="sm:hidden absolute right-1 top-1 h-2 w-2 rounded-full bg-fw-red"></span>@endif
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -16,7 +18,7 @@
     </button>
 
     <div x-show="open" x-cloak x-transition.opacity
-         class="absolute right-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-gray-100 bg-white text-gray-900 shadow-xl">
+         class="fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 overflow-hidden rounded-2xl border border-gray-100 bg-white text-gray-900 shadow-xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:mt-2 sm:w-72 sm:max-w-[calc(100vw-2rem)]">
         <a href="{{ route('home') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request()->routeIs('home') ? 'bg-gray-50' : '' }}">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fw-navy/10">
                 <svg class="h-4 w-4 text-fw-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10"/></svg>
@@ -28,6 +30,14 @@
             Profil
             @if($unreadFeedback)<span class="ml-auto inline-block h-2 w-2 rounded-full bg-fw-red" title="Neue Antwort auf dein Feedback"></span>@endif
         </a>
+        @if(app(\App\Services\ParentAccess::class)->hasChildren())
+            <a href="{{ route('parents.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request()->routeIs('parents.*') ? 'bg-gray-50' : '' }}">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fw-navy/10">
+                    <svg class="h-4 w-4 text-fw-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12 2a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM1 20a5 5 0 0 1 10 0M14 20a4.5 4.5 0 0 1 9 0"/></svg>
+                </span>
+                Eltern-Bereich
+            </a>
+        @endif
         @if(app(\App\Services\InventoryRegistry::class)->availableFor(auth()->user()))
             <a href="{{ route('inventory') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request()->routeIs('inventory') ? 'bg-gray-50' : '' }}">
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fw-navy/10">
@@ -58,7 +68,7 @@
 
         @if(! empty($launcherModules))
             <p class="border-t border-gray-100 px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Module</p>
-            <nav class="max-h-[70vh] overflow-y-auto pb-2">
+            <nav class="max-h-[50vh] sm:max-h-[70vh] overflow-y-auto pb-2">
                 @foreach($launcherModules as $key => $module)
                     {{-- Module routes are named after their key, e.g. kalender.* --}}
                     @php($active = request()->routeIs($key.'.*') && ! str_starts_with((string) request()->route()?->uri(), 'personalakte'))

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\EmailChangeController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\ScanController;
+use App\Livewire\Parents\Overview;
 use App\Livewire\Profile\Hours;
 use App\Models\Contact;
 use App\Models\FeedbackThread;
@@ -18,6 +19,13 @@ use Illuminate\Support\Str;
 
 // Root: the personal start page with notices, module cards and the modules (requires login)
 Route::view('/', 'pages.home')->middleware(['auth', 'active'])->name('home');
+
+// Eltern-Bereich: Erziehungsberechtigte (guard "guardian") and Kameraden who are parents; the modules add their parts
+Route::middleware('parent')->group(function () {
+    Route::get('/eltern', Overview::class)->name('parents.index');
+    Route::get('/eltern/{child}', Overview::class)->whereNumber('child')->name('parents.child');
+});
+Route::post('/eltern/abmelden', [MagicLinkController::class, 'logout'])->name('parents.logout');
 
 // Laravel auth middleware expects a route named 'login'; guests are sent straight to /anmelden (bootstrap/app.php)
 Route::redirect('/login', '/anmelden')->name('login');

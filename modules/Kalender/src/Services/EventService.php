@@ -183,8 +183,12 @@ class EventService
             throw ValidationException::withMessages(['status' => 'Dieser Termin ist nicht für dich.']);
         }
 
+        // The child's own answer; once the Erziehungsberechtigten answered, theirs counts
+        $existing = Response::where(['event_id' => $event->id, 'user_id' => $user->id])->first();
+
         return Response::updateOrCreate(['event_id' => $event->id, 'user_id' => $user->id], [
-            'status' => $status,
+            'own_status' => $status,
+            'status' => $existing !== null && $existing->guardian_status !== null ? $existing->guardian_status : $status,
             'comment' => filled($comment) ? trim($comment) : null,
         ]);
     }
@@ -279,26 +283,30 @@ class EventService
     /**
      * Everyone of the target group and everyone who answered, sorted by name, for CSV and print.
      *
-     * @return Collection<int, array{user: User, groups: string, status: string, comment: string, attended: string}>
+     * @return Collection<int, array{user: User, groups: string, status: string, comment: string, own: string, guardian: string, mismatch: bool, attended: string}>
      */
     public function participantRows(Event $event): Collection
     {
         $responses = $event->responses()->get()->keyBy('user_id');
+        /** @var Collection<int, User> $people */
+        $people = $this->audience($event)->toBase()->concat(User::whereIn('id', $responses->keys())->get())->unique('id')->sortBy('name')->values();
 
-        return $this->audience($event)->concat(User::whereIn('id', $responses->keys())->get())->unique('id')->sortBy('name')->values()
-            ->map(function (User $user) use ($responses) {
-                $response = $responses->get($user->id);
+        return $people->map(function (User $user) use ($responses) {
+            $response = $responses->get($user->id);
 
-                return [
-                    'user' => $user,
-                    'groups' => $user->groups()->pluck('name')->implode(', '),
-                    'status' => $response?->status ? $response->label() : 'offen',
-                    'comment' => $response?->comment ?? '',
-                    'attended' => match ($response?->attended) {
-                        true => 'ja', false => 'nein', default => ''
-                    },
-                ];
-            });
+            return [
+                'user' => $user,
+                'groups' => $user->groups()->pluck('name')->implode(', '),
+                'status' => $response?->status ? $response->label() : 'offen',
+                'comment' => $response?->comment ?? '',
+                'own' => $response?->own_status ? Response::labelOf($response->own_status) : '',
+                'guardian' => $response?->guardian_status ? Response::labelOf($response->guardian_status).' ('.$response->guardian_name.')'.($response->guardian_comment ? ' – '.$response->guardian_comment : '') : '',
+                'mismatch' => (bool) $response?->mismatch(),
+                'attended' => match ($response?->attended) {
+                    true => 'ja', false => 'nein', default => ''
+                },
+            ];
+        });
     }
 
     /** Participant list for the Terminverwalter, as CSV for Excel */
@@ -306,9 +314,9 @@ class EventService
     {
         $out = fopen('php://temp', 'r+');
         fwrite($out, "\xEF\xBB\xBF");
-        Csv::put($out, ['Name', 'Abteilungen', 'Rückmeldung', 'Kommentar', 'Anwesend'], ';');
+        Csv::put($out, ['Name', 'Abteilungen', 'Rückmeldung', 'Kommentar', 'Eigene Rückmeldung', 'Rückmeldung Erziehungsberechtigte', 'Passt nicht zusammen', 'Anwesend'], ';');
         foreach ($this->participantRows($event) as $row) {
-            Csv::put($out, [$row['user']->name, $row['groups'], $row['status'], $row['comment'], $row['attended']], ';');
+            Csv::put($out, [$row['user']->name, $row['groups'], $row['status'], $row['comment'], $row['own'], $row['guardian'], $row['mismatch'] ? 'ja' : '', $row['attended']], ';');
         }
         rewind($out);
 
@@ -373,11 +381,30 @@ class EventService
         });
     }
 
-    /** An Erziehungsberechtigte(r) answers for the child; the comment says who */
+    /**
+     * An Erziehungsberechtigte(r) answers for the child. Kept apart from the child's own answer and counts
+     * (status); the Terminverwaltung sees both and a mismatch. Same rules as the child: until the start.
+     */
     public function respondAsGuardian(Event $event, Guardian $guardian, string $status, ?string $comment = null): Response
     {
-        $note = trim((string) $comment);
+        if (! array_key_exists($status, Response::STATUSES)) {
+            throw ValidationException::withMessages(['status' => 'Ungültige Rückmeldung.']);
+        }
+        if (! $event->acceptsResponses()) {
+            throw ValidationException::withMessages(['status' => 'Für diesen Termin ist keine Rückmeldung (mehr) möglich.']);
+        }
+        $child = $guardian->user;
+        if (! $child || ! $child->is_active || ! $this->mayRespond($event, $child)) {
+            throw ValidationException::withMessages(['status' => 'Dieser Termin ist nicht für '.($child->name ?? 'das Kind').'.']);
+        }
 
-        return $this->respond($event, $guardian->user, $status, mb_substr(($note !== '' ? $note.' ' : '').'(Rückmeldung von '.$guardian->name.')', 0, 500));
+        return Response::updateOrCreate(['event_id' => $event->id, 'user_id' => $child->id], [
+            'status' => $status,
+            'guardian_status' => $status,
+            'guardian_comment' => filled($comment) ? mb_substr(trim((string) $comment), 0, 500) : null,
+            'guardian_id' => $guardian->id,
+            'guardian_name' => $guardian->name,
+            'guardian_at' => now(),
+        ]);
     }
 }

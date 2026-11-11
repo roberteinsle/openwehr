@@ -113,12 +113,13 @@
     @if($canEdit)
     <section class="{{ $card }}">
         <h2 class="text-sm font-semibold text-gray-900">Erziehungsberechtigte</h2>
-        <p class="text-xs text-gray-500">Bekommen die Kalender-Mails des Kameraden und sagen über einen Link für ihn zu oder ab – ohne eigenes Konto.</p>
+        <p class="text-xs text-gray-500">Bekommen die Kalender-Mails des Kameraden und sagen über einen Link für ihn zu oder ab. Mit ihrer Adresse melden sie sich im Eltern-Bereich an (Eltern-Login): Termine, Kalender-Abo, Ausrüstung und Anmeldungen des Kindes.</p>
         <ul class="divide-y divide-gray-100 text-sm">
             @forelse($guardians as $g)
                 <li class="flex flex-wrap items-center justify-between gap-2 py-1.5" wire:key="g-{{ $g->id }}">
                     <span><span class="font-medium text-gray-900">{{ $g->name }}</span> <span class="text-gray-500">· {{ $g->email }}</span>
-                        @if($g->phone) · <a href="tel:{{ preg_replace('/[^0-9+]/', '', $g->phone) }}" class="text-fw-navy underline">{{ $g->phone }}</a>@endif</span>
+                        @if($g->phone) · <a href="tel:{{ preg_replace('/[^0-9+]/', '', $g->phone) }}" class="text-fw-navy underline">{{ $g->phone }}</a>@endif
+                        <span class="block text-xs {{ $g->last_login_at ? 'text-green-700' : 'text-gray-400' }}">Eltern-Login: {{ $g->last_login_at ? 'zuletzt '.$g->last_login_at->copy()->setTimezone('Europe/Berlin')->format('d.m.Y') : 'noch nie angemeldet' }}</span></span>
                     <button type="button" wire:click="deleteGuardian({{ $g->id }})" wire:confirm="Erziehungsberechtigte(n) entfernen?" class="text-xs text-red-600 underline">Entfernen</button>
                 </li>
             @empty

@@ -30,7 +30,10 @@
 
         @if(session('kalender-guardian'))<p class="ok">{{ session('kalender-guardian') }}</p>@endif
         @if($error)<p class="err">{{ $error }}</p>@endif
-        <p class="muted">Bisher: <strong>{{ $response?->status ? \Modules\Kalender\src\Models\Response::STATUSES[$response->status] : 'keine Rückmeldung' }}</strong></p>
+        <p class="muted">Bisher: <strong>{{ $response?->status ? \Modules\Kalender\src\Models\Response::STATUSES[$response->status] : 'keine Rückmeldung' }}</strong>
+            @if($response?->guardian_status) (von {{ $response->guardian_name }})@endif
+            @if($response?->own_status) · {{ $child->name }} selbst: {{ \Modules\Kalender\src\Models\Response::labelOf($response->own_status) }}@endif</p>
+        <p class="muted">Deine Rückmeldung zählt, auch wenn {{ $child->name }} selbst anders geantwortet hat.</p>
 
         @if($event->acceptsResponses() && ! $event->isCancelled())
             <form method="POST" action="{{ request()->fullUrl() }}">
@@ -46,7 +49,8 @@
             <p class="muted">Für diesen Termin ist keine Rückmeldung (mehr) möglich.</p>
         @endif
     </div>
-    <p class="muted" style="text-align:center">Du bekommst diese Seite als Erziehungsberechtigte(r) von {{ $child->name }} ({{ $guardian->name }}).</p>
+    <p class="muted" style="text-align:center">Du bekommst diese Seite als Erziehungsberechtigte(r) von {{ $child->name }} ({{ $guardian->name }}).
+        Alle Termine, das Kalender-Abo und mehr findest du im <a href="{{ route('parents.index') }}">Eltern-Bereich</a> – Anmeldung mit deiner E-Mail-Adresse.</p>
 </main>
 </body>
 </html>

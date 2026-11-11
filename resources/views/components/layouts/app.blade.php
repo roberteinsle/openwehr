@@ -2,7 +2,7 @@
 <html lang="de" class="h-full bg-fw-grey-bg">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#1B2645">
@@ -47,7 +47,7 @@
                         </a>
                     @endif
                     <livewire:notifications.bell />
-                    {{-- On the phone the text navigation is hidden: Profil and Admin are in the 3×3 menu --}}
+                    {{-- On the phone the text navigation is hidden: Profil is in the tab bar, Admin in the 3×3 menu (opened from the tab bar) --}}
                     <x-app-launcher :admin-url="$showAdmin ? route('filament.admin.pages.dashboard') : null" :unread-feedback="$unreadFeedback" />
                     </div>
                     @endauth
@@ -63,10 +63,12 @@
             {{ $slot }}
         </main>
 
+        {{-- Phones: the tab bar at the bottom --}}
+        @auth<x-bottom-nav :unread-feedback="$unreadFeedback" />@endauth
     </div>
     @auth
         @if(app(\App\Services\ModuleRegistry::class)->isActive('kleiderkammer'))
-            @include('kleiderkammer::partials.scan-button', ['scanUrl' => \Modules\Kleiderkammer\src\Filament\Pages\ScanPage::getUrl()])
+            @include('kleiderkammer::partials.scan-button', ['scanUrl' => \Modules\Kleiderkammer\src\Filament\Pages\ScanPage::getUrl(), 'aboveNav' => true])
         @endif
     @endauth
     @livewireScripts

@@ -90,6 +90,7 @@ class Event extends Model
         return $this->belongsToMany(User::class, 'kal_event_user', 'event_id', 'user_id');
     }
 
+    /** @return HasMany<Response, $this> */
     public function responses(): HasMany
     {
         return $this->hasMany(Response::class, 'event_id');

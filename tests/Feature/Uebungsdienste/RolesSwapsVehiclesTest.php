@@ -152,7 +152,7 @@ test('the Vorstand swaps topic and responsible people of two Dienste in one go; 
     $this->plan->addResponsible($second, $this->bernd);
     $pending = $this->plan->requestSwap($this->hanna, $first, $second, $this->bernd);
 
-    Livewire::actingAs($vera)->test(Planner::class)->assertSee('Als Vorstand tauschst du')
+    Livewire::actingAs($vera)->test(Planner::class)->assertSee('Dienste anlegen, ändern und löschen')
         ->call('startSwap', $first->id)->assertSee('Di, 30.03.2027 – Wasserförderung – Bernd Blaulicht')
         ->set('swapWith', (string) $second->id)->call('exchange')->assertHasNoErrors()->assertSee('Getauscht');
 
@@ -166,4 +166,35 @@ test('the Vorstand swaps topic and responsible people of two Dienste in one go; 
 
     // Without the Vorstand Funktion: only asking the other one
     expect(fn () => $this->plan->exchange($this->hanna, $first, $second))->toThrow(ValidationException::class);
+});
+
+test('the Vorstand plans everything, Betreuer their own Abteilung, planners without ticks their own Abteilungen', function () {
+    $vorstand = MemberFunction::create(['name' => 'Vorstand']);
+    $betreuerFn = MemberFunction::create(['name' => 'Betreuer']);
+    $vera = User::factory()->create(['name' => 'Vera Vorstand']);
+    $vera->moduleAccess()->create(['module' => 'uebungsdienste']);
+    $vera->functions()->attach($vorstand);
+    $ben = User::factory()->create(['name' => 'Ben Betreuer']);
+    $ben->moduleAccess()->create(['module' => 'uebungsdienste']);
+    $ben->functions()->attach($betreuerFn);
+    $ben->groups()->attach($this->jf);
+
+    // Vorstand: the whole plan, also the whole Wehr
+    expect(ServicePlan::canPlan($vera))->toBeTrue()->and(ServicePlan::scopeOf($vera))->toBe([])
+        ->and(ServicePlan::ownerOptions($vera))->toHaveKey('');
+    $wehr = $this->plan->add($vera, '2027-03-16', '19:00', 'Wache');
+
+    // Betreuer without the role: only the Jugendfeuerwehr
+    expect(ServicePlan::canPlan($ben))->toBeTrue()->and(ServicePlan::ownerOptions($ben))->toBe([$this->jf->id => 'Jugendfeuerwehr']);
+    $jf = $this->plan->add($ben, '2027-03-19', '18:00', 'Wache', ['owner_group_id' => $this->jf->id]);
+    expect(ServicePlan::mayEdit($ben, $jf))->toBeTrue()->and(ServicePlan::mayEdit($ben, $wehr))->toBeFalse()
+        ->and(fn () => $this->plan->add($ben, '2027-03-20', '18:00', 'Wache'))->toThrow(ValidationException::class);
+    // … and only while in an Abteilung
+    $ben->groups()->detach();
+    expect(ServicePlan::canPlan($ben))->toBeFalse();
+
+    // A planner without ticks: their own Abteilung; without any Abteilung: everything
+    $this->planer->groups()->attach($this->aktive);
+    expect(ServicePlan::scopeOf($this->planer))->toBe([$this->aktive->id])->and(ServicePlan::mayEdit($this->planer, $wehr))->toBeFalse();
+    expect(ServicePlan::scopeOf($this->jugendwart))->toBe([]);
 });

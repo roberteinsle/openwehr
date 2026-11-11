@@ -7,6 +7,7 @@ use App\Services\AnnualReportRegistry;
 use App\Services\DashboardRegistry;
 use App\Services\HoursRegistry;
 use App\Services\ModuleRegistry;
+use App\Services\ParentRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Carbon;
@@ -23,6 +24,7 @@ use Modules\Kalender\src\Livewire\EventDetail;
 use Modules\Kalender\src\Livewire\EventForm;
 use Modules\Kalender\src\Livewire\EventTypes;
 use Modules\Kalender\src\Livewire\MonitorBoard;
+use Modules\Kalender\src\Livewire\ParentEvents;
 use Modules\Kalender\src\Livewire\PollForm;
 use Modules\Kalender\src\Livewire\PollList;
 use Modules\Kalender\src\Livewire\PollView;
@@ -87,6 +89,11 @@ class KalenderServiceProvider extends ServiceProvider
         Livewire::component('kalender.poll-list', PollList::class);
         Livewire::component('kalender.poll-form', PollForm::class);
         Livewire::component('kalender.poll-view', PollView::class);
+        Livewire::component('kalender.parent-events', ParentEvents::class);
+
+        // Eltern-Bereich: the child's Termine with the parents' Rückmeldung, and their Kalender-Abo
+        app(ParentRegistry::class)->section('kalender', 'Termine', 'kalender.parent-events', order: 10,
+            visible: fn (User $child) => $child->canUseModule('kalender'));
 
         app(ModuleRegistry::class)->register(
             'kalender',

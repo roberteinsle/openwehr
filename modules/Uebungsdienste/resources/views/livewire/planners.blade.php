@@ -1,7 +1,7 @@
 <div class="space-y-4">
     <div>
         <h1 class="text-xl font-bold text-gray-900">Planer & Abteilungen</h1>
-        <p class="text-sm text-gray-500">Für welche Abteilungen ein Übungsdienstplaner Dienste anlegt, ändert und löscht – z. B. die Jugendwarte nur für die Jugendfeuerwehr. Ohne Haken plant er für alle und die ganze Wehr. Wer mehrere Abteilungen hat, wählt beim Anlegen, für welche er gerade plant. Die Rolle „Übungsdienstplaner“ vergibst du unter Admin → Module. Admins dürfen immer alles.</p>
+        <p class="text-sm text-gray-500">Für welche Abteilungen ein Übungsdienstplaner Dienste anlegt, ändert und löscht. Ohne Haken plant er für seine eigenen Abteilungen (aus den Mitgliedsdaten); gehört er keiner an, für alle und die ganze Wehr. Der Vorstand plant immer alles, Betreuer (Funktion „Betreuer“) auch ohne die Rolle für ihre eigenen Abteilungen, z. B. die Jugendfeuerwehr. Wer mehrere Abteilungen hat, wählt beim Anlegen, für welche er gerade plant. Die Rolle „Übungsdienstplaner“ vergibst du unter Admin → Module. Admins dürfen immer alles.</p>
     </div>
     @if($flash)<p class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{{ $flash }}</p>@endif
     @error('scope')<p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{{ $message }}</p>@enderror

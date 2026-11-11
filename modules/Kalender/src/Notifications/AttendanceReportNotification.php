@@ -13,7 +13,7 @@ use Modules\Kalender\src\Models\Event;
 /** The Anwesenheit of a Dienst for the Wehrführung (and e.g. the Gemeinde): list in the mail, CSV attached; mail only */
 class AttendanceReportNotification extends Notification
 {
-    /** @param  Collection<int, array{user: User, groups: string, status: string, comment: string, attended: string}>  $present */
+    /** @param  Collection<int, array{user: User, groups: string, status: string, comment: string, own: string, guardian: string, mismatch: bool, attended: string}>  $present */
     public function __construct(
         private readonly Event $event,
         private readonly Collection $present,

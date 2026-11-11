@@ -2845,24 +2845,6 @@ parameters:
 			path: modules/Kalender/KalenderServiceProvider.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/routes/web.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/routes/web.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/routes/web.php
-
-		-
 			message: '#^Access to an undefined property Modules\\Kalender\\src\\Models\\Event\:\:\$partners\.$#'
 			identifier: property.notFound
 			count: 1
@@ -3037,48 +3019,6 @@ parameters:
 			path: modules/Kalender/src/Notifications/RsvpReminderNotification.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$attended\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$comment\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Method Modules\\Kalender\\src\\Services\\EventService\:\:participantRows\(\) should return Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, groups\: string, status\: string, comment\: string, attended\: string\}\> but returns Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, groups\: string, status\: mixed, comment\: mixed, attended\: string\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{user\: App\\Models\\User, groups\: string, status\: mixed, comment\: mixed, attended\: ''''\|''ja''\|''nein''\}, Closure\(App\\Models\\User\)\: array\{user\: App\\Models\\User, groups\: string, status\: mixed, comment\: mixed, attended\: ''''\|''ja''\|''nein''\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Model\>\:\:reject\(\) expects bool\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\|string\)\: bool\)\|Illuminate\\Database\\Eloquent\\Model, Closure\(App\\Models\\User\)\: bool given\.$#'
 			identifier: argument.type
 			count: 2
@@ -3086,12 +3026,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:each\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed, Closure\(App\\Models\\Guardian\)\: void given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Kalender/src/Services/EventService.php
-
-		-
-			message: '#^Parameter \#2 \$user of method Modules\\Kalender\\src\\Services\\EventService\:\:respond\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: modules/Kalender/src/Services/EventService.php
@@ -4353,7 +4287,7 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$member of method Modules\\Personalverwaltung\\src\\Services\\PersonnelService\:\:assertMayView\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
-			count: 6
+			count: 5
 			path: modules/Personalverwaltung/src/Services/PersonnelService.php
 
 		-

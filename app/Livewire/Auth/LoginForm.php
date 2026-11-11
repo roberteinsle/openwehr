@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\Guardian;
 use App\Services\MagicLinkService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -40,7 +41,7 @@ class LoginForm extends Component
     public function verify(MagicLinkService $service): void
     {
         try {
-            $service->consumeCode($this->email, $this->code, request());
+            $account = $service->consumeCode($this->email, $this->code, request());
         } catch (ValidationException $e) {
             $this->addError('code', $e->errors()['code'][0] ?? $e->errors()['token'][0] ?? 'Der Code stimmt nicht.');
 
@@ -48,7 +49,9 @@ class LoginForm extends Component
         }
 
         session()->regenerate();
-        if (session()->pull('first_login')) {
+        if ($account instanceof Guardian) {
+            $this->redirectRoute('parents.index');
+        } elseif (session()->pull('first_login')) {
             $this->redirectRoute('welcome');
         } else {
             $this->redirectIntended(route('home'));

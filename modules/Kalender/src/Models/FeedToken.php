@@ -10,7 +10,7 @@ class FeedToken extends Model
 {
     protected $table = 'kal_feed_tokens';
 
-    protected $fillable = ['user_id', 'token_hash', 'token_encrypted'];
+    protected $fillable = ['user_id', 'parent_hash', 'token_hash', 'token_encrypted'];
 
     protected $hidden = ['token_encrypted'];
 

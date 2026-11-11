@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Guardian;
 use App\Services\MagicLinkService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -53,7 +54,7 @@ class MagicLinkController extends Controller
     public function consumeToken(Request $request, string $token): RedirectResponse
     {
         try {
-            $this->magicLinkService->consumeToken($token, $request);
+            $account = $this->magicLinkService->consumeToken($token, $request);
         } catch (ValidationException $e) {
             return redirect()->route('auth.magic-link.form')
                 ->withErrors(['email' => $e->errors()['token'][0] ?? 'Ungültiger Link.']);
@@ -61,12 +62,18 @@ class MagicLinkController extends Controller
 
         $request->session()->regenerate();
 
+        // Erziehungsberechtigte go to the Eltern-Bereich
+        if ($account instanceof Guardian) {
+            return redirect()->route('parents.index');
+        }
+
         return $request->session()->pull('first_login') ? redirect()->route('welcome') : redirect()->intended(route('home'));
     }
 
     public function logout(Request $request): RedirectResponse
     {
-        Auth::logout();
+        Auth::guard('web')->logout();
+        Auth::guard('guardian')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Guardian;
 use App\Models\User;
 
 return [
@@ -42,6 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Erziehungsberechtigte in the Eltern-Bereich (no Kamerad account, App\Services\ParentAccess)
+        'guardian' => [
+            'driver' => 'session',
+            'provider' => 'guardians',
+        ],
     ],
 
     /*
@@ -65,6 +72,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'guardians' => [
+            'driver' => 'eloquent',
+            'model' => Guardian::class,
         ],
 
         // 'users' => [

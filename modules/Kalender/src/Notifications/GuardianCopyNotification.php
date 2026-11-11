@@ -11,7 +11,8 @@ use Modules\Kalender\src\Models\Event;
 
 /**
  * The Kalender mail of a Kamerad (e.g. Jugendfeuerwehr) as a copy to an Erziehungsberechtigte(r).
- * They have no login: the button leads to a signed page where they answer for the child.
+ * The button leads to a signed page where they answer for the child without signing in; the Eltern-Bereich
+ * (Eltern-Login with the same address) has all Termine.
  */
 class GuardianCopyNotification extends Notification
 {
@@ -37,6 +38,8 @@ class GuardianCopyNotification extends Notification
         if ($this->event->rsvp && $this->event->acceptsResponses()) {
             $mail->action('Rückmeldung für '.$this->child->name, self::url($this->event, $notifiable));
         }
+
+        $mail->line('Alle Termine, das Kalender-Abo für dein Handy und mehr findest du im Eltern-Bereich: '.route('parents.index').' – Anmeldung mit dieser E-Mail-Adresse.');
 
         return $mail->salutation(app(OrganizationSettings::class)->salutation());
     }

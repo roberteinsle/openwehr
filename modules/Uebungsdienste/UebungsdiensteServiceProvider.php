@@ -65,8 +65,9 @@ class UebungsdiensteServiceProvider extends ServiceProvider
             provider: self::class,
             route: 'uebungsdienste.index',
             // Vorstand incl. its sub-functions, and admins; anyone else only after a confirmation
-            audience: fn (User $user) => $user->isVorstand() || $user->hasModuleRole('uebungsdienste', ServicePlan::ROLE),
-            audienceLabel: 'Vorstand',
+            // Betreuer plan the Dienste of their Abteilung, e.g. the Jugendfeuerwehr
+            audience: fn (User $user) => $user->isVorstand() || $user->hasModuleRole('uebungsdienste', ServicePlan::ROLE) || ServicePlan::isBetreuer($user),
+            audienceLabel: 'Vorstand und Betreuer',
         );
 
         // Start page: the next Übungsdienst. The Vorstand (module access) sees topic and who is responsible,

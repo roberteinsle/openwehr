@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Modules\Uebungsdienste\src\Services\ServicePlan;
 
-/** Admins: for which Abteilungen each Übungsdienstplaner plans (none ticked = all and the whole Wehr) */
+/** Admins: for which Abteilungen each Übungsdienstplaner plans (none ticked = their own Abteilungen; without any = all) */
 class Planners extends Component
 {
     /** @var array<int, list<string>> */
@@ -24,7 +24,7 @@ class Planners extends Component
     public function mount(): void
     {
         foreach ($this->planners() as $planner) {
-            $this->scopes[$planner->id] = array_map('strval', ServicePlan::scopeOf($planner));
+            $this->scopes[$planner->id] = array_map('strval', ServicePlan::explicitScopeOf($planner));
         }
     }
 

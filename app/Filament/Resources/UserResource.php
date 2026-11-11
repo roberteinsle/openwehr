@@ -6,6 +6,7 @@ use App\Enums\MemberGender;
 use App\Enums\MemberStatus;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\UserResource\Pages;
+use App\Models\Guardian;
 use App\Models\MemberFunction;
 use App\Models\Module;
 use App\Models\User;
@@ -204,7 +205,7 @@ class UserResource extends Resource
                 ->columnSpanFull(),
 
             Section::make('Erziehungsberechtigte')
-                ->description('Z. B. für die Jugendfeuerwehr: Sie bekommen die Kalender-Mails des Kameraden (neue, geänderte und abgesagte Termine, Erinnerungen) und können ohne eigenes Konto über einen Link für ihn zu- oder absagen.')
+                ->description('Z. B. für die Jugendfeuerwehr: Sie bekommen die Kalender-Mails des Kameraden (neue, geänderte und abgesagte Termine, Erinnerungen) und sagen über einen Link für ihn zu oder ab. Mit ihrer Adresse melden sie sich außerdem im Eltern-Bereich an (Eltern-Login): Termine mit Rückmeldung, Kalender-Abo, Ausrüstung und Anmeldungen ihres Kindes.')
                 ->schema([
                     Forms\Components\Repeater::make('guardians')
                         ->relationship()
@@ -213,6 +214,12 @@ class UserResource extends Resource
                             Forms\Components\TextInput::make('name')->label('Name')->required()->maxLength(150),
                             Forms\Components\TextInput::make('email')->label('E-Mail')->email()->required()->maxLength(255)->distinct(),
                             Forms\Components\TextInput::make('phone')->label('Telefon')->tel()->maxLength(50),
+                            // The Eltern-Login with this address: whether and when the parent last signed in
+                            Forms\Components\Placeholder::make('parent_login')->label('Eltern-Login')
+                                ->content(fn (?Guardian $record) => $record?->last_login_at
+                                    ? 'zuletzt angemeldet am '.$record->last_login_at->timezone('Europe/Berlin')->format('d.m.Y H:i').' Uhr'
+                                    : 'noch nie angemeldet – Anmeldung mit dieser Adresse unter /anmelden')
+                                ->columnSpanFull(),
                         ])
                         ->columns(['default' => 1, 'md' => 3])
                         ->defaultItems(0)

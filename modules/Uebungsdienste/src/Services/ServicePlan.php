@@ -23,8 +23,8 @@ use Modules\Uebungsdienste\src\Notifications\SwapRequestedNotification;
 use Throwable;
 
 /**
- * Changes to the Übungsdienstplan. Admins and Übungsdienstplaner (role, optionally limited to
- * Abteilungen in ud_scopes) create, change and delete Dienste, set topic and responsible people and
+ * Changes to the Übungsdienstplan. Admins and the Vorstand (everything), Übungsdienstplaner (role; the
+ * Abteilungen in ud_scopes, otherwise their own) and Betreuer (their own Abteilungen) create, change and delete Dienste, set topic and responsible people and
  * book the vehicles a Dienst needs. Everyone else with access swaps Dienste: the other responsible
  * Kamerad is asked and agrees or declines.
  */
@@ -44,16 +44,72 @@ class ServicePlan
 
     // ─── who may do what ─────────────────────────────────────────────────────
 
-    /** Admins and Übungsdienstplaner */
+    /**
+     * Who plans: admins, the Vorstand (whole plan), Übungsdienstplaner (role) and Betreuer – holders of a Funktion
+     * named like "Betreuer" (incl. sub-functions) who belong to an Abteilung, for that Abteilung.
+     */
     public static function canPlan(User $user): bool
     {
-        return $user->is_active && ($user->is_admin || ($user->canUseModule(self::MODULE) && $user->hasModuleRole(self::MODULE, self::ROLE)));
+        if (! $user->is_active) {
+            return false;
+        }
+        if ($user->is_admin) {
+            return true;
+        }
+        if (! $user->canUseModule(self::MODULE)) {
+            return false;
+        }
+
+        return $user->hasModuleRole(self::MODULE, self::ROLE) || $user->isVorstand() || (self::isBetreuer($user) && self::ownGroups($user) !== []);
     }
 
-    /** The Abteilungen an Übungsdienstplaner plans for; [] = all (and the whole Wehr) */
+    /** Funktionen whose holders plan for their own Abteilungen, e.g. the Betreuer of the Jugendfeuerwehr */
+    public const BETREUER_PATTERNS = ['betreuer'];
+
+    public static function isBetreuer(User $user): bool
+    {
+        $ids = MemberFunction::where(function ($q) {
+            foreach (self::BETREUER_PATTERNS as $pattern) {
+                $q->orWhereRaw('lower(name) like ?', ['%'.$pattern.'%']);
+            }
+        })->pluck('id')->all();
+
+        return $ids !== [] && $user->functions()->whereIn('member_functions.id', MemberFunction::idsWithChildren($ids))->exists();
+    }
+
+    /** @return list<int> */
+    private static function ownGroups(User $user): array
+    {
+        return $user->groups()->pluck('groups.id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    /** @return list<int> the Abteilungen an admin ticked for this Übungsdienstplaner (ud_scopes) */
+    public static function explicitScopeOf(User $user): array
+    {
+        return DB::table('ud_scopes')->where('user_id', $user->id)->pluck('group_id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    /**
+     * The Abteilungen $user plans for; [] = all (and the whole Wehr). Admins and the Vorstand: all.
+     * Übungsdienstplaner: the Abteilungen an admin ticked, otherwise their own (none at all = all).
+     * Betreuer: their own Abteilungen (added to a planner's).
+     */
     public static function scopeOf(User $user): array
     {
-        return $user->is_admin ? [] : DB::table('ud_scopes')->where('user_id', $user->id)->pluck('group_id')->map(fn ($id) => (int) $id)->all();
+        if ($user->is_admin || $user->isVorstand()) {
+            return [];
+        }
+        $own = self::ownGroups($user);
+        if ($user->hasModuleRole(self::MODULE, self::ROLE)) {
+            $planner = self::explicitScopeOf($user) ?: $own;
+            if ($planner === []) {
+                return [];
+            }
+
+            return array_values(array_unique([...$planner, ...(self::isBetreuer($user) ? $own : [])]));
+        }
+
+        return self::isBetreuer($user) ? $own : [];
     }
 
     /** Admins: which Abteilungen an Übungsdienstplaner plans for (none = all) */

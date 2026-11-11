@@ -11,6 +11,8 @@
             <div class="bg-white rounded-2xl shadow-sm border border-fw-grey-light p-6">
                 <livewire:auth.login-form />
             </div>
+            {{-- Eltern-Login: Erziehungsberechtigte sign in with the address stored at their child --}}
+            <p class="mt-4 text-center text-xs text-gray-500">Eltern und Erziehungsberechtigte melden sich mit der E-Mail-Adresse an, die bei der Wehr für ihr Kind eingetragen ist.</p>
         </div>
     </div>
 </x-layouts.app>

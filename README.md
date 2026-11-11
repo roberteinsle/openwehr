@@ -45,6 +45,7 @@ openwehr besteht aus einem **Kern** und **Modulen**. Der Kern bringt Anmeldung, 
 | [Übungsdienstplaner](https://github.com/roberteinsle/openwehr/wiki/Übungsdienstplaner) | Wer welchen Übungsdienst mit welchem Thema übernimmt, mit Tausch und Fahrzeugbuchung |
 | [Schichtplan](https://github.com/roberteinsle/openwehr/wiki/Schichtplan) | Arbeitsdienste, Feste und Stände: Schichten verteilen oder selbst eintragen lassen |
 | [Mitteilungen](https://github.com/roberteinsle/openwehr/wiki/Mitteilungen) | Nachrichten der Wehrführung mit Anhängen und Lesebestätigung |
+| [Anmeldungen & Einverständnisse](https://github.com/roberteinsle/openwehr/wiki/Anmeldungen-und-Einverständnisse) | Anmeldungen für Fahrten und Zeltlager mit eigenen Feldern und Unterschrift, bei Kindern durch die Eltern |
 | [Einsatzbericht](https://github.com/roberteinsle/openwehr/wiki/Einsatzbericht) | Einsätze erfassen und freigeben, Besatzung, DIVERA-Anbindung, Lagemeldungen, Jahresbericht |
 | [Atemschutzüberwachung](https://github.com/roberteinsle/openwehr/wiki/Atemschutzüberwachung) | Trupps mit Uhr, Drücken und Warnungen, Geräteträger mit G26.3 und Übungen |
 | [Gefahrstoffe](https://github.com/roberteinsle/openwehr/wiki/Gefahrstoffe) | Warntafel und Gefahrenmatrix nachschlagen, auch ohne Netz |

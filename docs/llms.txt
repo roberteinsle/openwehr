@@ -1,6 +1,6 @@
 # openwehr
 
-> Kostenlose Open-Source-Web-App (AGPL-3.0) für Freiwillige Feuerwehren in Deutschland: ein gemeinsamer Kern mit Anmeldung ohne Passwort, Kameraden, Startseite, Benachrichtigungen und Admin-Bereich, dazu 24 Module, die jede Wehr einzeln einschaltet. Für das Handy gemacht, Oberfläche auf Deutsch, Betrieb auf dem eigenen Server (Docker-Image mit PostgreSQL).
+> Kostenlose Open-Source-Web-App (AGPL-3.0) für Freiwillige Feuerwehren in Deutschland: ein gemeinsamer Kern mit Anmeldung ohne Passwort, Kameraden, Startseite, Benachrichtigungen und Admin-Bereich, dazu 25 Module, die jede Wehr einzeln einschaltet. Für das Handy gemacht, Oberfläche auf Deutsch, Betrieb auf dem eigenen Server (Docker-Image mit PostgreSQL).
 
 - Projektseite: https://www.openwehr.de/
 - Quellcode: https://github.com/roberteinsle/openwehr
@@ -20,7 +20,7 @@
 - Fahrzeugbuchung: Fahrzeuge im gemeinsamen Kalender reservieren, Konfliktentscheidung, Wachen-Monitor
 - Fahrzeugverwaltung & Flotte: Fahrzeugakte (Stammdaten, Beschaffung, Dokumente wie Fahrzeugschein), Status, Werkstattzeiten, Fristen (HU, SP, UVV) mit Fristenliste und im Kalender, Prüfungen mit Checkliste, Ergebnis und Unterschrift setzen die Einsatzbereitschaft, Mängel aus der Prüfung oder per QR-Code am Fahrzeug ins Mängelmanagement, Kosten an die Finanzen
 - Fahrtenbuch: Fahrten mit Kilometerstand, verknüpft mit Buchung und Einsatz, Tanken und Export
-- Kalender & Termine: Termine für eine Zielgruppe mit Ort samt Navigation, Kleidung und Rückmeldung, Anwesenheit mit Liste und CSV an die Wehrführung, Terminabfragen, Kalender-Abo, gemeinsame Übungen mit Nachbarwehren; Erziehungsberechtigte (z. B. Jugendfeuerwehr) bekommen die Termin-Mails und sagen ohne eigenes Konto für das Kind zu oder ab
+- Kalender & Termine: Termine für eine Zielgruppe mit Ort samt Navigation, Kleidung und Rückmeldung, Anwesenheit mit Liste und CSV an die Wehrführung, Terminabfragen, Kalender-Abo, gemeinsame Übungen mit Nachbarwehren; Erziehungsberechtigte (z. B. Jugendfeuerwehr) bekommen die Termin-Mails und sagen für das Kind zu oder ab; die Antworten von Kind und Eltern werden getrennt gespeichert, die der Eltern zählt, Abweichungen werden markiert
 - Schichtplan: Schichten verteilen oder Mitglieder selbst eintragen lassen
 - Übungsdienstplaner: Übungsdienste mit Thema und Verantwortlichen für den Vorstand; jeder Dienst steht ohne Thema im Kalender der Zielgruppe
 - Personalverwaltung: eigener Bereich für Personalverwalter, persönliche Daten (Anschrift, Geburtsdatum, Mobilnummer) zuschaltbar mit Selbstpflege und Benachrichtigung, Diensthistorie (Dienstgrade, Abteilungen, Funktionen, Ereignisse, Dienstzeiten in anderen Wehren) mit Nachweisen und anrechenbarer Dienstzeit, Ehrungen nach Dienstjahren (mit üblichen Ehrungsarten als Vorlage), Sammelverarbeitung für Beförderungen, Ehrungen und Funktionen, Auswertungen für Kommune und Verband, Dienstausweis (auch digital auf dem Handy mit Prüf-QR-Code), Änderungswünsche der Kameraden zur eigenen Akte, neue Mitglieder anlegen oder per CSV importieren und per QR-Code einladen, Rolle Personaleinsicht nur lesend, Dienstbeteiligung aus dem Kalender, Zugriff je Abteilung
@@ -28,6 +28,7 @@
 - Ausrüstungsverwaltung: Geräte, Prüffristen, Ausleihe, Rückrufe, Beladeplan, Inventur per Barcode, RFID oder NFC am Handy, Reinigung/Wartung mit Lebenszykluskosten, Geräteinfo per QR-Code (auf Wunsch ohne Login)
 - Bestand (Kern): eine Suche und ein Scan-Feld über Fahrzeuge, Geräte, Kleiderkammer, Schlüssel und Mängel-Objekte; Ersatzbeschaffungsplan aus Lebensdauer und geplanten Fahrzeugbeschaffungen
 - Schlüsselverwaltung: Schlüssel und Transponder mit Ausgabe, unterschriebener Schlüsselquittung, Rückgabefristen, Verlust und QR-Etikett
+- Anmeldungen & Einverständnisse: Anmeldungen für Fahrten, Zeltlager und Veranstaltungen mit eigenen Feldern (Allergien, Schwimmer, Notfallnummer, Fotoerlaubnis), Einverständniserklärung und Unterschrift am Bildschirm – bei Kindern durch die Eltern im Eltern-Bereich –, Teilnehmerliste mit CSV und Druck; Gesundheitsangaben verschlüsselt und nach der Veranstaltung automatisch gelöscht
 - Wartungsmanagement: Prüfungen nach Vorlage, unterschriebene Prüfprotokolle als PDF
 - Kleiderkammer: ein oder mehrere Lager mit Zugang und Abgang/Ausmusterung (PSA einzeln mit Code, Massenartikel als Anzahl), Ausgabe und Rücknahme der Bekleidung, Protokoll aller Buchungen, Größen, QR-Etiketten, Inventar mit Netto-/Bruttopreisen als PDF und Excel (DIN A4)
 - Mängelmanagement: Mängel mit Foto per QR-Code melden – an Objekten, Fahrzeugen oder Geräten der Ausrüstung –, Bearbeitung und Zuständigkeit direkt in der App, Rückfragen an den Melder, Fotos im Verlauf, „doch nicht behoben“, Zuständige je Objekt, Erinnerung an liegengebliebene Mängel, Jahresbericht
@@ -44,7 +45,8 @@
 - Stundennachweis je Kamerad und für die Wehr, automatisch aus Diensten, Einsätzen, Lehrgängen und Schichten
 - Als App auf dem Startbildschirm (PWA) mit Push-Benachrichtigungen, ohne App-Store
 - Ansprechpartner der Wehr mit Telefon zum direkten Anrufen, auch externe Kontakte (Leitstelle, Gemeinde) in frei definierbaren Gruppen
-- Erziehungsberechtigte je Kamerad, z. B. für die Jugendfeuerwehr
+- Erziehungsberechtigte je Kamerad, z. B. für die Jugendfeuerwehr, mit Eltern-Login: ein abgespeckter Eltern-Bereich mit Terminen und Rückmeldung, Kalender-Abo aller Kinder, Anmeldungen und Ausrüstung des Kindes
+- Mobile Navigation mit Tab-Leiste unten (Start, Termine, Module, Mitteilungen, Profil)
 
 ## Ausblick
 

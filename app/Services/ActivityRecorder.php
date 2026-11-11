@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserModulePreference;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Anmeldungen\src\Models\Registration as AnmeldungRegistration;
 use Modules\Atemschutz\src\Models\Reading as AtemschutzReading;
 use Modules\Atemschutz\src\Models\Warning as AtemschutzWarning;
 use Modules\Ausruestung\src\Models\EquipmentEvent;
@@ -49,7 +50,7 @@ class ActivityRecorder
         FeedToken::class, BookingCommentRevision::class, DefectEvent::class, EquipmentEvent::class, DiveraRequest::class,
         VerbandbuchEntry::class, VerbandbuchSignature::class, VerbandbuchAmendment::class, VerbandbuchAccessLog::class,
         AtemschutzReading::class, AtemschutzWarning::class, Exposure::class, ExposureEvent::class, ExposureDismissal::class, LicensePhoto::class, FahrzeugStatusEvent::class, FahrtenbuchRevision::class, WasserkarteStatusEvent::class,
-        KleiderkammerMovement::class,
+        KleiderkammerMovement::class, AnmeldungRegistration::class,
     ];
 
     /** Changes of only these fields are bookkeeping, not worth an entry */
