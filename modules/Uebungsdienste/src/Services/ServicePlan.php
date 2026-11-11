@@ -173,7 +173,9 @@ class ServicePlan
         if ($user->is_admin || (self::canPlan($user) && self::scopeOf($user) === [])) {
             return $query;
         }
-        $groups = array_values(array_unique([...$user->groups()->pluck('groups.id')->map(fn ($id) => (int) $id)->all(), ...self::scopeOf($user)]));
+        // Guests too: Jugendliche who join the Übungsdienste of another Abteilung (User::guestGroups)
+        $groups = array_values(array_unique([...$user->groups()->pluck('groups.id')->map(fn ($id) => (int) $id)->all(),
+            ...$user->guestGroups()->pluck('groups.id')->map(fn ($id) => (int) $id)->all(), ...self::scopeOf($user)]));
 
         return $query->where(fn ($q) => $q->whereNull('owner_group_id')->orWhereIn('owner_group_id', $groups));
     }

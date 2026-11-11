@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\MemberGender;
 use App\Enums\MemberStatus;
 use App\Filament\ModuleAreas;
+use App\Services\ModuleAccess;
 use App\Services\ModuleRegistry;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Modules\Fahrzeugbuchung\src\Models\Booking;
 
@@ -199,6 +201,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Guardian::class)->orderBy('name');
     }
 
+    /** @return BelongsToMany<Group, $this> */
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class);
@@ -210,6 +213,25 @@ class User extends Authenticatable implements FilamentUser
         $ids = MemberFunction::vorstandIds();
 
         return $ids !== [] && $this->functions()->whereIn('member_functions.id', $ids)->exists();
+    }
+
+    /**
+     * Abteilungen whose Übungsdienste this Kamerad joins as a guest, e.g. a Jugendlicher from 16 at the
+     * Einsatzabteilung (App\Services\AgeTransitions). Not a membership: modules and lists keep groups().
+     *
+     * @return BelongsToMany<Group, $this>
+     */
+    public function guestGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_guests')->withTimestamps();
+    }
+
+    /** Age in full years today (Berlin), null without a birth date */
+    public function age(): ?int
+    {
+        $birth = $this->getAttribute('birth_date');
+
+        return $birth ? Carbon::parse($birth, 'Europe/Berlin')->age : null;
     }
 
     /** Functions (or sub-functions) this member holds, e.g. Jugendwart */
@@ -277,16 +299,8 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
-        // Auto-assign: all active users have access without an explicit record
-        $autoAssign = Cache::remember("module_auto_assign_{$key}", 60, fn () => Module::where('key', $key)->value('auto_assign')
-        );
-
-        // For a module meant only for some (e.g. the Vorstand), "automatisch freischalten" covers only them
-        if ($autoAssign && app(ModuleRegistry::class)->isMeantFor($key, $this)) {
-            return true;
-        }
-
-        return $this->moduleAccess()->where('module', $key)->exists();
+        // An explicit grant, or "automatisch freischalten" unless taken away (App\Services\ModuleAccess)
+        return ModuleAccess::effective($this, $key);
     }
 
     /** Whether this user holds a specific role within a module. */

@@ -231,7 +231,7 @@ class EventService
      */
     public function audience(Event $event): EloquentCollection
     {
-        return Audience::users($event->groups()->pluck('groups.id'), $event->functions()->pluck('member_functions.id'), $event->invitees()->pluck('users.id'));
+        return Audience::users($event->groups()->pluck('groups.id'), $event->functions()->pluck('member_functions.id'), $event->invitees()->pluck('users.id'), $event->type);
     }
 
     /** Rückmeldungen grouped, who of the audience has not answered yet, attendance and whether there are enough */

@@ -847,7 +847,7 @@ class PersonnelService
             $from = $member->joined_at->copy()->setTimezone('Europe/Berlin')->startOfDay()->utc();
         }
 
-        $events = Audience::scope(Event::query(), $member)
+        $events = Audience::scope(Event::query(), $member, events: true)
             ->whereNull('source_id')->whereNull('cancelled_at')->whereIn('type', $types)
             ->where('starts_at', '>=', $from)->where('ends_at', '<=', $until)
             // Attendance was taken: someone is marked present or absent

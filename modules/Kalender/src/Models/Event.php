@@ -112,7 +112,7 @@ class Event extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        return $user->canManageKalender() ? $query : Audience::scope($query, $user);
+        return $user->canManageKalender() ? $query : Audience::scope($query, $user, events: true);
     }
 
     public function scopePublic(Builder $query): Builder

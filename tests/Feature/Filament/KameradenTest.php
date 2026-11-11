@@ -150,12 +150,12 @@ test('the header action revokes a module from the filtered members only', functi
     expect($drop->moduleAccess()->exists())->toBeFalse()->and($keep->moduleAccess()->exists())->toBeTrue();
 });
 
-test('mobile number, birth date and address are hidden; stored values stay', function () {
-    $user = User::factory()->create(['phone' => '04101 12345', 'birth_date' => '1985-03-02', 'street' => 'Hauptstraße 1', 'postal_code' => '24576', 'city' => 'Bad Bramstedt']);
+test('mobile number and address are hidden, the birth date is shown; stored values stay', function () {
+    $user = User::factory()->create(['phone' => '04101 12345', 'birth_date' => '1985-03-02', 'street' => 'Hauptstraße 1', 'postal_code' => '12345', 'city' => 'Musterstadt']);
 
     Livewire::test(EditUser::class, ['record' => $user->getKey()])
         ->assertFormFieldIsHidden('phone')
-        ->assertFormFieldIsHidden('birth_date')
+        ->assertFormFieldIsVisible('birth_date')
         ->assertFormFieldIsHidden('street')
         ->assertFormFieldIsHidden('postal_code')
         ->assertFormFieldIsHidden('city')
@@ -167,8 +167,8 @@ test('mobile number, birth date and address are hidden; stored values stay', fun
     expect($user->phone)->toBe('04101 12345')
         ->and($user->birth_date->format('Y-m-d'))->toBe('1985-03-02')
         ->and($user->street)->toBe('Hauptstraße 1')
-        ->and($user->postal_code)->toBe('24576')
-        ->and($user->city)->toBe('Bad Bramstedt');
+        ->and($user->postal_code)->toBe('12345')
+        ->and($user->city)->toBe('Musterstadt');
 });
 
 test('the app version sits small behind the admin title', function () {

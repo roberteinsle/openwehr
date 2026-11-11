@@ -6,6 +6,7 @@ use App\Enums\MemberStatus;
 use App\Filament\Resources\UserResource;
 use App\Models\Module;
 use App\Models\User;
+use App\Services\ModuleAccess;
 use App\Services\ModuleRegistry;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -82,6 +83,7 @@ class ModuleMembers extends Page implements HasTable
         $roles = $this->definition()['roles'] ?? [];
         $roleOptions = $roles ? array_combine($roles, array_map('mb_ucfirst', $roles)) : [];
         $access = fn ($query) => $query->from('module_user')->whereColumn('module_user.user_id', 'users.id')->where('module_user.module', $key);
+        $blocked = fn ($query) => $query->from('module_blocks')->whereColumn('module_blocks.user_id', 'users.id')->where('module_blocks.module', $key);
         $registry = app(ModuleRegistry::class);
         $restricted = $registry->isRestricted($key);
         $audience = $this->definition()['audience_label'] ?? null;
@@ -126,13 +128,9 @@ class ModuleMembers extends Page implements HasTable
                 // Switching on for someone outside the audience goes through "Trotzdem freischalten"
                 ->disabled(fn (User $record) => $outside($record) && ! $record->has_access)
                 ->tooltip(fn (User $record) => $outside($record) && ! $record->has_access ? 'Nicht im '.$audience.' – über „Trotzdem freischalten“' : null)
-                ->getStateUsing(fn (User $record) => (bool) $record->has_access)
+                ->getStateUsing(fn (User $record) => ModuleAccess::effective($record, $key))
                 ->updateStateUsing(function (User $record, bool $state) use ($key) {
-                    if ($state) {
-                        DB::table('module_user')->insertOrIgnore(['user_id' => $record->id, 'module' => $key]);
-                    } else {
-                        DB::table('module_user')->where('user_id', $record->id)->where('module', $key)->delete();
-                    }
+                    ModuleAccess::set($record, $key, $state, keepRole: true);
 
                     return $state;
                 }),
@@ -146,7 +144,7 @@ class ModuleMembers extends Page implements HasTable
                 ->getStateUsing(fn (User $record) => $record->module_role)
                 // Giving a role also unlocks the module
                 ->updateStateUsing(function (User $record, ?string $state) use ($key) {
-                    DB::table('module_user')->updateOrInsert(['user_id' => $record->id, 'module' => $key], ['role' => $state ?: null]);
+                    ModuleAccess::set($record, $key, true, $state ?: null);
 
                     return $state;
                 });
@@ -155,7 +153,7 @@ class ModuleMembers extends Page implements HasTable
         return $table
             ->query(User::query()
                 ->select('users.*')
-                ->selectRaw('exists(select 1 from module_user where module_user.user_id = users.id and module_user.module = ?) as has_access', [$key])
+                ->selectRaw('(exists(select 1 from module_user where module_user.user_id = users.id and module_user.module = ?) or (? and not exists(select 1 from module_blocks where module_blocks.user_id = users.id and module_blocks.module = ?))) as has_access', [$key, ModuleAccess::autoAssign($key), $key])
                 ->addSelect(['module_role' => DB::table('module_user')->select('role')->whereColumn('module_user.user_id', 'users.id')->where('module_user.module', $key)->limit(1)])
                 ->with('groups'))
             ->columns($columns)
@@ -167,8 +165,9 @@ class ModuleMembers extends Page implements HasTable
                     ->trueLabel('Nur freigeschaltete')
                     ->falseLabel('Nur nicht freigeschaltete')
                     ->queries(
-                        true: fn (Builder $query) => $query->whereExists($access),
-                        false: fn (Builder $query) => $query->whereNotExists($access),
+                        // Automatic access counts unless an admin took it away
+                        true: fn (Builder $query) => $query->where(fn ($q) => $q->whereExists($access)->when(ModuleAccess::autoAssign($key), fn ($a) => $a->orWhereNotExists($blocked))),
+                        false: fn (Builder $query) => $query->whereNotExists($access)->when(ModuleAccess::autoAssign($key), fn ($a) => $a->whereExists($blocked)),
                     ),
                 $roles ? SelectFilter::make('role')
                     ->label('Rolle')
@@ -246,11 +245,8 @@ class ModuleMembers extends Page implements HasTable
         }
 
         foreach ($records as $user) {
-            DB::table('module_user')->insertOrIgnore(['user_id' => $user->id, 'module' => $this->module]);
-
-            if (filled($role)) {
-                DB::table('module_user')->where('user_id', $user->id)->where('module', $this->module)->update(['role' => $role]);
-            }
+            /** @var User $user */
+            ModuleAccess::set($user, $this->module, true, filled($role) ? $role : null, keepRole: true);
         }
 
         Notification::make()->title('„'.$this->definition()['name'].'“ für '.$records->count().' Kameraden freigeschaltet')->success()->send();

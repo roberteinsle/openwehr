@@ -27,19 +27,13 @@ parameters:
 		-
 			message: '#^Access to an undefined property App\\Models\\User\:\:\$has_access\.$#'
 			identifier: property.notFound
-			count: 5
+			count: 4
 			path: app/Filament/Pages/ModuleMembers.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\User\:\:\$module_role\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Filament/Pages/ModuleMembers.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
 			path: app/Filament/Pages/ModuleMembers.php
 
 		-
@@ -4232,12 +4226,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{user\: App\\Models\\User, age\: float\|int, on\: mixed\}, Closure\(App\\Models\\User\)\: array\{user\: App\\Models\\User, age\: float\|int, on\: mixed\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Personalverwaltung/src/Services/PersonnelService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, string\>, Closure\(App\\Models\\Group\)\: non\-empty\-array\<int\<0, max\>, string\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: modules/Personalverwaltung/src/Services/PersonnelService.php

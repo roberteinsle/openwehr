@@ -6,6 +6,7 @@ use App\Enums\MemberGender;
 use App\Enums\MemberStatus;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\UserResource\Pages;
+use App\Models\Group;
 use App\Models\Guardian;
 use App\Models\MemberFunction;
 use App\Models\Module;
@@ -15,6 +16,7 @@ use App\Services\Impersonation;
 use App\Services\Invitation;
 use App\Services\MagicLinkService;
 use App\Services\MemberRemoval;
+use App\Services\ModuleAccess;
 use App\Services\ModuleRegistry;
 use App\Support\FireRanks;
 use App\Support\MemberFields;
@@ -26,6 +28,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
@@ -102,8 +105,8 @@ class UserResource extends Resource
                     }
                 }])
                 ->validationMessages(['date_format' => 'Bitte im Format TT.MM.JJJJ eingeben, z. B. 17.05.1990.'])
-                ->helperText('Optional. Tag und Monat erscheinen auf der Startseite, wenn der Kamerad das nicht im Profil abgeschaltet hat.')
-                ->visible(MemberFields::BIRTH_DATE),
+                // Always in the admin form (the Jugendfeuerwehr needs the age); profile and birthday cards follow MemberFields
+                ->helperText('Optional. Für das Alter, z. B. ab wann Jugendliche bei der Einsatzabteilung mitüben (Kameraden → Altersübergänge). Auf der Startseite erscheint es nur, wenn Geburtstage eingeschaltet sind.'),
 
             // Switched off in MemberFields: hidden fields are not saved, so stored values stay
             Forms\Components\TextInput::make('street')
@@ -248,14 +251,11 @@ class UserResource extends Resource
                             ->label($def['name'])
                             ->helperText($def['description'])
                             ->live()
+                            ->hint(fn (?User $record) => $record && ModuleAccess::excludedByGroups($record, $key) ? 'Für die Abteilung nicht vorgesehen' : null)
                             ->afterStateHydrated(function (Forms\Components\Toggle $component, ?User $record) use ($key) {
+                                // What the Kamerad really has: a grant, or "automatisch freischalten" (not taken away)
                                 if ($record) {
-                                    $component->state(
-                                        DB::table('module_user')
-                                            ->where('user_id', $record->id)
-                                            ->where('module', $key)
-                                            ->exists()
-                                    );
+                                    $component->state(ModuleAccess::effective($record, $key));
                                 } else {
                                     $component->state(Module::find($key)?->auto_assign ?? false);
                                 }
@@ -311,7 +311,10 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    // A stripe in the colour of the first Abteilung
+                    ->extraAttributes(fn (User $record) => ($g = $record->groups->sortBy('sort_order')->first())
+                        ? ['style' => 'border-left: 4px solid '.$g->colorOrDefault().'; padding-left: .5rem;'] : []),
 
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-Mail')
@@ -320,9 +323,11 @@ class UserResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
+                // In the colour of each Abteilung, so the Abteilung of a row shows at a glance
                 Tables\Columns\TextColumn::make('groups.name')
                     ->label('Abteilungen')
                     ->badge()
+                    ->color(fn (string $state) => Color::hex(static::groupColors()[$state] ?? Group::DEFAULT_COLOR))
                     ->separator(', ')
                     // By the first Abteilung in the configured order; Kameraden without one last
                     ->sortable(query: fn ($query, string $direction) => $query->orderByRaw(
@@ -369,6 +374,7 @@ class UserResource extends Resource
                     ->label('Abteilung')
                     ->relationship('groups', 'name', fn ($query) => $query->orderBy('sort_order'))
                     ->multiple()
+                    ->searchable()
                     ->preload(),
 
                 Tables\Filters\Filter::make('module_access')
@@ -377,6 +383,7 @@ class UserResource extends Resource
                         Forms\Components\Select::make('module')
                             ->label('Modul')
                             ->options(array_map(fn ($def) => $def['name'], $modules))
+                            ->searchable()
                             ->placeholder('Alle Module'),
                     ])
                     ->query(function ($query, array $data) {
@@ -393,7 +400,8 @@ class UserResource extends Resource
                 Tables\Filters\TernaryFilter::make('is_admin')->label('Administrator'),
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
-                    ->options(static::enumOptions(MemberStatus::class)),
+                    ->options(static::enumOptions(MemberStatus::class))
+                    ->searchable(),
                 // A function with sub-functions stands for all of them, e.g. "Vorstand" shows the whole Vorstand
                 Tables\Filters\SelectFilter::make('functions')
                     ->label('Funktion')
@@ -402,6 +410,7 @@ class UserResource extends Resource
                         ? $query->whereHas('functions', fn ($q) => $q->whereIn('member_functions.id', MemberFunction::idsWithChildren($data['values'])))
                         : $query)
                     ->multiple()
+                    ->searchable()
                     ->preload(),
             ])
             ->actions([
@@ -700,15 +709,8 @@ class UserResource extends Resource
             foreach ($keys as $key) {
                 $role = filled($data["role_{$key}"] ?? null) ? $data["role_{$key}"] : null;
                 foreach ($userIds as $userId) {
-                    $exists = DB::table('module_user')->where('user_id', $userId)->where('module', $key);
-                    if ($exists->exists()) {
-                        // Without a chosen role an existing one (e.g. Entscheider) stays
-                        if ($role !== null) {
-                            $exists->update(['role' => $role]);
-                        }
-                    } else {
-                        DB::table('module_user')->insert(['user_id' => $userId, 'module' => $key, 'role' => $role]);
-                    }
+                    // Without a chosen role an existing one (e.g. Entscheider) stays
+                    ModuleAccess::set((int) $userId, $key, true, $role, keepRole: true);
                 }
             }
         });
@@ -723,10 +725,12 @@ class UserResource extends Resource
     /** @param  iterable<int>  $userIds */
     public static function revokeModule(iterable $userIds, string $key): void
     {
-        $count = DB::table('module_user')
-            ->whereIn('user_id', collect($userIds)->all())
-            ->where('module', $key)
-            ->delete();
+        // Also away from "automatisch freischalten" (blocked for these Kameraden)
+        $ids = collect($userIds)->all();
+        foreach ($ids as $id) {
+            ModuleAccess::set((int) $id, $key, false);
+        }
+        $count = count($ids);
 
         Notification::make()
             ->title('Modul „'.(app(ModuleRegistry::class)->get($key)['name'] ?? $key).'“ bei '.$count.' Kameraden entzogen')
@@ -748,6 +752,12 @@ class UserResource extends Resource
         return $options;
     }
 
+    /** @return array<string, string> Abteilung name => colour, once per request */
+    public static function groupColors(): array
+    {
+        return once(fn () => Group::pluck('color', 'name')->map(fn ($c) => $c ?: Group::DEFAULT_COLOR)->all());
+    }
+
     public static function syncModuleAccess(User $user, array $formState): void
     {
         $registry = app(ModuleRegistry::class);
@@ -756,17 +766,17 @@ class UserResource extends Resource
             $enabled = (bool) ($formState["module_access_{$key}"] ?? false);
             $role = $formState["module_role_{$key}"] ?? null;
 
-            if ($enabled) {
-                DB::table('module_user')->updateOrInsert(
-                    ['user_id' => $user->id, 'module' => $key],
-                    ['role' => $role]
-                );
-            } else {
-                DB::table('module_user')
-                    ->where('user_id', $user->id)
-                    ->where('module', $key)
-                    ->delete();
+            // Not in the form (e.g. a module without a toggle): only the grant goes, nothing is blocked
+            if (! array_key_exists("module_access_{$key}", $formState)) {
+                DB::table('module_user')->where('user_id', $user->id)->where('module', $key)->delete();
+
+                continue;
             }
+            // Unchanged automatic access stays automatic; a change becomes a grant or a block
+            if ($enabled && $role === null && ! ModuleAccess::granted($user, $key) && ModuleAccess::autoGranted($user, $key)) {
+                continue;
+            }
+            ModuleAccess::set($user, $key, $enabled, $role);
         }
     }
 }
