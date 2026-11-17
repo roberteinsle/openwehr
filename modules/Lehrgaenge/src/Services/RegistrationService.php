@@ -333,7 +333,7 @@ class RegistrationService
         $limit = self::today()->addDays(self::REFRESH_WARN_DAYS);
         $due = Record::with(['course', 'user'])->where('status', 'completed')->whereNotNull('completed_on')
             ->whereHas('course', fn ($q) => $q->whereNotNull('repeat_months'))->get()
-            ->filter(fn (Record $r) => $r->user?->is_active && $r->validUntil()->lte($limit) && ! $r->refresh_reminded_on?->equalTo($r->validUntil()));
+            ->filter(fn (Record $r) => $r->user?->is_active && $r->validUntil()->lte($limit) && ! ($r->refresh_reminded_on && Carbon::parse($r->refresh_reminded_on)->equalTo($r->validUntil())));
         foreach ($due as $record) {
             $record->update(['refresh_reminded_on' => $record->validUntil()]);
             $this->notify(collect([$record->user]), new RefreshDueNotification($record));

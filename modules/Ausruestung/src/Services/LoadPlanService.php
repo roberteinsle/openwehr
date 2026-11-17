@@ -15,7 +15,7 @@ use Modules\Ausruestung\src\Models\Location;
 class LoadPlanService
 {
     /**
-     * @return Collection<int, array{compartment: Compartment, rows: Collection, unplanned: Collection}>
+     * @return Collection<int, array{compartment: Compartment, rows: Collection<int, array<string, mixed>>, unplanned: Collection<int, mixed>}>
      */
     public function compare(Location $location): Collection
     {
@@ -28,7 +28,8 @@ class LoadPlanService
             ->get()
             ->groupBy('compartment_id');
 
-        return $location->compartments->map(function (Compartment $compartment) use ($present) {
+        /** @var Collection<int, array{compartment: Compartment, rows: Collection<int, array<string, mixed>>, unplanned: Collection<int, mixed>}> $comparison */
+        $comparison = $location->compartments->map(function (Compartment $compartment) use ($present) {
             $items = $present->get($compartment->id, collect());
             $planned = $compartment->loadPlanItems->pluck('category_id')->all();
 
@@ -55,6 +56,8 @@ class LoadPlanService
                 'unplanned' => $items->reject(fn (Equipment $e) => in_array($e->category_id, $planned, true))->values(),
             ];
         });
+
+        return $comparison;
     }
 
     /** Items assigned to the location but to no compartment */

@@ -13,12 +13,6 @@ parameters:
 			path: app/Filament/Pages/Dashboard.php
 
 		-
-			message: '#^Call to function is_string\(\) with class\-string\<Filament\\Widgets\\Widget\> will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: app/Filament/Pages/Dashboard.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>is_admin" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -289,12 +283,6 @@ parameters:
 			path: app/Listeners/LogSentMail.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\User\:\:\$modules_locked\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Livewire/Dashboard/Home.php
-
-		-
 			message: '#^Negated boolean expression is always true\.$#'
 			identifier: booleanNot.alwaysTrue
 			count: 1
@@ -479,12 +467,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: app/Services/MemberStructureTransfer.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\User\:\:\$modules_locked\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/ModuleOverview.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>sort_order" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -736,12 +718,6 @@ parameters:
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
-			path: modules/Atemschutz/src/Services/ReadinessService.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Atemschutz\\src\\Models\\Team\:\:\$csa\.$#'
-			identifier: property.notFound
-			count: 2
 			path: modules/Atemschutz/src/Services/ReadinessService.php
 
 		-
@@ -1245,12 +1221,6 @@ parameters:
 		-
 			message: '#^Cannot call method label\(\) on string\.$#'
 			identifier: method.nonObject
-			count: 1
-			path: modules/Ausruestung/src/Services/LoadPlanService.php
-
-		-
-			message: '#^Method Modules\\Ausruestung\\src\\Services\\LoadPlanService\:\:compare\(\) should return Illuminate\\Support\\Collection\<int, array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection, unplanned\: Illuminate\\Support\\Collection\}\> but returns Illuminate\\Support\\Collection\<int, array\{compartment\: Modules\\Ausruestung\\src\\Models\\Compartment, rows\: Illuminate\\Support\\Collection\<int, array\{category\: mixed, target\: mixed, present\: int, usable\: int, missing\: float\|int, surplus\: float\|int, problems\: Illuminate\\Support\\Collection\<int, mixed\>\}\>, unplanned\: Illuminate\\Support\\Collection\<int, mixed\>\}\>\.$#'
-			identifier: return.type
 			count: 1
 			path: modules/Ausruestung/src/Services/LoadPlanService.php
 
@@ -2839,12 +2809,6 @@ parameters:
 			path: modules/Kalender/KalenderServiceProvider.php
 
 		-
-			message: '#^Access to an undefined property Modules\\Kalender\\src\\Models\\Event\:\:\$partners\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/src/Livewire/EventForm.php
-
-		-
 			message: '#^Cannot call method setTimezone\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -2971,12 +2935,6 @@ parameters:
 			path: modules/Kalender/src/Models/PollOption.php
 
 		-
-			message: '#^Access to an undefined property Modules\\Kalender\\src\\Models\\Event\:\:\$partners\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Kalender/src/Notifications/EventCreatedNotification.php
-
-		-
 			message: '#^Cannot call method copy\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -3035,12 +2993,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: modules/Kalender/src/Services/FeedService.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Kalender\\src\\Models\\Event\:\:\$partners\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Kalender/src/Services/IcsExporter.php
 
 		-
 			message: '#^Parameter \#1 \$ids of static method App\\Models\\DressCode\:\:names\(\) expects array\|null, string\|null given\.$#'
@@ -3403,24 +3355,6 @@ parameters:
 			path: modules/Lehrgaenge/LehrgaengeServiceProvider.php
 
 		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Course\:\:\$is_standard\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Lehrgaenge/src/Livewire/CourseList.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Course\:\:\$repeat_months\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Lehrgaenge/src/Livewire/CourseList.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Course\:\:\$short\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Lehrgaenge/src/Livewire/CourseList.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 4
@@ -3491,12 +3425,6 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: modules/Lehrgaenge/src/Livewire/Registrations.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Course\:\:\$is_standard\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Lehrgaenge/src/Models/Course.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$repeat_months\.$#'
@@ -3589,12 +3517,6 @@ parameters:
 			path: modules/Lehrgaenge/src/Notifications/RequestReceivedNotification.php
 
 		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Course\:\:\$is_standard\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Lehrgaenge/src/Services/CatalogImporter.php
-
-		-
 			message: '#^Call to an undefined method DOMNameSpaceNode\|DOMNode\:\:getAttribute\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -3619,18 +3541,6 @@ parameters:
 			path: modules/Lehrgaenge/src/Services/RegistrationService.php
 
 		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Course\:\:\$repeat_months\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Lehrgaenge/src/Services/RegistrationService.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Record\:\:\$refresh_reminded_on\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Lehrgaenge/src/Services/RegistrationService.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Model\>\:\:reject\(\) expects bool\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\|string\)\: bool\)\|Illuminate\\Database\\Eloquent\\Model, Closure\(App\\Models\\User\)\: bool given\.$#'
 			identifier: argument.type
 			count: 2
@@ -3641,12 +3551,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: modules/Lehrgaenge/src/Services/RegistrationService.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Lehrgaenge\\src\\Models\\Course\:\:\$repeat_months\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Lehrgaenge/src/Services/ResultImport.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -4171,15 +4075,9 @@ parameters:
 			path: modules/Personalverwaltung/src/Services/PersonnelService.php
 
 		-
-			message: '#^Cannot access property \$year on string\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: modules/Personalverwaltung/src/Services/PersonnelService.php
-
-		-
 			message: '#^Cannot call method copy\(\) on string\.$#'
 			identifier: method.nonObject
-			count: 2
+			count: 1
 			path: modules/Personalverwaltung/src/Services/PersonnelService.php
 
 		-
@@ -4213,19 +4111,7 @@ parameters:
 			path: modules/Personalverwaltung/src/Services/PersonnelService.php
 
 		-
-			message: '#^Method Modules\\Personalverwaltung\\src\\Services\\PersonnelService\:\:roundBirthdays\(\) should return Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, age\: int, on\: Illuminate\\Support\\Carbon\}\> but returns Illuminate\\Support\\Collection\<int, array\{user\: App\\Models\\User, age\: \(float\|int\<50, max\>\), on\: mixed\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: modules/Personalverwaltung/src/Services/PersonnelService.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{group\: string, name\: string, detail\: string, date\: Illuminate\\Support\\Carbon\|null\}, Closure\(App\\Models\\User\)\: array\{group\: string, name\: string, detail\: string, date\: Illuminate\\Support\\Carbon\|null\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Personalverwaltung/src/Services/PersonnelService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{user\: App\\Models\\User, age\: float\|int, on\: mixed\}, Closure\(App\\Models\\User\)\: array\{user\: App\\Models\\User, age\: float\|int, on\: mixed\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: modules/Personalverwaltung/src/Services/PersonnelService.php
@@ -5443,12 +5329,6 @@ parameters:
 			path: modules/Wasserkarte/routes/web.php
 
 		-
-			message: '#^Access to an undefined property Modules\\Wasserkarte\\src\\Models\\Source\:\:\$suction_height_m\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Wasserkarte/src/Livewire/SourceForm.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>capacity_m3" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -5483,12 +5363,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: modules/Wasserkarte/src/Livewire/SourceForm.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Wasserkarte\\src\\Models\\Source\:\:\$suction_height_m\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Wasserkarte/src/Models/Source.php
 
 		-
 			message: '#^Cannot call method lt\(\) on string\.$#'
@@ -5564,12 +5438,6 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Wasserkarte/src/Services/WaterService.php
-
-		-
-			message: '#^Access to an undefined property Modules\\Wasserkarte\\src\\Models\\Source\:\:\$suction_height_m\.$#'
 			identifier: property.notFound
 			count: 1
 			path: modules/Wasserkarte/src/Services/WaterService.php

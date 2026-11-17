@@ -399,10 +399,18 @@ class PersonnelService
             return collect();
         }
 
-        return self::visibleMembers($manager)->where('status', 'active')->whereNotNull('birth_date')->get()
-            ->map(fn (User $u) => ['user' => $u, 'age' => $year - $u->birth_date->year, 'on' => $u->birth_date->copy()->setYear($year)])
+        /** @var Collection<int, array{user: User, age: int, on: Carbon}> $rows */
+        $rows = self::visibleMembers($manager)->where('status', 'active')->whereNotNull('birth_date')->get()->toBase()
+            ->map(function ($u) use ($year) {
+                /** @var User $u */
+                $born = Carbon::parse($u->birth_date);
+
+                return ['user' => $u, 'age' => (int) ($year - $born->year), 'on' => $born->setYear($year)];
+            })
             ->filter(fn ($row) => $row['age'] >= 50 && ($row['age'] % 10 === 0 || ($row['age'] >= 70 && $row['age'] % 5 === 0)))
             ->sortBy(fn ($row) => $row['on']->timestamp)->values();
+
+        return $rows;
     }
 
     /** CSV of the switched-on personal data, for letters and lists */
