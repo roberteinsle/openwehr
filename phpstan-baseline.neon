@@ -175,24 +175,6 @@ parameters:
 			path: app/Filament/Resources/LogResource.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:sum\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model\)\: int\<0, max\>\)\|string\|null, Closure\(App\\Models\\MemberFunction\)\: int\<0, max\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Filament/Resources/MemberFunctionResource.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Filament/Resources/UserResource.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Filament/Resources/UserResource.php
-
-		-
 			message: '#^Call to an undefined method BackedEnum\:\:label\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -443,30 +425,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Services/MemberRemoval.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/MemberStructureTransfer.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sort_order\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/MemberStructureTransfer.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$users\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/MemberStructureTransfer.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:users\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/MemberStructureTransfer.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>sort_order" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -1617,12 +1575,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<int, mixed\>\>\:\:sortBy\(\) contains unresolvable type\.$#'
 			identifier: argument.unresolvableType
-			count: 1
-			path: modules/Einsatzbericht/src/Services/ReportService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<int, mixed\>\>\:\:sortBy\(\) expects array\<array\{string, string\}\|\(callable\(array\{mixed, mixed, float\}, array\{mixed, mixed, float\}\)\: mixed\)\|\(callable\(array\{mixed, mixed, float\}, int\)\: mixed\)\|string\>\|\(callable\(array\{mixed, mixed, float\}, int\)\: mixed\)\|string, 0 given\.$#'
-			identifier: argument.type
 			count: 1
 			path: modules/Einsatzbericht/src/Services/ReportService.php
 
@@ -4195,32 +4147,8 @@ parameters:
 			path: modules/Personalverwaltung/src/Support/ServiceTime.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ends_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/SchichtplanServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/SchichtplanServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$starts_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Schichtplan/SchichtplanServiceProvider.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
 			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/SchichtplanServiceProvider.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Schichtplan\\src\\Models\\Assignment\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
 			count: 1
 			path: modules/Schichtplan/SchichtplanServiceProvider.php
 
@@ -4233,78 +4161,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 3
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Support\\HigherOrderCollectionProxy\<string, Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:isRequested\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$assignment of method Modules\\Schichtplan\\src\\Services\\PlanService\:\:toggleLock\(\) expects Modules\\Schichtplan\\src\\Models\\Assignment, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, ''''\|decimal\-int\-string\>, Closure\(Modules\\Schichtplan\\src\\Models\\Station\)\: non\-empty\-array\<int\<0, max\>, ''''\|decimal\-int\-string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, array\<int, mixed\>\>, Closure\(Modules\\Schichtplan\\src\\Models\\Slot\)\: non\-empty\-array\<int\<0, max\>, array\<int, mixed\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, array\{from\: string, until\: string\}\>, Closure\(Modules\\Schichtplan\\src\\Models\\Participant\)\: non\-empty\-array\<int\<0, max\>, array\{from\: string, until\: string\}\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, array\{name\: string, capacity\: int\<0, max\>\}\>, Closure\(Modules\\Schichtplan\\src\\Models\\Station\)\: non\-empty\-array\<int\<0, max\>, array\{name\: string, capacity\: int\<0, max\>\}\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, mixed\>, Closure\(Modules\\Schichtplan\\src\\Models\\Participant\)\: non\-empty\-array\<int\<0, max\>, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(Modules\\Schichtplan\\src\\Models\\Participant\)\: bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$groupBy of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:groupBy\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: \(lowercase\-string&non\-falsy\-string&uppercase\-string\)\)\|list\<Closure\|string\>\|string, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: \(lowercase\-string&non\-falsy\-string&uppercase\-string\) given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$station of method Modules\\Schichtplan\\src\\Services\\PlanService\:\:removeStation\(\) expects Modules\\Schichtplan\\src\\Models\\Station, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$station of method Modules\\Schichtplan\\src\\Services\\PlanService\:\:setStationLead\(\) expects Modules\\Schichtplan\\src\\Models\\Station, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#1 \$station of method Modules\\Schichtplan\\src\\Services\\PlanService\:\:updateStation\(\) expects Modules\\Schichtplan\\src\\Models\\Station, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
 			count: 1
 			path: modules/Schichtplan/src/Livewire/PlanEditor.php
 
@@ -4319,84 +4175,6 @@ parameters:
 			identifier: argument.type
 			count: 3
 			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#2 \$slot of method Modules\\Schichtplan\\src\\Services\\PlanService\:\:setSeat\(\) expects Modules\\Schichtplan\\src\\Models\\Slot, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Parameter \#3 \$station of method Modules\\Schichtplan\\src\\Services\\PlanService\:\:setSeat\(\) expects Modules\\Schichtplan\\src\\Models\\Station, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanEditor.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slot\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Livewire/PlanList.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slot_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$starts_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Parameter \#1 \$groupBy of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:groupBy\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: \(lowercase\-string&non\-falsy\-string&uppercase\-string\)\)\|list\<Closure\|string\>\|string, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: \(lowercase\-string&non\-falsy\-string&uppercase\-string\) given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Parameter \#2 \$assignment of method Modules\\Schichtplan\\src\\Services\\SignupService\:\:approve\(\) expects Modules\\Schichtplan\\src\\Models\\Assignment, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Parameter \#2 \$assignment of method Modules\\Schichtplan\\src\\Services\\SignupService\:\:reject\(\) expects Modules\\Schichtplan\\src\\Models\\Assignment, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Parameter \#2 \$assignment of method Modules\\Schichtplan\\src\\Services\\SignupService\:\:withdraw\(\) expects Modules\\Schichtplan\\src\\Models\\Assignment, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Parameter \#3 \$slot of method Modules\\Schichtplan\\src\\Services\\SignupService\:\:signUp\(\) expects Modules\\Schichtplan\\src\\Models\\Slot, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
-
-		-
-			message: '#^Parameter \#4 \$station of method Modules\\Schichtplan\\src\\Services\\SignupService\:\:signUp\(\) expects Modules\\Schichtplan\\src\\Models\\Station, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Livewire/SignupBoard.php
 
 		-
 			message: '#^Cannot call method gte\(\) on string\.$#'
@@ -4423,57 +4201,9 @@ parameters:
 			path: modules/Schichtplan/src/Models/Plan.php
 
 		-
-			message: '#^Cannot call method copy\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: modules/Schichtplan/src/Models/Slot.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Schichtplan/src/Notifications/PlanNotification.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 2
-			path: modules/Schichtplan/src/Notifications/PlanNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slot_id\.$#'
-			identifier: property.notFound
-			count: 4
-			path: modules/Schichtplan/src/Notifications/PlanNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$starts_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Schichtplan/src/Notifications/PlanNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$station_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Schichtplan/src/Notifications/PlanNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
 			count: 1
-			path: modules/Schichtplan/src/Notifications/PlanNotification.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 3
-			path: modules/Schichtplan/src/Notifications/PlanNotification.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
 			path: modules/Schichtplan/src/Notifications/PlanNotification.php
 
 		-
@@ -4483,57 +4213,15 @@ parameters:
 			path: modules/Schichtplan/src/Notifications/PlanNotification.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Notifications/ShiftDecidedNotification.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
 			identifier: property.notFound
 			count: 2
 			path: modules/Schichtplan/src/Notifications/ShiftDecidedNotification.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Schichtplan/src/Notifications/ShiftDecidedNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Notifications/ShiftReminderNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$starts_at\.$#'
-			identifier: property.notFound
-			count: 4
-			path: modules/Schichtplan/src/Notifications/ShiftReminderNotification.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Schichtplan/src/Notifications/ShiftReminderNotification.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 3
-			path: modules/Schichtplan/src/Notifications/ShiftRequestedNotification.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
 			identifier: property.notFound
 			count: 2
-			path: modules/Schichtplan/src/Notifications/ShiftRequestedNotification.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 1
 			path: modules/Schichtplan/src/Notifications/ShiftRequestedNotification.php
 
 		-
@@ -4541,24 +4229,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: modules/Schichtplan/src/Services/CalendarLink.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Schichtplan/src/Services/ChangeNotifier.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$starts_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: modules/Schichtplan/src/Services/ChangeNotifier.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Schichtplan/src/Services/ChangeNotifier.php
 
 		-
 			message: '#^Cannot call method gt\(\) on string\.$#'
@@ -4573,39 +4243,9 @@ parameters:
 			path: modules/Schichtplan/src/Services/ChangeNotifier.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$capacity\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 3
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 3
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$starts_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
+			count: 2
 			path: modules/Schichtplan/src/Services/PlanService.php
 
 		-
@@ -4615,98 +4255,8 @@ parameters:
 			path: modules/Schichtplan/src/Services/PlanService.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isAvailableFor\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:label\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
 			message: '#^Cannot call method copy\(\) on string\.$#'
 			identifier: method.nonObject
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Method Modules\\Schichtplan\\src\\Services\\PlanService\:\:addStation\(\) should return Modules\\Schichtplan\\src\\Models\\Station but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{name\: string, capacity\: int\<0, max\>\}, Closure\(Modules\\Schichtplan\\src\\Models\\Station\)\: array\{name\: string, capacity\: int\<0, max\>\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed, Closure\(Modules\\Schichtplan\\src\\Models\\Station\)\: mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: non\-falsy\-string, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: non\-falsy\-string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: string, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: string, Closure\(Modules\\Schichtplan\\src\\Models\\Station\)\: string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:reject\(\) expects bool\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|Illuminate\\Database\\Eloquent\\Model, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:reject\(\) expects bool\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|Illuminate\\Database\\Eloquent\\Model, Closure\(Modules\\Schichtplan\\src\\Models\\Station\)\: bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:sortBy\(\) expects array\<array\{string, string\}\|\(callable\(Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\)\: mixed\)\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|string\>\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|string, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:max\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:min\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: modules/Schichtplan/src/Services/PlanService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:sortBy\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
 			count: 1
 			path: modules/Schichtplan/src/Services/PlanService.php
 
@@ -4723,19 +4273,7 @@ parameters:
 			path: modules/Schichtplan/src/Services/PlanService.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{int\<0, max\>, int\<0, max\>, int\<0, max\>\}, Closure\(Modules\\Schichtplan\\src\\Models\\Assignment\)\: array\{int\<0, max\>, int\<0, max\>, int\<0, max\>\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: modules/Schichtplan/src/Services/ShiftPlanner.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: modules/Schichtplan/src/Services/SignupService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$starts_at\.$#'
 			identifier: property.notFound
 			count: 1
 			path: modules/Schichtplan/src/Services/SignupService.php
@@ -4743,12 +4281,6 @@ parameters:
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:signupOpen\(\)\.$#'
 			identifier: method.notFound
-			count: 1
-			path: modules/Schichtplan/src/Services/SignupService.php
-
-		-
-			message: '#^Cannot call method lte\(\) on string\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: modules/Schichtplan/src/Services/SignupService.php
 

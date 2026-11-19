@@ -709,11 +709,11 @@ Anmeldungen für Fahrten, Zeltlager, Jahresabschlussfahrten oder Veranstaltungen
 
 | Bereich    | Technologie                                          |
 |------------|------------------------------------------------------|
-| Backend    | PHP 8.4, Laravel 12, Livewire 4                      |
+| Backend    | PHP 8.5, Laravel 13, Livewire 4                      |
 | Admin      | Filament 5                                           |
 | Frontend   | Tailwind CSS 4, Alpine.js, FullCalendar 6, Vite      |
 | Datenbank  | PostgreSQL 18 (mit `btree_gist`-Extension)           |
-| Tests      | Pest 3                                               |
+| Tests      | Pest 4                                               |
 | Deployment | Docker (serversideup/php), GitHub Actions, Coolify   |
 
 ## Installation
@@ -763,6 +763,8 @@ Beim Anbieter der Domain (oder bei dem, der die Domain der Wehr verwaltet) zwei 
 Alternativ ein Platzhalter-Eintrag `*.ff-musterstadt.de`, dann sind alle Unterdomains sofort erreichbar. Bis die Einträge überall bekannt sind, kann es einige Minuten dauern; prüfen lässt sich das mit `ping openwehr.ff-musterstadt.de`.
 
 **Zweite Adresse und Cloudflare (optional).** Soll openwehr zusätzlich unter einer weiteren Adresse erreichbar sein (z. B. einer gemeinsamen Domain mehrerer Wehren), beide Adressen in Coolify unter **Domains** eintragen, die eigene Domain der Wehr als `APP_URL` und die weitere als `APP_ALIAS_URLS` (siehe [Konfiguration](#konfiguration)). Läuft der Server hinter **Cloudflare** und lässt die Firewall Port 80/443 nur noch für Cloudflare zu, ist eine Domain, die nicht im eigenen Cloudflare-Konto liegt, direkt nicht mehr erreichbar. Dann hilft **Cloudflare for SaaS** (SSL/TLS → Custom Hostnames, im Free-Plan 100 Domains inklusive): im eigenen Cloudflare-Konto einen Eintrag `fallback` (A/AAAA auf den Server, Proxy an) als **Fallback Origin** und einen Eintrag `kunden` (CNAME auf `fallback`, Proxy an) anlegen, die Domain der Wehr als **Custom Hostname** hinzufügen und bei der Wehr `openwehr.ff-musterstadt.de` als **CNAME** auf `kunden.<eigene Domain>` eintragen (statt des A-Eintrags). Cloudflare bestätigt die Domain und stellt das Zertifikat aus, sobald der CNAME ankommt; das kann je nach Gültigkeit des alten Eintrags bis zu einem Tag dauern. SSL-Modus in Cloudflare: „Full“. Wer openwehr unter der bisherigen Adresse auf den Startbildschirm gelegt hat, landet nach dem Wechsel einmal kurz auf „Keine Verbindung“ oder einer leeren Seite: die App räumt dabei ihren alten Speicher für diese Adresse auf. Beim nächsten Öffnen geht es weiter zur neuen Adresse; danach die App am besten einmal neu unter der neuen Adresse auf den Startbildschirm legen.
+
+**Admin-Bereich zusätzlich schützen (empfohlen).** Läuft openwehr hinter Cloudflare, kann der Admin-Bereich zusätzlich hinter **Cloudflare Zero Trust (Access)** liegen: eine Access-Anwendung (Self-hosted) nur für den Pfad `/admin` der eigenen Domain, mit einer Policy für alle, die den Admin-Bereich brauchen (Admins und Modulverantwortliche wie Kleiderwart oder Gerätewart). openwehr prüft Anmeldung und Rechte trotzdem selbst vollständig; Access ist eine zusätzliche Schicht. Damit sie sich nicht über die Server-IP umgehen lässt, nimmt der Server Web-Verkehr nur über Cloudflare an (Firewall nur für Cloudflare-IPs oder Cloudflare Tunnel). Die Kameraden-Seiten, Webhooks (`/webhooks/…`) und Monitore bleiben außerhalb von Access.
 
 ### 4. Coolify installieren
 

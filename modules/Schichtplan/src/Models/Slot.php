@@ -4,8 +4,15 @@ namespace Modules\Schichtplan\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /** One time block of a plan */
+/**
+ * @property int $id
+ * @property int $plan_id
+ * @property Carbon $starts_at
+ * @property Carbon $ends_at
+ */
 class Slot extends Model
 {
     protected $table = 'sp_slots';

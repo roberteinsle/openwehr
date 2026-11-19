@@ -57,5 +57,5 @@
 
 ## Technik
 
-Laravel 12 (PHP 8.4), Livewire 4, Filament 5, Tailwind 4, PostgreSQL 18, OpenStreetMap-Karten. Betrieb als Docker-Image, z. B. mit Coolify.
+Laravel 13 (PHP 8.5), Livewire 4, Filament 5, Tailwind 4, PostgreSQL 18, OpenStreetMap-Karten. Betrieb als Docker-Image, z. B. mit Coolify.
 - Sicherheit: wöchentliche Dependabot-Updates, bei jedem Push Tests, composer/npm audit, Larastan, Gitleaks und Trivy-Image-Scan, KI-Sicherheitsreview für Pull Requests, Meldeweg in SECURITY.md: https://github.com/roberteinsle/openwehr/blob/main/SECURITY.md

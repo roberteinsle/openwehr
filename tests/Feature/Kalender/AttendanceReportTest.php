@@ -5,7 +5,6 @@ use App\Models\MemberFunction;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Modules\Kalender\src\Livewire\AttendanceSettings;

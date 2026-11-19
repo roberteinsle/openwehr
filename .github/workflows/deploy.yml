@@ -44,10 +44,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.4"
+          php-version: "8.5"
           extensions: pdo_pgsql, intl, mbstring, openssl, bcmath, gd, exif
           coverage: none
 
@@ -91,10 +91,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup PHP 8.4
+      - name: Setup PHP 8.5
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.4"
+          php-version: "8.5"
           extensions: pdo_pgsql, intl, mbstring, openssl, bcmath, gd, exif
           coverage: none
 
@@ -112,6 +112,9 @@ jobs:
       # Static analysis (Larastan, level 5); old findings are in phpstan-baseline.neon, new code must be clean
       - name: Static Analysis
         run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress --error-format=github
+
+      - name: Code Style
+        run: ./vendor/bin/pint --test
 
       - name: Setup Node
         uses: actions/setup-node@v7

@@ -1,7 +1,7 @@
 # Development image for GitHub Codespaces / VS Code Dev Containers.
 # Production uses the root Dockerfile (serversideup/php); this one adds the
 # same PHP extensions to the Microsoft devcontainer base with its "vscode" user.
-FROM mcr.microsoft.com/devcontainers/php:8.4
+FROM mcr.microsoft.com/devcontainers/php:8.5
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

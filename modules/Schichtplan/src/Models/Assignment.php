@@ -34,16 +34,19 @@ class Assignment extends Model
         return $this->belongsTo(Plan::class, 'plan_id');
     }
 
+    /** @return BelongsTo<Slot, $this> */
     public function slot(): BelongsTo
     {
         return $this->belongsTo(Slot::class, 'slot_id');
     }
 
+    /** @return BelongsTo<Station, $this> */
     public function station(): BelongsTo
     {
         return $this->belongsTo(Station::class, 'station_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

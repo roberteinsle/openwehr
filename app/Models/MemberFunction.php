@@ -26,6 +26,7 @@ class MemberFunction extends Model
         return $this->belongsTo(self::class, 'parent_id');
     }
 
+    /** @return HasMany<MemberFunction, $this> */
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order')->orderBy('name');

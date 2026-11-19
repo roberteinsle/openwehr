@@ -78,7 +78,7 @@ Jede Änderung am Code läuft durch alle Tests, statische Analyse und Prüfungen
 
 Ideen, Wünsche und Fehler sind willkommen – am besten als [Issue](https://github.com/roberteinsle/openwehr/issues/new/choose) mit dem Ablauf, wie er in der Wehr heute läuft.
 
-**Für Entwickler:** Laravel 12, Livewire 4, Filament 5, Tailwind 4, PostgreSQL 18, Tests mit Pest. Das Repository öffnet sich fertig eingerichtet im Dev-Container bzw. in GitHub Codespaces (mit Beispieldaten, Anmeldung als `admin@example.com`, der Login-Link steht in `storage/logs/laravel.log`); `composer test` startet die Tests. Hinweise zur Architektur stehen in [CLAUDE.md](CLAUDE.md), die vollständige Beschreibung aller Funktionen im [Handbuch](HANDBUCH.md), aus dem das Wiki erzeugt wird.
+**Für Entwickler:** PHP 8.5, Laravel 13, Livewire 4, Filament 5, Tailwind 4, PostgreSQL 18, Tests mit Pest. Das Repository öffnet sich fertig eingerichtet im Dev-Container bzw. in GitHub Codespaces (mit Beispieldaten, Anmeldung als `admin@example.com`, der Login-Link steht in `storage/logs/laravel.log`); `composer test` startet die Tests. Hinweise zur Architektur stehen in [CLAUDE.md](CLAUDE.md), die vollständige Beschreibung aller Funktionen im [Handbuch](HANDBUCH.md), aus dem das Wiki erzeugt wird.
 
 ## Links
 
