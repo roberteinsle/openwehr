@@ -22,19 +22,18 @@ class DemoDataSeeder extends Seeder
             ['name' => 'JF-Anhänger', 'short_name' => 'JF-Anh', 'color' => '#22c55e', 'description' => 'Anhänger Jugendfeuerwehr', 'sort_order' => 3],
         ];
         foreach ($vehicles as $vehicle) {
-            DB::table('vehicles')->upsert(
+            // updateOrInsert, not upsert: vehicles.name has no unique index
+            DB::table('vehicles')->updateOrInsert(
+                ['name' => $vehicle['name']],
                 [...$vehicle, 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
-                ['name'],
-                ['short_name', 'color', 'description', 'sort_order', 'is_active', 'updated_at'],
             );
         }
 
         $groups = ['Aktiver Dienst', 'Jugendfeuerwehr', 'Musikzug', 'Wehrführer'];
         foreach ($groups as $index => $name) {
-            DB::table('groups')->upsert(
-                ['name' => $name, 'sort_order' => $index + 1, 'created_at' => $now, 'updated_at' => $now],
-                ['name'],
-                ['sort_order', 'updated_at'],
+            DB::table('groups')->updateOrInsert(
+                ['name' => $name],
+                ['sort_order' => $index + 1, 'created_at' => $now, 'updated_at' => $now],
             );
         }
     }
