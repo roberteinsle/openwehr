@@ -4,8 +4,7 @@ namespace Modules\Fahrzeugbuchung\src\Livewire\Monitor;
 
 use Illuminate\Support\Str;
 use Livewire\Component;
-use Modules\Fahrzeugbuchung\src\Models\Booking;
-use Modules\Fahrzeugbuchung\src\Models\Vehicle;
+use Modules\Fahrzeugbuchung\src\Support\VehicleBoard;
 
 /**
  * Read-only board for the screen at the station. Refreshes itself every minute
@@ -13,50 +12,15 @@ use Modules\Fahrzeugbuchung\src\Models\Vehicle;
  */
 class StationBoard extends Component
 {
-    /** A next booking this close counts as "bald gebucht" */
-    private const SOON_MINUTES = 120;
-
-    private const UPCOMING_DAYS = 7;
-
     public function render()
     {
-        $now = now();
-
-        $bookings = Booking::with(['vehicle', 'user'])
-            ->visible()
-            ->where('ends_at', '>', $now)
-            ->where('starts_at', '<', $now->copy()->addDays(self::UPCOMING_DAYS))
-            ->orderBy('starts_at')
-            ->get();
-
-        $confirmed = $bookings->where('status', Booking::STATUS_CONFIRMED);
-
-        $vehicles = Vehicle::active()->get()->map(function (Vehicle $vehicle) use ($confirmed, $now) {
-            $own = $confirmed->where('vehicle_id', $vehicle->id);
-            $current = $own->first(fn (Booking $b) => $b->starts_at <= $now);
-            $next = $own->first(fn (Booking $b) => $b->starts_at > $now);
-
-            return [
-                'vehicle' => $vehicle,
-                'current' => $current,
-                'next' => $next,
-                'state' => match (true) {
-                    $current !== null => 'busy',
-                    $next && $next->starts_at->diffInMinutes($now, true) <= self::SOON_MINUTES => 'soon',
-                    default => 'free',
-                },
-            ];
-        });
+        $board = VehicleBoard::data();
 
         return view('fahrzeugbuchung::livewire.monitor.station-board', [
-            'vehicles' => $vehicles,
-            'upcoming' => $bookings->take(14),
-            'counts' => [
-                'free' => $vehicles->where('state', 'free')->count(),
-                'soon' => $vehicles->where('state', 'soon')->count(),
-                'busy' => $vehicles->where('state', 'busy')->count(),
-            ],
-            'updatedAt' => $now->copy()->setTimezone('Europe/Berlin'),
+            'vehicles' => $board['vehicles'],
+            'upcoming' => $board['bookings']->take(14),
+            'counts' => $board['counts'],
+            'updatedAt' => now()->setTimezone('Europe/Berlin'),
         ]);
     }
 

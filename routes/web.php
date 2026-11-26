@@ -13,6 +13,7 @@ use App\Services\HoursRegistry;
 use App\Services\Impersonation;
 use App\Services\MagicLinkService;
 use App\Services\OrganizationSettings;
+use App\Support\DisplayToken;
 use App\Support\HoursCsv;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -162,6 +163,16 @@ Route::get('/organisation/logo', function () {
         'X-Content-Type-Options' => 'nosniff',
     ]);
 })->name('organization.logo');
+
+// -----------------------------------------------------------------------
+// Wachen-Monitor: the screen at the station, with the contents the admin chose
+// (MonitorRegistry). Read-only, no user: admins or the secret DISPLAY_TOKEN, else 404.
+// -----------------------------------------------------------------------
+Route::get('/monitor/{key?}', function (?string $key = null) {
+    abort_unless(DisplayToken::allows($key), 404);
+
+    return response()->view('monitor')->header('Referrer-Policy', 'no-referrer');
+})->middleware('throttle:30,1')->name('monitor');
 
 // -----------------------------------------------------------------------
 // Old English addresses: bookmarks, the station monitor and links in sent mails keep working

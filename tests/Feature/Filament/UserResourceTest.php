@@ -79,7 +79,7 @@ test('the admin navigation shows the version and the module areas', function () 
 test('fahrzeugbuchung admin shows the station monitor in a new tab', function () {
     $this->get('/admin/fahrzeugbuchung')
         ->assertOk()
-        ->assertSee('Wachen-Monitor')
+        ->assertSee('Fahrzeug-Monitor')
         ->assertSee('href="'.route('fahrzeugbuchung.monitor').'" target="_blank"', false);
 });
 

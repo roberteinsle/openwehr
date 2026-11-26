@@ -7,6 +7,7 @@ use App\Services\AnnualReportRegistry;
 use App\Services\DashboardRegistry;
 use App\Services\HoursRegistry;
 use App\Services\ModuleRegistry;
+use App\Services\MonitorRegistry;
 use App\Services\ParentRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
@@ -41,6 +42,7 @@ use Modules\Kalender\src\Services\IcsExporter;
 use Modules\Kalender\src\Services\IcsParser;
 use Modules\Kalender\src\Services\PollService;
 use Modules\Kalender\src\Services\SourceSync;
+use Modules\Kalender\src\Support\MonitorPanel as KalenderMonitorPanel;
 
 class KalenderServiceProvider extends ServiceProvider
 {
@@ -83,6 +85,14 @@ class KalenderServiceProvider extends ServiceProvider
         Livewire::component('kalender.event-types', EventTypes::class);
         Livewire::component('kalender.attendance-settings', AttendanceSettings::class);
         Livewire::component('kalender.monitor-board', MonitorBoard::class);
+
+        $monitor = app(MonitorRegistry::class);
+        $monitor->register('kalender.abteilungen', 'kalender', 'Termine je Abteilung',
+            fn (array $options) => KalenderMonitorPanel::groups($options),
+            'Die nächsten Termine nebeneinander je Abteilung, z. B. Aktive, Jugendfeuerwehr und Musikzug.', 20);
+        $monitor->register('kalender.termine', 'kalender', 'Nächste Termine',
+            fn (array $options) => KalenderMonitorPanel::upcoming($options),
+            'Die nächsten Termine aller Abteilungen als Liste.', 25);
         Livewire::component('kalender.event-form', EventForm::class);
         Livewire::component('kalender.event-detail', EventDetail::class);
         Livewire::component('kalender.sources', Sources::class);

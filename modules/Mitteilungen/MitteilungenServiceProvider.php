@@ -5,6 +5,7 @@ namespace Modules\Mitteilungen;
 use App\Models\User;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleRegistry;
+use App\Services\MonitorRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -15,6 +16,7 @@ use Modules\Mitteilungen\src\Livewire\Editor;
 use Modules\Mitteilungen\src\Livewire\Manage;
 use Modules\Mitteilungen\src\Models\Announcement;
 use Modules\Mitteilungen\src\Services\AnnouncementService;
+use Modules\Mitteilungen\src\Support\MonitorPanel;
 
 class MitteilungenServiceProvider extends ServiceProvider
 {
@@ -37,6 +39,10 @@ class MitteilungenServiceProvider extends ServiceProvider
 
         Livewire::component('mitteilungen.manage', Manage::class);
         Livewire::component('mitteilungen.editor', Editor::class);
+
+        app(MonitorRegistry::class)->register('mitteilungen.aktuell', 'mitteilungen', 'Mitteilungen',
+            fn (array $options) => MonitorPanel::render($options),
+            'Aktuelle Mitteilungen an alle, wichtige zuerst. Mitteilungen nur für einzelne Abteilungen oder Funktionen erscheinen nicht.', 40);
 
         app(ModuleRegistry::class)->register(
             'mitteilungen',

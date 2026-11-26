@@ -4,6 +4,7 @@ namespace Modules\Fahrzeugbuchung;
 
 use App\Models\User;
 use App\Services\ModuleRegistry;
+use App\Services\MonitorRegistry;
 use App\Services\VehicleBookingRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
@@ -31,6 +32,7 @@ use Modules\Fahrzeugbuchung\src\Policies\BookingCommentPolicy;
 use Modules\Fahrzeugbuchung\src\Policies\BookingPolicy;
 use Modules\Fahrzeugbuchung\src\Policies\VehiclePolicy;
 use Modules\Fahrzeugbuchung\src\Services\BookingService;
+use Modules\Fahrzeugbuchung\src\Support\VehicleBoard;
 
 class FahrzeugbuchungServiceProvider extends ServiceProvider
 {
@@ -92,6 +94,18 @@ class FahrzeugbuchungServiceProvider extends ServiceProvider
         Livewire::component('decisions.decision-index', DecisionIndex::class);
         Livewire::component('decisions.decision-detail', DecisionDetail::class);
         Livewire::component('monitor.station-board', StationBoard::class);
+
+        // Field on the Wachen-Monitor (core): vehicle state and the next bookings, names shortened
+        app(MonitorRegistry::class)->register('fahrzeugbuchung.belegung', 'fahrzeugbuchung', 'Fahrzeugbelegung', function (array $options) {
+            $board = VehicleBoard::data();
+
+            return view('fahrzeugbuchung::monitor.vehicles', [
+                'vehicles' => $board['vehicles'],
+                // Only what has not started yet; running ones are on the tiles
+                'upcoming' => $board['bookings']->filter(fn ($b) => $b->starts_at->isFuture())->take(['full' => 8, 'half' => 5, 'quarter' => 2][$options['size']] ?? 2),
+                'size' => $options['size'],
+            ]);
+        }, 'Welches Fahrzeug frei, bald gebucht oder unterwegs ist, dazu die nächsten Buchungen.', 30);
 
         app(ModuleRegistry::class)->register(
             'fahrzeugbuchung',

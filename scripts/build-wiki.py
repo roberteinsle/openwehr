@@ -56,17 +56,18 @@ def sub(lines, name):
 
 # "## Funktionen" belongs to the Fahrzeugbuchung, apart from the core parts
 fun = S['Funktionen']['lines']
-booking = ['Rollen', 'Kalender', 'Buchen', 'Nachrichten zur Buchung', 'Konflikte und Entscheidungen', 'Wachen-Monitor']
+booking = ['Rollen', 'Kalender', 'Buchen', 'Nachrichten zur Buchung', 'Konflikte und Entscheidungen', 'Fahrzeug-Monitor']
 fb = S['Fahrzeugbuchung']['lines'] + ['']
 for n in booking:
     fb += sub(fun, n)
 add('Fahrzeugbuchung', 'Fahrzeugbuchung', fb, ['Fahrzeugbuchung', 'Funktionen'])
 add('Anmeldung-und-Profil', 'Anmeldung und Profil', sub(fun, 'Anmeldung') + sub(fun, 'Profil') + sub(fun, 'Feedback'), [])
-add('Admin-Bereich', 'Admin-Bereich', sub(fun, 'Admin-Bereich') + sub(fun, 'E-Mails'), [])
+add('Admin-Bereich', 'Admin-Bereich', sub(fun, 'Admin-Bereich') + sub(fun, 'Wachen-Monitor') + sub(fun, 'E-Mails'), [])
 for h in ['Anmeldung', 'Profil', 'Feedback']:
     anchor[slug(h)] = 'Anmeldung-und-Profil'
 for h in ['Admin-Bereich (`/admin`)', 'E-Mails']:
     anchor[slug(h)] = 'Admin-Bereich'
+anchor[slug('Wachen-Monitor')] = 'Admin-Bereich#wachen-monitor'
 for h in booking:
     anchor[slug(h)] = 'Fahrzeugbuchung'
 
@@ -117,7 +118,7 @@ Dieses Wiki beschreibt, was openwehr kann und wie es eingerichtet wird – für 
 - [[Konfiguration]] – Umgebungsvariablen
 - [[Startseite und Navigation|Startseite-und-Navigation]] – Startseite, Glocke, Modulleiste, Personalakte
 - [[Anmeldung und Profil|Anmeldung-und-Profil]] – Login ohne Passwort, Profil, Feedback
-- [[Admin-Bereich]] – Kameraden, Abteilungen, Funktionen, Module, E-Mail-Texte, Logs
+- [[Admin-Bereich]] – Kameraden, Abteilungen, Funktionen, Module, Wachen-Monitor, E-Mail-Texte, Logs
 - [[Sicherheit]] – Updates, Prüfungen, Lücken melden
 
 ## Module im Überblick

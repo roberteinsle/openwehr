@@ -25,6 +25,7 @@ test('a Kleiderwart lands in the Kleiderkammer area and sees only its group', fu
         ->assertDontSee('href="'.url('/admin/maengelmanagement').'"', false)
         ->assertDontSee('href="'.url('/admin/fahrzeugbuchung').'"', false)
         ->assertDontSee('Wachen-Monitor')
+        ->assertDontSee('Fahrzeug-Monitor')
         ->assertDontSee('href="'.url('/admin/kameraden').'"', false)
         ->assertDontSee('href="'.url('/admin/logs').'"', false);
 });

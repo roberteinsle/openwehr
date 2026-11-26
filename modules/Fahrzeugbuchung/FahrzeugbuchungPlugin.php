@@ -26,7 +26,7 @@ class FahrzeugbuchungPlugin implements Plugin
             ->discoverPages(in: __DIR__.'/src/Filament/Pages', for: 'Modules\\Fahrzeugbuchung\\src\\Filament\\Pages')
             ->discoverWidgets(in: __DIR__.'/src/Filament/Widgets', for: 'Modules\\Fahrzeugbuchung\\src\\Filament\\Widgets')
             ->navigationItems([
-                NavigationItem::make('Wachen-Monitor')
+                NavigationItem::make('Fahrzeug-Monitor')
                     ->url(fn () => route('fahrzeugbuchung.monitor'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-tv')
                     ->group('Fahrzeugbuchung')

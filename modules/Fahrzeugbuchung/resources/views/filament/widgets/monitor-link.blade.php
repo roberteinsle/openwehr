@@ -1,5 +1,5 @@
 <x-filament-widgets::widget>
-    <x-filament::section heading="Wachen-Monitor" description="Nur-Lese-Ansicht für den Bildschirm in der Wache, aktualisiert sich jede Minute.">
+    <x-filament::section heading="Fahrzeug-Monitor" description="Nur-Lese-Ansicht für den Bildschirm in der Wache, aktualisiert sich jede Minute.">
         <div style="display:grid;gap:.75rem;font-size:.875rem">
             <x-filament::button tag="a" :href="$adminUrl" target="_blank" icon="heroicon-o-tv">
                 Monitor öffnen

@@ -7,7 +7,7 @@ use Livewire\Component;
 use Modules\Kalender\src\Support\Roster;
 
 /**
- * Read-only Termine board for the screen at the station, like the Wachen-Monitor of the Fahrzeugbuchung:
+ * Read-only Termine board for the screen at the station, like the Fahrzeug-Monitor of the Fahrzeugbuchung:
  * the next Termin with countdown, today and the coming two weeks. Refreshes itself every minute.
  */
 class MonitorBoard extends Component

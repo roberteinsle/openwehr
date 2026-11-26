@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\DisplayToken;
 use Illuminate\Support\Facades\Route;
 use Modules\Fahrzeugbuchung\src\Http\Controllers\BookingEventController;
 use Modules\Fahrzeugbuchung\src\Http\Controllers\BookingReturnController;
@@ -12,10 +13,7 @@ Route::prefix('fahrzeugbuchung')->name('fahrzeugbuchung.')->group(function () {
     // everyone else gets a 404 so the page doesn't reveal that it exists.
     // -----------------------------------------------------------------------
     Route::get('/monitor/{key?}', function (?string $key = null) {
-        $token = (string) config('monitor.token');
-        $validKey = $token !== '' && $key !== null && hash_equals($token, $key);
-
-        abort_unless(auth()->user()?->is_admin || $validKey, 404);
+        abort_unless(DisplayToken::allows($key), 404);
 
         return response()
             ->view('fahrzeugbuchung::pages.monitor')

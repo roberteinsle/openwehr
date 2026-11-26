@@ -15,6 +15,7 @@ use App\Services\DriverRegistry;
 use App\Services\HoursRegistry;
 use App\Services\InventoryRegistry;
 use App\Services\ModuleRegistry;
+use App\Services\MonitorRegistry;
 use App\Services\OrganizationSettings;
 use App\Services\ParentRegistry;
 use App\Services\PersonnelFileRegistry;
@@ -58,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DriverRegistry::class);
         $this->app->singleton(BadgeRegistry::class);
         $this->app->singleton(ParentRegistry::class);
+        $this->app->singleton(MonitorRegistry::class);
     }
 
     public function boot(): void

@@ -2,6 +2,7 @@
 
 namespace Modules\Fahrzeugbuchung\src\Filament\Widgets;
 
+use App\Support\DisplayToken;
 use Filament\Widgets\Widget;
 
 class MonitorLinkWidget extends Widget
@@ -14,11 +15,9 @@ class MonitorLinkWidget extends Widget
 
     protected function getViewData(): array
     {
-        $token = config('monitor.token');
-
         return [
             'adminUrl' => route('fahrzeugbuchung.monitor'),
-            'stationUrl' => $token ? route('fahrzeugbuchung.monitor', ['key' => $token]) : null,
+            'stationUrl' => DisplayToken::url('fahrzeugbuchung.monitor'),
         ];
     }
 }

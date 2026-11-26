@@ -5,6 +5,7 @@ use App\Models\Group;
 use App\Models\Guardian;
 use App\Services\ModuleRegistry;
 use App\Services\OrganizationSettings;
+use App\Support\DisplayToken;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Modules\Kalender\src\Http\Controllers\FeedController;
@@ -50,13 +51,11 @@ Route::middleware('throttle:120,1')->group(function () {
     Route::get('/kalender/oeffentlich.ics', [PublicCalendarController::class, 'ics'])->name('kalender.public.ics');
 });
 
-// Termin monitor for the screen at the station, like the Wachen-Monitor: read-only, no user. Admins or
+// Termin monitor for the screen at the station, like the Fahrzeug-Monitor: read-only, no user. Admins or
 // the secret DISPLAY_TOKEN; everyone else gets a 404 so the page doesn't reveal that it exists.
 Route::get('/kalender/monitor/{key?}', function (?string $key = null) {
     abort_unless(app(ModuleRegistry::class)->isActive('kalender'), 404);
-    $token = (string) config('monitor.token');
-    $validKey = $token !== '' && $key !== null && hash_equals($token, $key);
-    abort_unless(auth()->user()?->is_admin || $validKey, 404);
+    abort_unless(DisplayToken::allows($key), 404);
 
     return response()->view('kalender::pages.monitor')->header('Referrer-Policy', 'no-referrer');
 })->middleware('throttle:30,1')->name('kalender.monitor');

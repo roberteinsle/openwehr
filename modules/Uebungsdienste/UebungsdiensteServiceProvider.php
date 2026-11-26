@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\AnnualReportRegistry;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleRegistry;
+use App\Services\MonitorRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Gate;
@@ -18,6 +19,7 @@ use Modules\Uebungsdienste\src\Livewire\Planners;
 use Modules\Uebungsdienste\src\Livewire\ServiceForm;
 use Modules\Uebungsdienste\src\Models\Service;
 use Modules\Uebungsdienste\src\Services\ServicePlan;
+use Modules\Uebungsdienste\src\Support\MonitorPanel;
 
 /**
  * Übungsdienstplaner: who runs which Übungsdienst with which topic. Meant for the Vorstand and the
@@ -48,6 +50,10 @@ class UebungsdiensteServiceProvider extends ServiceProvider
 
             $schedule->command(SyncCalendar::class)->hourly()->withoutOverlapping()->appendOutputTo($output);
         });
+
+        app(MonitorRegistry::class)->register('uebungsdienste.abteilungen', 'uebungsdienste', 'Nächste Dienste je Abteilung',
+            fn (array $options) => MonitorPanel::render($options),
+            'Die kommenden Übungsdienste mit Thema, nebeneinander je Abteilung.', 10);
 
         Livewire::component('uebungsdienste.planner', Planner::class);
         Livewire::component('uebungsdienste.service-form', ServiceForm::class);

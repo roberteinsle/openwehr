@@ -29,7 +29,7 @@ class FahrzeugbuchungDashboard extends ModuleDashboard
     public function getWidgets(): array
     {
         return [
-            // Top 5 and the coming bookings side by side (desktop), the vehicles below, the Wachen-Monitor last
+            // Top 5 and the coming bookings side by side (desktop), the vehicles below, the Fahrzeug-Monitor last
             TopBookersWidget::class,
             UpcomingBookingsWidget::class,
             VehicleBookingsWidget::class,

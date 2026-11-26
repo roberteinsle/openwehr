@@ -100,7 +100,7 @@ test('admin dashboard ranks bookers and vehicles', function () {
         ->assertCanSeeTableRecords([$this->anh, $this->mtw], inOrder: true)
         ->assertTableColumnStateSet('bookings_count', 1, $this->mtw->getKey());
 
-    $this->get('/admin/fahrzeugbuchung')->assertOk()->assertSee('Wachen-Monitor');
+    $this->get('/admin/fahrzeugbuchung')->assertOk()->assertSee('Fahrzeug-Monitor');
     Livewire::test(MonitorLinkWidget::class)
         ->assertSee(route('fahrzeugbuchung.monitor', ['key' => 'geheimer-wachen-schluessel']));
 });
