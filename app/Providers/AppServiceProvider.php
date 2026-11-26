@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EnsureParent;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Models\Contact;
 use App\Models\User;
 use App\Services\ActivityRecorder;
 use App\Services\AnnualReportRegistry;
@@ -21,6 +22,7 @@ use App\Services\ParentRegistry;
 use App\Services\PersonnelFileRegistry;
 use App\Services\PushService;
 use App\Services\ScanRegistry;
+use App\Services\SearchRegistry;
 use App\Services\SystemStatus;
 use App\Services\VehicleBlockRegistry;
 use App\Services\VehicleBookingRegistry;
@@ -60,10 +62,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(BadgeRegistry::class);
         $this->app->singleton(ParentRegistry::class);
         $this->app->singleton(MonitorRegistry::class);
+        $this->app->singleton(SearchRegistry::class);
     }
 
     public function boot(): void
     {
+        // The header search finds Ansprechpartner (core, everyone sees /ansprechpartner)
+        app(SearchRegistry::class)->register('kern.ansprechpartner', null, 'Ansprechpartner', fn (string $term) => Contact::query()
+            ->where(fn ($q) => $q->where('name', 'ilike', SearchRegistry::like($term))->orWhere('role', 'ilike', SearchRegistry::like($term)))
+            ->orderBy('sort_order')->orderBy('name')->limit(SearchRegistry::LIMIT)->get()
+            ->map(fn (Contact $c) => ['title' => $c->name, 'detail' => collect([$c->role, $c->phone])->filter()->implode(' · '), 'url' => route('contacts')]), 80);
+
         // Webhooks without session and CSRF (backup reports for the admin "Analyse")
         if (! $this->app->routesAreCached()) {
             Route::group([], base_path('routes/webhooks.php'));

@@ -31,6 +31,10 @@ class AnnouncementService
 
         $announcement = DB::transaction(function () use ($announcement, $data, $groupIds, $functionIds, $by, $files) {
             $announcement ??= new Announcement(['created_by' => $by->id]);
+            // The Wachen-Monitor hangs openly in the station: only Mitteilungen for everyone go there
+            if ($groupIds !== [] || $functionIds !== []) {
+                $data['on_monitor'] = false;
+            }
             $announcement->fill($data)->save();
             $announcement->groups()->sync($groupIds);
             $announcement->functions()->sync($functionIds);

@@ -7,6 +7,7 @@ use App\Services\AnnualReportRegistry;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleRegistry;
 use App\Services\MonitorRegistry;
+use App\Services\SearchRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +21,7 @@ use Modules\Uebungsdienste\src\Livewire\ServiceForm;
 use Modules\Uebungsdienste\src\Models\Service;
 use Modules\Uebungsdienste\src\Services\ServicePlan;
 use Modules\Uebungsdienste\src\Support\MonitorPanel;
+use Modules\Uebungsdienste\src\Support\SearchSource as UebungsdiensteSearchSource;
 
 /**
  * Übungsdienstplaner: who runs which Übungsdienst with which topic. Meant for the Vorstand and the
@@ -34,6 +36,8 @@ class UebungsdiensteServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        app(SearchRegistry::class)->register('uebungsdienste.dienste', 'uebungsdienste', 'Übungsdienste', fn (string $term, User $user) => UebungsdiensteSearchSource::search($term, $user), 15);
+
         $base = __DIR__;
 
         $this->loadViewsFrom($base.'/resources/views', 'uebungsdienste');

@@ -8,7 +8,7 @@ use Livewire\Component;
 
 /**
  * The Wachen-Monitor: a header with clock and Wehr, below it 1, 2 or 4 fields with the contents the
- * admin chose. Read-only, refreshes itself every minute (wire:poll).
+ * admin chose. Read-only, refreshes itself in the interval set by the admin (wire:poll, 1–60 minutes).
  */
 class Board extends Component
 {
@@ -27,6 +27,7 @@ class Board extends Component
         return view('livewire.monitor.board', [
             'count' => $settings['fields'],
             'fields' => $fields,
+            'refresh' => $settings['refresh'],
             'updatedAt' => now('Europe/Berlin'),
         ]);
     }

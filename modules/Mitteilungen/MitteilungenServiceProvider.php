@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleRegistry;
 use App\Services\MonitorRegistry;
+use App\Services\SearchRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +18,7 @@ use Modules\Mitteilungen\src\Livewire\Manage;
 use Modules\Mitteilungen\src\Models\Announcement;
 use Modules\Mitteilungen\src\Services\AnnouncementService;
 use Modules\Mitteilungen\src\Support\MonitorPanel;
+use Modules\Mitteilungen\src\Support\SearchSource as MitteilungenSearchSource;
 
 class MitteilungenServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,8 @@ class MitteilungenServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        app(SearchRegistry::class)->register('mitteilungen.aktuell', 'mitteilungen', 'Mitteilungen', fn (string $term, User $user) => MitteilungenSearchSource::search($term, $user), 20);
+
         $base = __DIR__;
 
         $this->loadViewsFrom($base.'/resources/views', 'mitteilungen');
@@ -42,7 +46,7 @@ class MitteilungenServiceProvider extends ServiceProvider
 
         app(MonitorRegistry::class)->register('mitteilungen.aktuell', 'mitteilungen', 'Mitteilungen',
             fn (array $options) => MonitorPanel::render($options),
-            'Aktuelle Mitteilungen an alle, wichtige zuerst. Mitteilungen nur für einzelne Abteilungen oder Funktionen erscheinen nicht.', 40);
+            'Aktuelle Mitteilungen, bei denen „Auch auf dem Wachen-Monitor zeigen“ angehakt ist, wichtige zuerst. Nur Mitteilungen an alle Kameraden.', 40);
 
         app(ModuleRegistry::class)->register(
             'mitteilungen',

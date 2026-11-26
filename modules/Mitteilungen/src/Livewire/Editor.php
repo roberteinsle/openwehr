@@ -45,6 +45,9 @@ class Editor extends Component
     /** Lesebestätigung: every Kamerad confirms having read it */
     public bool $needsAck = false;
 
+    /** Also on the Wachen-Monitor in the station (only for Mitteilungen to everyone) */
+    public bool $onMonitor = false;
+
     /** New attachments */
     public array $uploads = [];
 
@@ -81,6 +84,7 @@ class Editor extends Component
         $this->groupIds = $announcement->groups()->pluck('groups.id')->map(fn ($id) => (string) $id)->all();
         $this->functionIds = $announcement->functions()->pluck('member_functions.id')->map(fn ($id) => (string) $id)->all();
         $this->needsAck = (bool) $announcement->needs_ack;
+        $this->onMonitor = (bool) $announcement->on_monitor;
         $this->notify = 'none';
     }
 
@@ -120,6 +124,12 @@ class Editor extends Component
         $from = $from?->utc();
         $until = $until?->utc();
 
+        if ($this->onMonitor && ($this->groupIds !== [] || $this->functionIds !== [])) {
+            $this->addError('onMonitor', 'Auf den Wachen-Monitor kommen nur Mitteilungen an alle Kameraden – der Bildschirm hängt offen in der Wache.');
+
+            return;
+        }
+
         if ($from && $until && $until->lt($from)) {
             $this->addError('visibleUntil', '„Bis“ liegt vor „ab“.');
 
@@ -129,7 +139,7 @@ class Editor extends Component
         try {
             $announcement = $announcements->save(
                 $this->editingId ? Announcement::findOrFail($this->editingId) : null,
-                ['title' => trim($this->title), 'body' => trim($this->body) ?: null, 'important' => $this->important, 'needs_ack' => $this->needsAck, 'visible_from' => $from, 'visible_until' => $until],
+                ['title' => trim($this->title), 'body' => trim($this->body) ?: null, 'important' => $this->important, 'needs_ack' => $this->needsAck, 'on_monitor' => $this->onMonitor, 'visible_from' => $from, 'visible_until' => $until],
                 array_map('intval', $this->groupIds),
                 auth()->user(),
                 $this->notify === 'mail',

@@ -34,11 +34,23 @@
                     @auth
                     <div class="flex items-center gap-4 sm:gap-6">
                     <nav class="hidden sm:flex items-center gap-6 text-sm">
+                        {{-- Search across modules and their contents (/suche), left of Profil --}}
+                        <form role="search" action="{{ route('search') }}" method="GET" class="relative">
+                            <label for="header-search" class="sr-only">Suchen</label>
+                            <svg class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m20 20-3.5-3.5"/></svg>
+                            <input id="header-search" type="search" name="q" value="{{ request()->routeIs('search') ? request('q') : '' }}" placeholder="Suchen …" autocomplete="off" maxlength="100"
+                                   class="w-40 lg:w-56 rounded-lg border-0 bg-white/10 py-1.5 pl-8 pr-2 text-sm text-white placeholder-white/60 focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:ring-2 focus:ring-white/40">
+                        </form>
                         <a href="{{ route('profile') }}" class="inline-flex items-center gap-2 hover:text-fw-grey-light {{ request()->routeIs('profile') ? 'font-semibold' : '' }}"><x-avatar :user="auth()->user()" size="h-7 w-7" text="text-[10px]" />Profil @if($unreadFeedback)<span class="ml-1 inline-block w-2 h-2 rounded-full bg-fw-red align-middle" title="Neue Antwort auf dein Feedback"></span>@endif</a>
                         @if($showAdmin)
                         <a href="{{ route('filament.admin.pages.dashboard') }}" class="hover:text-fw-grey-light">Admin</a>
                         @endif
                     </nav>
+                    {{-- On the phone the search field is a magnifier --}}
+                    <a href="{{ route('search') }}" title="Suchen" aria-label="Suchen"
+                       class="sm:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 {{ request()->routeIs('search') ? 'bg-white/10' : '' }}">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m20 20-3.5-3.5"/></svg>
+                    </a>
                     {{-- The digitaler Dienstausweis, for every active Kamerad once the Personalverwaltung switched it on --}}
                     @if(\Modules\Personalverwaltung\src\Services\PersonnelService::digitalIdFor(auth()->user()))
                         <a href="{{ route('personalverwaltung.digital-id') }}" title="Dienstausweis" aria-label="Dienstausweis"

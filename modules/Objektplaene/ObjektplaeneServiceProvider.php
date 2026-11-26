@@ -5,6 +5,7 @@ namespace Modules\Objektplaene;
 use App\Models\User;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleRegistry;
+use App\Services\SearchRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +18,7 @@ use Modules\Objektplaene\src\Livewire\ObjectDetail;
 use Modules\Objektplaene\src\Livewire\ObjectForm;
 use Modules\Objektplaene\src\Models\PlanObject;
 use Modules\Objektplaene\src\Services\ObjectPlanService;
+use Modules\Objektplaene\src\Support\SearchSource as ObjektplaeneSearchSource;
 
 /**
  * Objektpläne & Brandschutzunterlagen: Feuerwehrpläne, Objektpläne and Brandschutzordnungen per
@@ -32,6 +34,8 @@ class ObjektplaeneServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        app(SearchRegistry::class)->register('objektplaene.objekte', 'objektplaene', 'Objektpläne', fn (string $term, User $user) => ObjektplaeneSearchSource::search($term, $user), 30);
+
         $base = __DIR__;
 
         $this->loadViewsFrom($base.'/resources/views', 'objektplaene');

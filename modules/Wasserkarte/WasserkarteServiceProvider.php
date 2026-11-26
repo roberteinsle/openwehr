@@ -7,6 +7,7 @@ use App\Services\AnnualReportRegistry;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleRegistry;
 use App\Services\ScanRegistry;
+use App\Services\SearchRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +22,7 @@ use Modules\Wasserkarte\src\Livewire\SourceForm;
 use Modules\Wasserkarte\src\Models\Inspection;
 use Modules\Wasserkarte\src\Models\Source;
 use Modules\Wasserkarte\src\Services\WaterService;
+use Modules\Wasserkarte\src\Support\SearchSource as WasserkarteSearchSource;
 
 /**
  * Wasserkarte & Hydranten: all Löschwasserquellen on a map with status and performance data,
@@ -35,6 +37,8 @@ class WasserkarteServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        app(SearchRegistry::class)->register('wasserkarte.quellen', 'wasserkarte', 'Wasserquellen', fn (string $term, User $user) => WasserkarteSearchSource::search($term, $user), 35);
+
         $base = __DIR__;
 
         $this->loadViewsFrom($base.'/resources/views', 'wasserkarte');

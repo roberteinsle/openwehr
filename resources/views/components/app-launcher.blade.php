@@ -6,7 +6,13 @@
     $launcherModules = app(\App\Services\ModuleOverview::class)->for(auth()->user());
 @endphp
 {{-- On the phone the button sits in the tab bar at the bottom (x-bottom-nav, event "toggle-launcher") and the menu opens above it --}}
-<div class="relative" x-data="{ open: false }" x-on:keydown.escape.window="open = false" x-on:toggle-launcher.window="open = ! open"
+{{-- "filter" narrows the module list (many Wehren switch on a lot of modules); on larger screens the field gets the focus when the menu opens --}}
+<div class="relative" x-data="{ open: false, filter: '',
+        fold(t) { return t.toLowerCase().replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss').replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/ue/g, 'u') },
+        shows(name) { return this.filter.trim() === '' || this.fold(name).includes(this.fold(this.filter.trim())) },
+        get hits() { return [...this.$root.querySelectorAll('[data-launcher-module]')].filter(a => this.shows(a.dataset.name)) } }"
+     x-init="$watch('open', v => { if (! v) { filter = ''; return } if (window.matchMedia('(min-width: 640px)').matches) $nextTick(() => $refs.moduleFilter?.focus()) })"
+     x-on:keydown.escape.window="open = false" x-on:toggle-launcher.window="open = ! open"
      x-on:click.outside="if (! $event.target.closest('[data-launcher-toggle]')) open = false">
     <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-haspopup="true" aria-label="Alle Module"
             title="Alle Module" class="relative hidden sm:flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40">
@@ -68,17 +74,27 @@
 
         @if(! empty($launcherModules))
             <p class="border-t border-gray-100 px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Module</p>
-            <nav class="max-h-[50vh] sm:max-h-[70vh] overflow-y-auto pb-2">
+            <div class="px-3 pb-1">
+                <label for="launcher-filter" class="sr-only">Modul suchen</label>
+                <input id="launcher-filter" x-ref="moduleFilter" type="search" x-model="filter" placeholder="Modul suchen …" autocomplete="off"
+                       x-on:keydown.enter.prevent="hits[0]?.click()"
+                       class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm focus:border-fw-red focus:bg-white focus:ring-fw-red">
+            </div>
+            <nav class="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto pb-2">
                 @foreach($launcherModules as $key => $module)
                     {{-- Module routes are named after their key, e.g. kalender.* --}}
                     @php($active = request()->routeIs($key.'.*') && ! str_starts_with((string) request()->route()?->uri(), 'personalakte'))
-                    <a href="{{ $module['url'] }}" class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 {{ $active ? 'bg-gray-50 font-semibold text-fw-navy' : '' }}">
+                    <a href="{{ $module['url'] }}" data-launcher-module data-name="{{ $module['name'] }}" x-show="shows($el.dataset.name)" class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 {{ $active ? 'bg-gray-50 font-semibold text-fw-navy' : '' }}">
                         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $active ? 'bg-fw-navy text-white' : 'bg-fw-navy/10 text-fw-navy' }}">
                             <x-module-icon :key="$key" class="h-4 w-4" />
                         </span>
                         <span class="min-w-0 truncate">{{ $module['name'] }}</span>
                     </a>
                 @endforeach
+                <div x-show="filter.trim() !== '' && hits.length === 0" x-cloak class="px-4 py-2 text-sm text-gray-500">
+                    Kein Modul gefunden.
+                    <a x-bind:href="'{{ route('search') }}?q=' + encodeURIComponent(filter.trim())" class="text-fw-navy underline">Überall suchen</a>
+                </div>
             </nav>
         @else
             <p class="border-t border-gray-100 px-4 py-3 text-xs text-gray-500">Für dich ist noch kein Modul freigeschaltet.</p>

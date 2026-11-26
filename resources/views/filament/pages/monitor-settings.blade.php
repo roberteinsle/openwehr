@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <x-filament::section heading="Link" description="Nur-Lese-Ansicht für einen Bildschirm in der Wache, aktualisiert sich jede Minute.">
+    <x-filament::section heading="Link" :description="'Nur-Lese-Ansicht für einen Bildschirm in der Wache, aktualisiert sich '.\App\Support\MonitorSettings::refreshLabel(\App\Support\MonitorSettings::get()['refresh']).'.'">
         <div style="display:grid;gap:.75rem;font-size:.875rem">
             <div>
                 <x-filament::button tag="a" :href="$adminUrl" target="_blank" icon="heroicon-o-tv">

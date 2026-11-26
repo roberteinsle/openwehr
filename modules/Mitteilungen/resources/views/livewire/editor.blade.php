@@ -88,6 +88,10 @@
         </div>
         <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="needsAck" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Lesebestätigung: jeder Empfänger bestätigt „gelesen“ – du siehst, wer noch fehlt, und kannst erinnern</label>
         <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="important" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Wichtig (rot, oben, nicht ausblendbar)</label>
+        <div>
+            <label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" wire:model="onMonitor" class="rounded border-gray-300 text-fw-red focus:ring-fw-red"> Auch auf dem Wachen-Monitor zeigen (nur bei Mitteilungen an alle Kameraden)</label>
+            @error('onMonitor')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
         <fieldset>
             <legend class="text-sm text-gray-700 mb-1">Benachrichtigen – auf der Startseite und unter „Mitteilungen“ steht sie immer</legend>
             <div class="space-y-1.5">

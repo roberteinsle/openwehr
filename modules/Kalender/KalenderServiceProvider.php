@@ -9,6 +9,7 @@ use App\Services\HoursRegistry;
 use App\Services\ModuleRegistry;
 use App\Services\MonitorRegistry;
 use App\Services\ParentRegistry;
+use App\Services\SearchRegistry;
 use App\Support\ModuleNav;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Carbon;
@@ -43,6 +44,7 @@ use Modules\Kalender\src\Services\IcsParser;
 use Modules\Kalender\src\Services\PollService;
 use Modules\Kalender\src\Services\SourceSync;
 use Modules\Kalender\src\Support\MonitorPanel as KalenderMonitorPanel;
+use Modules\Kalender\src\Support\SearchSource as KalenderSearchSource;
 
 class KalenderServiceProvider extends ServiceProvider
 {
@@ -55,6 +57,8 @@ class KalenderServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        app(SearchRegistry::class)->register('kalender.termine', 'kalender', 'Termine', fn (string $term, User $user) => KalenderSearchSource::search($term, $user), 10);
+
         $base = __DIR__;
 
         $this->loadViewsFrom($base.'/resources/views', 'kalender');

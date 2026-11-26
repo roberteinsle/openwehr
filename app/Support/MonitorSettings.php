@@ -21,6 +21,11 @@ final class MonitorSettings
 
     public const MAX_FIELDS = 4;
 
+    /** How often the screen reloads its contents, in minutes */
+    public const REFRESH_MINUTES = [1, 3, 5, 15, 30, 60];
+
+    public const DEFAULT_REFRESH = 1;
+
     /** Default content per field: the first one whose module is on */
     private const DEFAULTS = [
         ['uebungsdienste.abteilungen', 'kalender.abteilungen'],
@@ -29,7 +34,7 @@ final class MonitorSettings
         ['kalender.termine'],
     ];
 
-    /** @return array{fields: int, panels: list<?string>, group_ids: list<int>} panels always has MAX_FIELDS entries */
+    /** @return array{fields: int, panels: list<?string>, group_ids: list<int>, refresh: int} panels always has MAX_FIELDS entries, refresh in minutes */
     public static function get(): array
     {
         $stored = json_decode((string) Setting::get(self::KEY, ''), true);
@@ -44,6 +49,7 @@ final class MonitorSettings
             'fields' => $fields,
             'panels' => array_pad(array_slice($panels, 0, self::MAX_FIELDS), self::MAX_FIELDS, null),
             'group_ids' => array_values(array_map('intval', array_filter((array) ($stored['group_ids'] ?? []), 'is_numeric'))),
+            'refresh' => in_array((int) ($stored['refresh'] ?? 0), self::REFRESH_MINUTES, true) ? (int) $stored['refresh'] : self::DEFAULT_REFRESH,
         ];
     }
 
@@ -58,11 +64,16 @@ final class MonitorSettings
     /**
      * @param  list<?string>  $panels  content per field; empty means an empty field
      * @param  list<int|string>  $groupIds
+     * @param  ?int  $refresh  minutes between updates; null keeps the current value
      */
-    public static function save(int $fields, array $panels, array $groupIds): void
+    public static function save(int $fields, array $panels, array $groupIds, ?int $refresh = null): void
     {
         if (! in_array($fields, self::FIELD_COUNTS, true)) {
             throw ValidationException::withMessages(['fields' => 'Bitte 1, 2 oder 4 Felder wählen.']);
+        }
+        $refresh ??= self::get()['refresh'];
+        if (! in_array($refresh, self::REFRESH_MINUTES, true)) {
+            throw ValidationException::withMessages(['refresh' => 'Bitte 1, 3, 5, 15, 30 oder 60 Minuten wählen.']);
         }
 
         $registry = app(MonitorRegistry::class);
@@ -77,7 +88,13 @@ final class MonitorSettings
         $groupIds = array_values(array_map('intval', array_filter($groupIds, 'is_numeric')));
         $groupIds = Group::whereIn('id', $groupIds)->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
 
-        Setting::set(self::KEY, json_encode(['fields' => $fields, 'panels' => $panels, 'group_ids' => $groupIds]));
+        Setting::set(self::KEY, json_encode(['fields' => $fields, 'panels' => $panels, 'group_ids' => $groupIds, 'refresh' => $refresh]));
+    }
+
+    /** "jede Minute", "alle 5 Minuten" … */
+    public static function refreshLabel(int $minutes): string
+    {
+        return $minutes === 1 ? 'jede Minute' : ($minutes === 60 ? 'jede Stunde' : 'alle '.$minutes.' Minuten');
     }
 
     /** "full", "half" or "quarter": how much of the screen one field gets */

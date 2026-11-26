@@ -8,8 +8,9 @@ use Illuminate\Support\Str;
 use Modules\Mitteilungen\src\Models\Announcement;
 
 /**
- * "Mitteilungen" on the Wachen-Monitor: the current ones meant for everyone, important first. Ones for
- * single Abteilungen or Funktionen stay off – the screen hangs in the station, without login.
+ * "Mitteilungen" on the Wachen-Monitor: the current ones the author ticked for it (on_monitor), important
+ * first. Ones for single Abteilungen or Funktionen stay off even if ticked – the screen hangs in the
+ * station, without login.
  */
 final class MonitorPanel
 {
@@ -22,7 +23,7 @@ final class MonitorPanel
     {
         $size = $options['size'];
 
-        $announcements = Announcement::current()
+        $announcements = Announcement::current()->where('on_monitor', true)
             ->doesntHave('groups')->doesntHave('functions')
             ->orderByDesc('important')->orderByDesc('created_at')
             ->limit(self::COUNT[$size] ?? 2)->get();

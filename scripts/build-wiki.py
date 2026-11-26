@@ -116,7 +116,7 @@ Dieses Wiki beschreibt, was openwehr kann und wie es eingerichtet wird – für 
 ## Einstieg
 - [[Installation]] – Server, Coolify, Datenbank, erste Schritte, Updates und Sicherungen
 - [[Konfiguration]] – Umgebungsvariablen
-- [[Startseite und Navigation|Startseite-und-Navigation]] – Startseite, Glocke, Modulleiste, Personalakte
+- [[Startseite und Navigation|Startseite-und-Navigation]] – Startseite, Suche, Glocke, Modulleiste, Personalakte
 - [[Anmeldung und Profil|Anmeldung-und-Profil]] – Login ohne Passwort, Profil, Feedback
 - [[Admin-Bereich]] – Kameraden, Abteilungen, Funktionen, Module, Wachen-Monitor, E-Mail-Texte, Logs
 - [[Sicherheit]] – Updates, Prüfungen, Lücken melden

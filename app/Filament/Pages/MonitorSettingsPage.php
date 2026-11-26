@@ -65,6 +65,7 @@ class MonitorSettingsPage extends Page implements HasForms
             'panel_2' => $settings['panels'][2],
             'panel_3' => $settings['panels'][3],
             'group_ids' => $settings['group_ids'],
+            'refresh' => (string) $settings['refresh'],
         ]);
     }
 
@@ -96,6 +97,13 @@ class MonitorSettingsPage extends Page implements HasForms
                         $panelSelect(1),
                         $panelSelect(2),
                         $panelSelect(3),
+                        Forms\Components\Select::make('refresh')
+                            ->label('Aktualisieren')
+                            ->options(collect(MonitorSettings::REFRESH_MINUTES)->mapWithKeys(fn (int $m) => [(string) $m => MonitorSettings::refreshLabel($m)])->all())
+                            ->in(array_map('strval', MonitorSettings::REFRESH_MINUTES))
+                            ->required()
+                            ->selectablePlaceholder(false)
+                            ->helperText('Wie oft der Bildschirm neue Termine, Buchungen und Mitteilungen holt. Die Uhr läuft immer mit.'),
                     ])
                     ->columnSpanFull(),
 
@@ -122,14 +130,16 @@ class MonitorSettingsPage extends Page implements HasForms
             $fields,
             array_map(fn (int $i) => $i < $fields ? ($data['panel_'.$i] ?? null) : (MonitorSettings::get()['panels'][$i] ?? null), range(0, MonitorSettings::MAX_FIELDS - 1)),
             $data['group_ids'] ?? [],
+            (int) $data['refresh'],
         );
 
-        Notification::make()->title('Wachen-Monitor gespeichert')->body('Der Bildschirm übernimmt es spätestens in einer Minute.')->success()->send();
+        // The screen still waits out its old interval before it reads the new settings
+        Notification::make()->title('Wachen-Monitor gespeichert')->body('Der Bildschirm übernimmt es bei seiner nächsten Aktualisierung.')->success()->send();
     }
 
     public function resetToDefaults(): void
     {
-        MonitorSettings::save(MonitorSettings::MAX_FIELDS, MonitorSettings::defaultPanels(), []);
+        MonitorSettings::save(MonitorSettings::MAX_FIELDS, MonitorSettings::defaultPanels(), [], MonitorSettings::DEFAULT_REFRESH);
         $this->mount();
 
         Notification::make()->title('Standard wiederhergestellt')->success()->send();

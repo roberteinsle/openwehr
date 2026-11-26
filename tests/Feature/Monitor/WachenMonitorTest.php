@@ -15,7 +15,9 @@ use Livewire\Livewire;
 use Modules\Fahrzeugbuchung\src\Models\Booking;
 use Modules\Fahrzeugbuchung\src\Models\Vehicle;
 use Modules\Kalender\src\Models\Event;
+use Modules\Mitteilungen\src\Livewire\Editor as EditorComponent;
 use Modules\Mitteilungen\src\Models\Announcement;
+use Modules\Mitteilungen\src\Services\AnnouncementService;
 use Modules\Uebungsdienste\src\Models\Service;
 
 function monitorModules(array $keys, bool $on = true): void
@@ -132,19 +134,64 @@ test('the Termine per Abteilung leave out personal Termine', function () {
         ->assertDontSee('Führerschein vorzeigen');
 });
 
-test('Mitteilungen show only those for everyone, important first', function () {
-    Announcement::create(['title' => 'Grillabend Samstag', 'body' => 'Bitte **Salate** mitbringen.']);
-    Announcement::create(['title' => 'Neue Alarmordnung', 'important' => true]);
-    Announcement::create(['title' => 'Schon vorbei', 'visible_until' => now()->subMinute()]);
-    Announcement::create(['title' => 'Nur für die Jugend'])->groups()->attach($this->jf);
+test('Mitteilungen show only those ticked for the monitor and meant for everyone, important first', function () {
+    Announcement::create(['title' => 'Grillabend Samstag', 'body' => 'Bitte **Salate** mitbringen.', 'on_monitor' => true]);
+    Announcement::create(['title' => 'Neue Alarmordnung', 'important' => true, 'on_monitor' => true]);
+    Announcement::create(['title' => 'Nicht angehakt']);
+    Announcement::create(['title' => 'Schon vorbei', 'visible_until' => now()->subMinute(), 'on_monitor' => true]);
+    Announcement::create(['title' => 'Nur für die Jugend', 'on_monitor' => true])->groups()->attach($this->jf);
 
     MonitorSettings::save(1, ['mitteilungen.aktuell'], []);
 
     Livewire::test(Board::class)
         ->assertSeeInOrder(['Neue Alarmordnung', 'Grillabend Samstag'])
         ->assertSee('Bitte Salate mitbringen.')
+        ->assertDontSee('Nicht angehakt')
         ->assertDontSee('Schon vorbei')
         ->assertDontSee('Nur für die Jugend');
+});
+
+test('the editor puts a Mitteilung for everyone on the monitor, but refuses one with an audience', function () {
+    $redakteur = User::factory()->create();
+    $redakteur->moduleAccess()->create(['module' => 'mitteilungen', 'role' => 'redakteur']);
+
+    Livewire::actingAs($redakteur)->test(EditorComponent::class)
+        ->set('title', 'Übung am Samstag')->set('onMonitor', true)->set('notify', 'none')
+        ->call('save')->assertHasNoErrors();
+    expect(Announcement::where('title', 'Übung am Samstag')->value('on_monitor'))->toBeTrue();
+
+    Livewire::actingAs($redakteur)->test(EditorComponent::class)
+        ->set('title', 'Nur Jugend')->set('onMonitor', true)->set('groupIds', [(string) $this->jf->id])->set('notify', 'none')
+        ->call('save')->assertHasErrors('onMonitor');
+    expect(Announcement::where('title', 'Nur Jugend')->exists())->toBeFalse();
+
+    // The service never keeps the flag on a Mitteilung with an audience
+    $a = app(AnnouncementService::class)->save(null, ['title' => 'Direkt', 'on_monitor' => true], [$this->jf->id], $redakteur);
+    expect($a->refresh()->on_monitor)->toBeFalse();
+});
+
+test('the refresh interval is chosen in the settings and used by the screen', function () {
+    expect(MonitorSettings::get()['refresh'])->toBe(1);
+    $this->get('/monitor/geheimer-wachen-schluessel')->assertSee('wire:poll.60s', false)->assertSee('aktualisiert sich jede Minute');
+
+    $this->actingAs(User::factory()->admin()->create());
+    Livewire::test(MonitorSettingsPage::class)
+        ->fillForm(['fields' => '2', 'panel_0' => 'kalender.termine', 'panel_1' => 'mitteilungen.aktuell', 'refresh' => '15'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(MonitorSettings::get()['refresh'])->toBe(15);
+    Livewire::test(Board::class)->assertSee('wire:poll.900s', false)->assertSee('aktualisiert sich alle 15 Minuten');
+
+    Livewire::test(MonitorSettingsPage::class)->fillForm(['refresh' => '7'])->call('save')->assertHasFormErrors(['refresh']);
+    expect(fn () => MonitorSettings::save(1, ['kalender.termine'], [], 7))->toThrow(ValidationException::class)
+        ->and(MonitorSettings::get()['refresh'])->toBe(15);
+
+    // Saving without an interval keeps it; the defaults bring back one minute
+    MonitorSettings::save(1, ['kalender.termine'], []);
+    expect(MonitorSettings::get()['refresh'])->toBe(15);
+    Livewire::test(MonitorSettingsPage::class)->call('resetToDefaults');
+    expect(MonitorSettings::get()['refresh'])->toBe(1);
 });
 
 test('the Fahrzeugbelegung shows the state with shortened names', function () {

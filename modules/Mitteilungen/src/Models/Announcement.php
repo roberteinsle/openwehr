@@ -29,11 +29,11 @@ use Illuminate\Support\Carbon;
  */
 class Announcement extends Model
 {
-    protected $fillable = ['title', 'body', 'important', 'needs_ack', 'visible_from', 'visible_until', 'created_by', 'archived_at'];
+    protected $fillable = ['title', 'body', 'important', 'needs_ack', 'visible_from', 'visible_until', 'created_by', 'archived_at', 'on_monitor'];
 
     protected function casts(): array
     {
-        return ['important' => 'boolean', 'needs_ack' => 'boolean', 'visible_from' => 'datetime', 'visible_until' => 'datetime', 'archived_at' => 'datetime'];
+        return ['important' => 'boolean', 'needs_ack' => 'boolean', 'on_monitor' => 'boolean', 'visible_from' => 'datetime', 'visible_until' => 'datetime', 'archived_at' => 'datetime'];
     }
 
     /** "29.10.2026 19:30 – 31.10.2026" in Berlin time; a time only where one was set (not 0:00 at the start, 23:59 at the end) */
