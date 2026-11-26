@@ -29,13 +29,27 @@ class AlarmService
     /** Minutes an alarm stays on the Wachen-Monitor after its last update; 0 = not at all */
     public const SHOW_MINUTES = [0, 15, 30, 60, 120, 240];
 
-    public const DEFAULTS = ['enabled' => false, 'show_minutes' => 60, 'osm' => true];
+    /** What the alarm view can show; the admin picks (setting "fields") */
+    public const FIELDS = [
+        'keyword' => 'Stichwort',
+        'address' => 'Einsatzort',
+        'message' => 'Meldung',
+        'ric' => 'RIC (alarmierte Gruppen/Schleifen)',
+        'vehicle' => 'Fahrzeuge',
+        'person' => 'Personen',
+        'map' => 'Karte',
+    ];
+
+    /** Persons are off by default: the screen hangs openly in the station */
+    public const DEFAULT_FIELDS = ['keyword', 'address', 'message', 'ric', 'vehicle', 'map'];
+
+    public const DEFAULTS = ['enabled' => false, 'show_minutes' => 60, 'osm' => true, 'fields' => self::DEFAULT_FIELDS];
 
     public function __construct(private readonly Geocoder $geocoder, private readonly AlarmRegistry $registry) {}
 
     // ─── settings ────────────────────────────────────────────────────────────
 
-    /** @return array{enabled: bool, show_minutes: int, osm: bool} */
+    /** @return array{enabled: bool, show_minutes: int, osm: bool, fields: list<string>} */
     public static function settings(): array
     {
         $stored = json_decode((string) Setting::get(self::SETTINGS, ''), true);
@@ -45,18 +59,28 @@ class AlarmService
             'enabled' => (bool) ($stored['enabled'] ?? self::DEFAULTS['enabled']),
             'show_minutes' => in_array((int) ($stored['show_minutes'] ?? -1), self::SHOW_MINUTES, true) ? (int) $stored['show_minutes'] : self::DEFAULTS['show_minutes'],
             'osm' => (bool) ($stored['osm'] ?? self::DEFAULTS['osm']),
+            'fields' => isset($stored['fields']) && is_array($stored['fields'])
+                ? array_values(array_intersect(array_keys(self::FIELDS), $stored['fields']))
+                : self::DEFAULT_FIELDS,
         ];
     }
 
-    public static function saveSettings(bool $enabled, int $showMinutes, bool $osm): void
+    /** @param  ?list<string>  $fields  what the alarm view shows (keys of FIELDS); null keeps the current choice */
+    public static function saveSettings(bool $enabled, int $showMinutes, bool $osm, ?array $fields = null): void
     {
         if (! in_array($showMinutes, self::SHOW_MINUTES, true)) {
             throw new \InvalidArgumentException('Unknown duration');
         }
+        $fields = $fields === null ? self::settings()['fields'] : array_values(array_intersect(array_keys(self::FIELDS), $fields));
         if ($enabled && self::key() === null) {
             self::regenerateKey();
         }
-        Setting::set(self::SETTINGS, json_encode(['enabled' => $enabled, 'show_minutes' => $showMinutes, 'osm' => $osm]));
+        Setting::set(self::SETTINGS, json_encode(['enabled' => $enabled, 'show_minutes' => $showMinutes, 'osm' => $osm, 'fields' => $fields]));
+    }
+
+    public static function shows(string $field): bool
+    {
+        return in_array($field, self::settings()['fields'], true);
     }
 
     public static function enabled(): bool
@@ -112,6 +136,7 @@ class AlarmService
             'keyword' => $fields['keyword'], 'message' => $fields['message'], 'address' => $fields['address'],
             'latitude' => $fields['latitude'], 'longitude' => $fields['longitude'],
             'located_by' => $fields['latitude'] !== null ? 'divera' : null,
+            'rics' => $fields['rics'] ?: null, 'vehicles' => $fields['vehicles'] ?: null, 'persons' => $fields['persons'] ?: null,
         ], fn ($v) => $v !== null);
 
         if ($isNew) {
@@ -182,6 +207,42 @@ class AlarmService
         return $alarm ? $alarm->id.'-'.$alarm->updated_at?->getTimestamp() : '';
     }
 
+    /**
+     * Corrected by an admin: the monitor shows the change at its next check. A new address without
+     * coordinates is located again.
+     *
+     * @param  array{keyword: ?string, address: ?string, message: ?string, latitude: ?float, longitude: ?float, priority: bool, rics: list<string>, vehicles: list<string>, persons: list<string>}  $data
+     */
+    public function update(Alarm $alarm, array $data): void
+    {
+        $hasPosition = $data['latitude'] !== null && $data['longitude'] !== null;
+        $alarm->fill([
+            'keyword' => $data['keyword'], 'address' => $data['address'], 'message' => $data['message'], 'priority' => $data['priority'],
+            'rics' => $data['rics'] ?: null, 'vehicles' => $data['vehicles'] ?: null, 'persons' => $data['persons'] ?: null,
+        ]);
+        if ($hasPosition) {
+            $moved = $data['latitude'] !== $alarm->latitude || $data['longitude'] !== $alarm->longitude;
+            $alarm->fill(['latitude' => $data['latitude'], 'longitude' => $data['longitude'], 'located_by' => $moved ? 'admin' : $alarm->located_by]);
+        } else {
+            $alarm->fill(['latitude' => null, 'longitude' => null, 'located_by' => null]);
+        }
+        $alarm->updated_at = now();
+        $alarm->save();
+
+        if (! $hasPosition) {
+            $this->locate($alarm);
+        }
+    }
+
+    /**
+     * "Noch einmal auslösen": the alarm is on the monitor again as if it had just come – not ended,
+     * time from now. The modules are not told again (it is the same alarm).
+     */
+    public function retrigger(Alarm $alarm): void
+    {
+        $alarm->forceFill(['ended_at' => null, 'ended_by' => null, 'received_at' => now(), 'updated_at' => now()])->save();
+    }
+
     public function end(Alarm $alarm, string $by): void
     {
         if ($alarm->ended_at === null) {
@@ -193,7 +254,7 @@ class AlarmService
      * A test alarm from the admin, built like DIVERA's full object. Either straight through the same
      * processing, or as a real POST to the public address (checks proxy and key, too).
      *
-     * @param  array{keyword: string, message?: ?string, address?: ?string, latitude?: ?float, longitude?: ?float, priority?: bool}  $fields
+     * @param  array{keyword: string, message?: ?string, address?: ?string, latitude?: ?float, longitude?: ?float, priority?: bool, ric?: ?string, vehicle?: ?string, person?: ?string}  $fields
      */
     public function test(array $fields, bool $viaUrl = false): Alarm
     {
@@ -209,6 +270,9 @@ class AlarmService
             'lat' => $fields['latitude'] ?? null,
             'lng' => $fields['longitude'] ?? null,
             'priority' => (bool) ($fields['priority'] ?? false),
+            'ric' => $fields['ric'] ?? null,
+            'vehicle' => $fields['vehicle'] ?? null,
+            'person' => $fields['person'] ?? null,
             'ts_create' => now()->getTimestamp(),
             'ts_update' => now()->getTimestamp(),
         ], fn ($v) => $v !== null && $v !== '') + ['openwehr_test' => true];
@@ -232,7 +296,10 @@ class AlarmService
     /**
      * The alarm fields from DIVERA's JSON, at the top level or under "data"
      *
-     * @return array{external_id: ?string, keyword: ?string, message: ?string, address: ?string, latitude: ?float, longitude: ?float, priority: bool, closed: bool}
+     * ric, vehicle and person: DIVERA's alarm API takes them as comma-separated text; in a webhook
+     * they may come as text, as a list or as a list of objects – the names are taken from all of these.
+     *
+     * @return array{external_id: ?string, keyword: ?string, message: ?string, address: ?string, latitude: ?float, longitude: ?float, priority: bool, closed: bool, rics: list<string>, vehicles: list<string>, persons: list<string>}
      */
     public static function extract(array $payload): array
     {
@@ -269,7 +336,47 @@ class AlarmService
             'longitude' => $lng,
             'priority' => $flag($value('priority')),
             'closed' => $flag($value('closed')),
+            'rics' => self::names($sources, 'ric', 'rics'),
+            'vehicles' => self::names($sources, 'vehicle', 'vehicles'),
+            'persons' => self::names($sources, 'person', 'persons'),
         ];
+    }
+
+    /**
+     * "Text, mehr Text" or ["Text"] or [{"name": "Text"}] → ["Text", …] (at most 30, each at most 100 characters)
+     *
+     * @param  list<array<mixed>>  $sources
+     * @return list<string>
+     */
+    public static function names(array $sources, string ...$keys): array
+    {
+        foreach ($keys as $key) {
+            foreach ($sources as $source) {
+                $found = $source[$key] ?? null;
+                $items = match (true) {
+                    is_string($found) || is_int($found) => explode(',', (string) $found),
+                    is_array($found) => array_map(fn ($item) => match (true) {
+                        is_scalar($item) => (string) $item,
+                        is_array($item) => (string) collect(['name', 'shortname', 'title', 'fullname', 'display_name', 'ric', 'number'])
+                            ->map(fn ($k) => $item[$k] ?? null)->first(fn ($v) => is_scalar($v) && trim((string) $v) !== ''),
+                        default => '',
+                    }, $found),
+                    default => [],
+                };
+                $names = collect($items)->map(fn ($n) => mb_substr(trim($n), 0, 100))->filter(fn ($n) => $n !== '')->unique()->take(30)->values()->all();
+                if ($names !== []) {
+                    return $names;
+                }
+            }
+        }
+
+        return [];
+    }
+
+    /** "A, B , C" → ["A", "B", "C"] for the admin's edit form */
+    public static function splitList(?string $text): array
+    {
+        return self::names([['list' => (string) $text]], 'list');
     }
 
     /** "seit 12 Min." style age for lists */

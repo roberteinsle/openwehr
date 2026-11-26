@@ -25,6 +25,7 @@ class Board extends Component
                 'others' => $running->slice(1)->values(),
                 'state' => AlarmService::state(),
                 'refresh' => $settings['refresh'],
+                'show' => array_fill_keys(AlarmService::settings()['fields'], true),
             ]);
         }
 

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('address', 255)->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            // divera | google | osm: where the coordinates came from
+            // divera | google | osm | admin: where the coordinates came from
             $table->string('located_by', 20)->nullable();
             $table->boolean('priority')->default(false);
             // The request as it came

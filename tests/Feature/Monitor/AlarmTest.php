@@ -130,7 +130,7 @@ test('an admin saves the settings and simulates an alarm, then ends it', functio
     Livewire::test(DiveraWebhookPage::class)
         ->fillForm(['enabled' => true, 'show_minutes' => '30', 'osm' => false])
         ->call('save')->assertHasNoFormErrors();
-    expect(AlarmService::settings())->toBe(['enabled' => true, 'show_minutes' => 30, 'osm' => false]);
+    expect(AlarmService::settings())->toMatchArray(['enabled' => true, 'show_minutes' => 30, 'osm' => false]);
 
     Livewire::test(DiveraWebhookPage::class)
         ->fillForm(['keyword' => 'TH 1 – Baum auf Straße', 'address' => 'Waldweg', 'latitude' => '51.2', 'longitude' => '10.1'], 'testForm')
@@ -162,4 +162,57 @@ test('a new address keeps the old key away', function () {
 
     $this->postJson($old, $this->alarm)->assertNotFound();
     $this->postJson(AlarmService::url(), $this->alarm)->assertOk();
+});
+
+test('RIC, vehicles and persons come as text, list or objects and show as chosen in the settings', function () {
+    $this->postJson($this->url, [...$this->alarm, 'ric' => 'Löschzug Musterstadt, Vollalarm', 'vehicle' => [['name' => 'HLF 20'], ['shortname' => 'DLK']], 'person' => ['Hanna Hydrant']])->assertOk();
+
+    $alarm = Alarm::sole();
+    expect($alarm->rics)->toBe(['Löschzug Musterstadt', 'Vollalarm'])->and($alarm->vehicles)->toBe(['HLF 20', 'DLK'])->and($alarm->persons)->toBe(['Hanna Hydrant']);
+
+    // Persons are off by default
+    Livewire::test(Board::class)->assertSee('Vollalarm')->assertSee('HLF 20')->assertDontSee('Hanna Hydrant');
+
+    AlarmService::saveSettings(true, 60, true, ['keyword', 'person']);
+    Livewire::test(Board::class)->assertSee('B 3 – Brand Scheune')->assertSee('Hanna Hydrant')
+        ->assertDontSee('Vollalarm')->assertDontSee('Dorfstraße 1, Musterstadt')->assertDontSee('alarmMap(', false);
+
+    // Saving without fields keeps the choice
+    AlarmService::saveSettings(true, 30, true);
+    expect(AlarmService::settings()['fields'])->toBe(['keyword', 'person']);
+});
+
+test('the map takes at most half of the screen and the three texts have the same size', function () {
+    $this->postJson($this->url, $this->alarm)->assertOk();
+
+    $html = Livewire::test(Board::class)->html();
+    expect($html)->toContain('lg:grid-cols-2')->not->toContain('lg:grid-cols-5')
+        ->and(substr_count($html, 'text-4xl font-bold leading-tight'))->toBe(3);
+});
+
+test('an admin edits, triggers again and deletes an alarm', function () {
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([['lat' => '51.3', 'lon' => '9.5']])]);
+    $this->postJson($this->url, $this->alarm)->assertOk();
+    $alarm = Alarm::sole();
+    $this->actingAs(User::factory()->admin()->create(['name' => 'Bernd Blaulicht']));
+
+    Livewire::test(DiveraWebhookPage::class)
+        ->call('startEdit', $alarm->id)
+        ->assertSet('editingId', $alarm->id)
+        ->fillForm(['keyword' => 'B 4 – Brand Gewerbe', 'address' => 'Industriestraße 5, Musterstadt', 'latitude' => null, 'longitude' => null, 'vehicles' => 'HLF 20, TLF 3000'], 'editForm')
+        ->call('saveEdit')
+        ->assertSet('editingId', null);
+
+    expect($alarm->refresh())->keyword->toBe('B 4 – Brand Gewerbe')->vehicles->toBe(['HLF 20', 'TLF 3000'])
+        ->latitude->toBe(51.3)->located_by->toBe('osm');
+
+    app(AlarmService::class)->end($alarm, 'Test');
+    $this->travel(2)->hours();
+    expect(AlarmService::current())->toBeNull();
+
+    Livewire::test(DiveraWebhookPage::class)->call('retrigger', $alarm->id);
+    expect(AlarmService::current()?->id)->toBe($alarm->id)->and($alarm->refresh()->ended_at)->toBeNull();
+
+    Livewire::test(DiveraWebhookPage::class)->call('deleteAlarm', $alarm->id);
+    expect(Alarm::count())->toBe(0);
 });

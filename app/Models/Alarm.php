@@ -13,12 +13,12 @@ class Alarm extends Model
 
     public const KEEP_DAYS = 90;
 
-    protected $fillable = ['source', 'external_id', 'keyword', 'message', 'address', 'latitude', 'longitude', 'located_by', 'priority', 'payload', 'received_at', 'ended_at', 'ended_by'];
+    protected $fillable = ['source', 'external_id', 'keyword', 'message', 'address', 'latitude', 'longitude', 'located_by', 'priority', 'payload', 'received_at', 'ended_at', 'ended_by', 'rics', 'vehicles', 'persons'];
 
     protected function casts(): array
     {
         return [
-            'latitude' => 'float', 'longitude' => 'float', 'priority' => 'boolean', 'payload' => 'array',
+            'latitude' => 'float', 'longitude' => 'float', 'priority' => 'boolean', 'payload' => 'array', 'rics' => 'array', 'vehicles' => 'array', 'persons' => 'array',
             'received_at' => 'datetime', 'ended_at' => 'datetime',
         ];
     }

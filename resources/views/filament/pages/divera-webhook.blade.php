@@ -46,14 +46,28 @@
                         <p style="opacity:.75">
                             {{ $alarm->received_at->copy()->timezone('Europe/Berlin')->format('d.m.Y H:i') }}
                             @if($alarm->address) · {{ $alarm->address }}@endif
-                            · {{ match ($alarm->located_by) { 'divera' => 'Koordinaten von DIVERA', 'google' => 'Adresse über Google gefunden', 'osm' => 'Adresse über OpenStreetMap gefunden', default => 'ohne Karte' } }}
+                            · {{ match ($alarm->located_by) { 'divera' => 'Koordinaten von DIVERA', 'google' => 'Adresse über Google gefunden', 'osm' => 'Adresse über OpenStreetMap gefunden', 'admin' => 'Koordinaten von Hand', default => 'ohne Karte' } }}
                             @if($alarm->ended_at) · beendet {{ $alarm->ended_at->copy()->timezone('Europe/Berlin')->format('H:i') }}{{ $alarm->ended_by ? ' ('.$alarm->ended_by.')' : '' }}@endif
                         </p>
                     </div>
-                    @if(! $alarm->ended_at)
-                        <x-filament::button size="sm" color="gray" wire:click="endAlarm({{ $alarm->id }})">Beenden</x-filament::button>
-                    @endif
+                    <div style="display:flex;gap:.375rem;flex-wrap:wrap;justify-content:flex-end">
+                        @if(! $alarm->ended_at)
+                            <x-filament::button size="sm" color="gray" wire:click="endAlarm({{ $alarm->id }})">Beenden</x-filament::button>
+                        @endif
+                        <x-filament::button size="sm" color="gray" outlined wire:click="startEdit({{ $alarm->id }})">Bearbeiten</x-filament::button>
+                        <x-filament::button size="sm" color="warning" outlined wire:click="retrigger({{ $alarm->id }})" wire:confirm="Diesen Alarm noch einmal auf den Wachen-Monitor bringen?">Erneut auslösen</x-filament::button>
+                        <x-filament::button size="sm" color="danger" outlined wire:click="deleteAlarm({{ $alarm->id }})" wire:confirm="Alarm endgültig löschen?">Löschen</x-filament::button>
+                    </div>
                 </div>
+                @if($editingId === $alarm->id)
+                    <form wire:submit="saveEdit" style="display:grid;gap:1rem;padding:.75rem;border-radius:.5rem;background:rgba(127,127,127,.08)">
+                        {{ $this->editForm }}
+                        <div style="display:flex;gap:.5rem">
+                            <x-filament::button type="submit" size="sm">Speichern</x-filament::button>
+                            <x-filament::button size="sm" color="gray" outlined wire:click="cancelEdit">Abbrechen</x-filament::button>
+                        </div>
+                    </form>
+                @endif
             @empty
                 <p style="opacity:.7">Noch kein Alarm angekommen.</p>
             @endforelse
