@@ -30,7 +30,7 @@ class FeedbackThreadResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Feedback';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 8;
 
     /** Threads with a member message the admins haven't opened yet */
     public static function getNavigationBadge(): ?string

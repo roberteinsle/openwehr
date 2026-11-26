@@ -57,7 +57,7 @@ class UebungsdiensteServiceProvider extends ServiceProvider
 
         app(MonitorRegistry::class)->register('uebungsdienste.abteilungen', 'uebungsdienste', 'Nächste Dienste je Abteilung',
             fn (array $options) => MonitorPanel::render($options),
-            'Die kommenden Übungsdienste mit Thema, nebeneinander je Abteilung.', 10);
+            'Die kommenden Übungsdienste mit Thema, nebeneinander je Abteilung.', 10, covers: ['uebungsdienste']);
 
         Livewire::component('uebungsdienste.planner', Planner::class);
         Livewire::component('uebungsdienste.service-form', ServiceForm::class);

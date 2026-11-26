@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Modules\Kalender\src\Models\EventType;
+use Modules\Kalender\src\Support\Birthdays;
 
 /**
  * Admins: the Terminarten – name, colour, order, on/off, new ones. A type in use or one other modules
@@ -23,6 +24,9 @@ class EventTypes extends Component
 
     public ?string $flash = null;
 
+    /** Birthdays of the Kameraden in the Kalender (not a Terminart, but switched here) */
+    public bool $birthdays = true;
+
     public function boot(): void
     {
         abort_unless(auth()->user()?->is_admin, 403);
@@ -30,6 +34,7 @@ class EventTypes extends Component
 
     public function mount(): void
     {
+        $this->birthdays = Birthdays::enabled();
         $this->load();
     }
 
@@ -41,6 +46,12 @@ class EventTypes extends Component
     private function rules(string $prefix): array
     {
         return [$prefix.'label' => ['required', 'string', 'max:60'], $prefix.'color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/']];
+    }
+
+    public function updatedBirthdays(bool $value): void
+    {
+        Birthdays::setEnabled($value);
+        $this->flash = $value ? 'Geburtstage werden im Kalender gezeigt.' : 'Geburtstage werden nicht mehr gezeigt.';
     }
 
     public function save(): void

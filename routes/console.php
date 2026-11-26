@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Alarm;
 use App\Models\AppError;
 use App\Models\EmailChangeRequest;
 use App\Models\Heartbeat;
@@ -20,7 +21,7 @@ $output = is_writable('/proc/1/fd/2') ? '/proc/1/fd/2' : storage_path('logs/sche
 // Prune expired login tokens, e-mail change requests, mail log and activity log after their retention (Analyse), notifications after 180 days, DIVERA requests after 90 days,
 // technical logs (errors, request figures, heartbeats) after their retention,
 // Verbandbuch entries after their retention time daily
-Schedule::command('model:prune', ['--model' => [LoginToken::class, EmailChangeRequest::class, MailLog::class, ActivityLog::class, DiveraRequest::class, UserNotification::class, VerbandbuchEntry::class, Exposure::class,
+Schedule::command('model:prune', ['--model' => [LoginToken::class, EmailChangeRequest::class, MailLog::class, ActivityLog::class, DiveraRequest::class, Alarm::class, UserNotification::class, VerbandbuchEntry::class, Exposure::class,
     AppError::class, RequestMetric::class, Heartbeat::class]])->daily()->appendOutputTo($output);
 
 // Admin "Analyse": the app is up this minute; daily certificate, backup and job check with a mail to the admins

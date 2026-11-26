@@ -62,12 +62,13 @@ for n in booking:
     fb += sub(fun, n)
 add('Fahrzeugbuchung', 'Fahrzeugbuchung', fb, ['Fahrzeugbuchung', 'Funktionen'])
 add('Anmeldung-und-Profil', 'Anmeldung und Profil', sub(fun, 'Anmeldung') + sub(fun, 'Profil') + sub(fun, 'Feedback'), [])
-add('Admin-Bereich', 'Admin-Bereich', sub(fun, 'Admin-Bereich') + sub(fun, 'Wachen-Monitor') + sub(fun, 'E-Mails'), [])
+add('Admin-Bereich', 'Admin-Bereich', sub(fun, 'Admin-Bereich') + sub(fun, 'Wachen-Monitor') + sub(fun, 'DIVERA-Webhook') + sub(fun, 'E-Mails'), [])
 for h in ['Anmeldung', 'Profil', 'Feedback']:
     anchor[slug(h)] = 'Anmeldung-und-Profil'
 for h in ['Admin-Bereich (`/admin`)', 'E-Mails']:
     anchor[slug(h)] = 'Admin-Bereich'
 anchor[slug('Wachen-Monitor')] = 'Admin-Bereich#wachen-monitor'
+anchor[slug('DIVERA-Webhook')] = 'Admin-Bereich#divera-webhook'
 for h in booking:
     anchor[slug(h)] = 'Fahrzeugbuchung'
 

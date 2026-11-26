@@ -8,6 +8,7 @@ use App\Livewire\Profile\Hours;
 use App\Models\Contact;
 use App\Models\FeedbackThread;
 use App\Models\User;
+use App\Services\AlarmService;
 use App\Services\CredentialRegistry;
 use App\Services\HoursRegistry;
 use App\Services\Impersonation;
@@ -172,8 +173,15 @@ Route::get('/organisation/logo', function () {
 Route::get('/monitor/{key?}', function (?string $key = null) {
     abort_unless(DisplayToken::allows($key), 404);
 
-    return response()->view('monitor')->header('Referrer-Policy', 'no-referrer');
+    return response()->view('monitor', ['statusUrl' => route('monitor.status', ['key' => $key])])->header('Referrer-Policy', 'no-referrer');
 })->middleware('throttle:30,1')->name('monitor');
+
+// The monitor asks every 10 seconds whether an alarm came, changed or ended (tiny answer, no rendering)
+Route::get('/monitor-status/{key?}', function (?string $key = null) {
+    abort_unless(DisplayToken::allows($key), 404);
+
+    return response()->json(['state' => AlarmService::state()])->header('Cache-Control', 'no-store');
+})->middleware('throttle:20,1')->name('monitor.status');
 
 // -----------------------------------------------------------------------
 // Old English addresses: bookmarks, the station monitor and links in sent mails keep working

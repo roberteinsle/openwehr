@@ -52,6 +52,9 @@
                     <div class="min-h-[4.5rem] sm:min-h-[6rem] bg-white p-1 {{ $day['inMonth'] ? '' : 'bg-gray-50 text-gray-400' }}">
                         <div class="text-xs mb-0.5 {{ $day['isToday'] ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-fw-red font-bold text-white' : 'text-gray-500' }}">{{ $day['date']->day }}</div>
                         <div class="space-y-0.5">
+                            @foreach($day['birthdays'] as $name)
+                                <p class="truncate rounded bg-amber-50 px-1 text-[11px] leading-4 text-amber-900" title="Geburtstag: {{ $name }}"><span aria-hidden="true">🎂</span> {{ $name }}</p>
+                            @endforeach
                             @foreach($day['events']->take(3) as $event)
                                 <a href="{{ route('kalender.show', $event) }}" title="{{ $event->title }}{{ $event->audienceLabel() ? ' ('.$event->audienceLabel().')' : '' }} – {{ $event->timeLabel() }}"
                                    class="block truncate rounded border px-1 text-[11px] leading-4 {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}" style="{{ $event->colorStyle() }}">
@@ -70,6 +73,9 @@
                     <div class="rounded-lg border p-2 {{ $day['isToday'] ? 'border-fw-red bg-red-50/40' : 'border-gray-100' }}">
                         <p class="text-xs font-semibold {{ $day['isToday'] ? 'text-fw-red' : 'text-gray-500' }}">{{ $weekdays[$i] }} {{ $day['date']->format('d.m.') }}</p>
                         <div class="mt-1 space-y-1">
+                            @foreach($day['birthdays'] as $name)
+                                <p class="rounded bg-amber-50 px-1.5 py-1 text-xs text-amber-900"><span aria-hidden="true">🎂</span> Geburtstag {{ $name }}</p>
+                            @endforeach
                             @forelse($day['events'] as $event)
                                 <a href="{{ route('kalender.show', $event) }}" class="block rounded border px-1.5 py-1 text-xs {{ $event->isCancelled() ? 'line-through opacity-60' : '' }}" style="{{ $event->colorStyle() }}">
                                     <span class="block font-semibold">{{ $event->all_day ? 'ganztägig' : $event->starts_at->copy()->setTimezone('Europe/Berlin')->format('H:i').'–'.$event->ends_at->copy()->setTimezone('Europe/Berlin')->format('H:i') }}</span>
@@ -78,14 +84,14 @@
                                     @if($event->location)<span class="block opacity-75">{{ $event->location }}</span>@endif
                                 </a>
                             @empty
-                                <p class="text-xs text-gray-300">–</p>
+                                @if($day['birthdays'] === [])<p class="text-xs text-gray-300">–</p>@endif
                             @endforelse
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
-            @php($withEvents = collect($days)->filter(fn ($d) => $d['events']->isNotEmpty()))
+            @php($withEvents = collect($days)->filter(fn ($d) => $d['events']->isNotEmpty() || $d['birthdays'] !== []))
             @if($withEvents->isEmpty())
                 <p class="text-sm text-gray-500">In diesem Monat gibt es keine Termine.</p>
             @else
@@ -94,6 +100,9 @@
                         <div class="py-2 sm:flex sm:gap-4">
                             <p class="w-28 shrink-0 text-sm font-semibold {{ $day['isToday'] ? 'text-fw-red' : 'text-gray-700' }}">{{ $weekdays[$day['date']->dayOfWeekIso - 1] }}, {{ $day['date']->format('d.m.') }}</p>
                             <div class="flex-1 space-y-1">
+                                @foreach($day['birthdays'] as $name)
+                                    <p class="px-2 py-1 text-sm text-amber-900"><span aria-hidden="true">🎂</span> Geburtstag <span class="font-medium">{{ $name }}</span></p>
+                                @endforeach
                                 @foreach($day['events'] as $event)
                                     @php($mine = $event->responses->first())
                                     <a href="{{ route('kalender.show', $event) }}" class="flex items-start justify-between gap-3 rounded-lg px-2 py-1 hover:bg-gray-50">

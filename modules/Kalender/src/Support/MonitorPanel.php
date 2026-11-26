@@ -10,7 +10,8 @@ use Modules\Kalender\src\Models\Event;
 /**
  * Kalender contents of the Wachen-Monitor: the next Termine (all Abteilungen, like the Termin-Monitor)
  * and the same side by side per Abteilung. Personal, cancelled and external Termine stay off, see
- * Roster::upcoming.
+ * Roster::upcoming. Termine kept by a module whose own content is on the screen too (covered, e.g. the
+ * Übungsdienste) are left out, so nothing shows twice.
  */
 final class MonitorPanel
 {
@@ -19,24 +20,32 @@ final class MonitorPanel
     /** Rows in the plain list per field size */
     private const ROWS = ['full' => 12, 'half' => 8, 'quarter' => 4];
 
-    /** @param  array{size: string, group_ids: list<int>}  $options */
+    /** @param  array{size: string, group_ids: list<int>, covered?: list<string>}  $options */
     public static function upcoming(array $options): View
     {
         return view('kalender::monitor.upcoming', [
-            'events' => Roster::upcoming(self::DAYS)->take(self::ROWS[$options['size']] ?? 4),
+            'events' => self::events($options)->take(self::ROWS[$options['size']] ?? 4),
             'size' => $options['size'],
             ...self::days(),
         ]);
     }
 
-    /** @param  array{size: string, group_ids: list<int>}  $options */
+    /** @param  array{size: string, group_ids: list<int>, covered?: list<string>}  $options */
     public static function groups(array $options): View
     {
         return view('kalender::monitor.groups', [
-            'columns' => MonitorColumns::build(Roster::upcoming(self::DAYS), fn (Event $e) => self::groupIds($e), $options),
+            'columns' => MonitorColumns::build(self::events($options), fn (Event $e) => self::groupIds($e), $options),
             'size' => $options['size'],
             ...self::days(),
         ]);
+    }
+
+    /** @param  array{covered?: list<string>}  $options */
+    private static function events(array $options)
+    {
+        $covered = $options['covered'] ?? [];
+
+        return Roster::upcoming(self::DAYS)->reject(fn (Event $e) => $e->managed_by !== null && in_array($e->managed_by, $covered, true))->values();
     }
 
     /** @return ?list<int> the Abteilungen of a Termin, null = the whole Wehr (also one only for Funktionen) */

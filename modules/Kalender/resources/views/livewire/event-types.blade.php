@@ -7,6 +7,12 @@
     @if($flash)<p class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{{ $flash }}</p>@endif
     @error('delete')<p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{{ $message }}</p>@enderror
 
+    <label class="flex items-start gap-2 rounded-2xl border border-gray-100 bg-white p-3 text-sm text-gray-700 shadow-sm">
+        <input type="checkbox" wire:model.live="birthdays" class="mt-0.5 rounded border-gray-300 text-fw-red focus:ring-fw-red">
+        <span><span class="font-medium text-gray-900"><span aria-hidden="true">🎂</span> Geburtstage der Kameraden im Kalender zeigen</span><br>
+            <span class="text-xs text-gray-500">Tag und Name (ohne Jahr und Alter) aller aktiven Kameraden mit Geburtsdatum in den Mitgliedsdaten – in Monat, Woche und Liste, nicht im Abo, auf den Monitoren oder im Dienstplan.</span></span>
+    </label>
+
     <form wire:submit="save" class="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-white shadow-sm">
         @foreach($types as $key => $type)
             <div class="flex flex-wrap items-center gap-3 p-3" wire:key="t-{{ $type->id }}">

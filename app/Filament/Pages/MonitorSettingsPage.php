@@ -32,7 +32,7 @@ class MonitorSettingsPage extends Page implements HasForms
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tv';
 
-    /** Between Einstellungen (5) and Feedback (7) */
+    /** Between Einstellungen (5) and DIVERA-Webhook (7) */
     protected static ?int $navigationSort = 6;
 
     protected string $view = 'filament.pages.monitor-settings';

@@ -8,6 +8,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/js/monitor.js',
                 'modules/Kleiderkammer/resources/js/scanner.js',
             ],
             refresh: true,

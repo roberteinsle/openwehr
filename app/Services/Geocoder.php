@@ -41,4 +41,32 @@ class Geocoder
             return null;
         }
     }
+
+    /**
+     * Address → coordinates via OpenStreetMap's Nominatim, for when no Google key is set (the DIVERA
+     * alarm). Sends the address to the OpenStreetMap Foundation; one request per alarm, which is well
+     * within Nominatim's usage policy (at most one request a second, a User-Agent naming the app).
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    public function locateOpenStreetMap(?string $address): ?array
+    {
+        if (blank($address)) {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(8)->acceptJson()->withUserAgent('openwehr (self-hosted fire brigade app)')
+                ->get('https://nominatim.openstreetmap.org/search', ['q' => $address, 'format' => 'jsonv2', 'limit' => 1, 'countrycodes' => 'de', 'accept-language' => 'de']);
+            $hit = $response->json('0');
+
+            return $response->successful() && isset($hit['lat'], $hit['lon']) && is_numeric($hit['lat']) && is_numeric($hit['lon'])
+                ? ['lat' => (float) $hit['lat'], 'lng' => (float) $hit['lon']]
+                : null;
+        } catch (Throwable $e) {
+            report($e);
+
+            return null;
+        }
+    }
 }

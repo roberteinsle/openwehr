@@ -2,7 +2,9 @@
 
 namespace Modules\Einsatzbericht;
 
+use App\Models\Alarm;
 use App\Models\User;
+use App\Services\AlarmRegistry;
 use App\Services\AnnualReportRegistry;
 use App\Services\DashboardRegistry;
 use App\Services\HoursRegistry;
@@ -28,6 +30,7 @@ use Modules\Einsatzbericht\src\Livewire\ReportEditor;
 use Modules\Einsatzbericht\src\Livewire\ReportList;
 use Modules\Einsatzbericht\src\Livewire\SituationLog;
 use Modules\Einsatzbericht\src\Livewire\Statistics;
+use Modules\Einsatzbericht\src\Models\DiveraRequest;
 use Modules\Einsatzbericht\src\Models\Report;
 use Modules\Einsatzbericht\src\Services\DiveraWebhook;
 use Modules\Einsatzbericht\src\Services\ExternalAccess;
@@ -57,6 +60,19 @@ class EinsatzberichtServiceProvider extends ServiceProvider
             Route::middleware('web')->group($base.'/routes/web.php');
             Route::group([], $base.'/routes/webhooks.php');
         }
+
+        // Alarms of the core DIVERA webhook (Admin → DIVERA-Webhook) become drafts like those of the
+        // module's own address, as long as "Entwürfe aus DIVERA" is on here; tests and updates don't
+        app(AlarmRegistry::class)->listen('einsatzbericht', function (Alarm $alarm, bool $isNew) {
+            if (! $isNew || $alarm->isTest() || ! DiveraWebhook::enabled()) {
+                return;
+            }
+            $entry = DiveraRequest::create([
+                'received_at' => $alarm->received_at, 'method' => 'POST', 'content_type' => 'application/json (DIVERA-Webhook im Admin-Bereich)',
+                'body' => json_encode($alarm->payload ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), 'status' => 'pending',
+            ]);
+            app(DiveraWebhook::class)->process($entry);
+        });
 
         // DIVERA: at most 30 requests a minute per address
         // Per address (a real alarm burst) and per sender IP (wrong keys tried out)

@@ -8,6 +8,7 @@ use Livewire\Component;
 use Modules\Kalender\src\Models\Event;
 use Modules\Kalender\src\Models\EventType;
 use Modules\Kalender\src\Services\FeedService;
+use Modules\Kalender\src\Support\Birthdays;
 
 /**
  * Month, week and list view, filtered by type. The view a Kamerad starts with is the default
@@ -102,6 +103,9 @@ class CalendarView extends Component
         $events = $base()->between($from->copy()->utc(), $until->copy()->utc())->orderBy('starts_at')
             ->with(['groups', 'functions', 'responses' => fn ($q) => $q->where('user_id', $user->id)])->get();
 
+        // Birthdays only in "Alle Terminarten", they are no Termin of a type
+        $birthdays = $this->type === '' ? Birthdays::between($from, $until) : collect();
+
         // Every day of the period with the events touching it (multi-day events appear on each day)
         $days = [];
         for ($day = $from->copy(); $day->lt($until); $day->addDay()) {
@@ -112,6 +116,7 @@ class CalendarView extends Component
                 'inMonth' => $dayStart->month === $anchor->month,
                 'isToday' => $dayStart->isSameDay(now('Europe/Berlin')),
                 'events' => $events->filter(fn (Event $e) => $e->starts_at->lt($dayEnd) && $e->ends_at->gt($dayStart))->values(),
+                'birthdays' => $birthdays->get($dayStart->toDateString(), []),
             ];
         }
 

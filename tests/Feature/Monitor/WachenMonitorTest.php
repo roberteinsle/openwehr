@@ -111,6 +111,21 @@ test('Dienste appear in the column of their Abteilung, Dienste of the whole Wehr
         ->and(substr_count($html, 'Gerätehaus putzen'))->toBe(2);
 });
 
+test('Nächste Termine leave out the Übungsdienste while their own field is on the screen', function () {
+    $start = now()->addDays(2)->setTime(19, 0);
+    Event::create(['title' => 'Übungsdienst', 'type' => 'uebung', 'managed_by' => 'uebungsdienste', 'starts_at' => $start, 'ends_at' => $start->copy()->addHours(2)]);
+    Event::create(['title' => 'Jahreshauptversammlung', 'type' => 'veranstaltung', 'starts_at' => $start, 'ends_at' => $start->copy()->addHours(2)]);
+
+    MonitorSettings::save(2, ['uebungsdienste.abteilungen', 'kalender.termine'], []);
+    $html = Livewire::test(Board::class)->html();
+    expect(substr_count($html, 'Jahreshauptversammlung'))->toBe(1)
+        ->and($html)->not->toContain('>Übungsdienst<');
+
+    // Without the Übungsdienste field the Termin is listed
+    MonitorSettings::save(1, ['kalender.termine'], []);
+    Livewire::test(Board::class)->assertSee('Übungsdienst')->assertSee('Jahreshauptversammlung');
+});
+
 test('chosen Abteilungen get a column even without Dienste', function () {
     MonitorSettings::save(1, ['uebungsdienste.abteilungen'], [$this->aktive->id, $this->jf->id, $this->musik->id]);
 
@@ -224,14 +239,15 @@ test('only admins reach the settings, which show the station link', function () 
         ->assertSee('Nächste Dienste je Abteilung');
 });
 
-test('the settings page sits between Einstellungen and Feedback', function () {
+test('the settings page comes right after Einstellungen, before DIVERA-Webhook and Feedback', function () {
     $html = $this->actingAs(User::factory()->admin()->create())->get('/admin/wachen-monitor')->getContent();
     preg_match_all('/fi-sidebar-item-label[^>]*>\s*([^<]+?)\s*</', $html, $m);
     $labels = $m[1];
 
     $settings = array_search('Einstellungen', $labels, true);
     expect($labels[$settings + 1] ?? null)->toBe('Wachen-Monitor')
-        ->and($labels[$settings + 2] ?? null)->toBe('Feedback');
+        ->and($labels[$settings + 2] ?? null)->toBe('DIVERA-Webhook')
+        ->and($labels[$settings + 3] ?? null)->toBe('Feedback');
 });
 
 test('an admin chooses two fields with their contents and the Abteilungen', function () {

@@ -1,5 +1,5 @@
 @inject('org', \App\Services\OrganizationSettings::class)
-<div wire:poll.{{ $refresh * 60 }}s class="h-full min-h-screen p-4 lg:p-6 flex flex-col gap-4 bg-gradient-to-br from-[#0b1433] via-[#131f4a] to-[#2a1640]">
+<div wire:poll.{{ $refresh * 60 }}s data-alarm-state="{{ $state }}" class="h-full min-h-screen p-4 lg:p-6 flex flex-col gap-4 bg-gradient-to-br from-[#0b1433] via-[#131f4a] to-[#2a1640]">
     {{-- Header: Wehr and clock --}}
     <div class="flex items-center gap-5 rounded-2xl bg-white/5 border border-white/10 px-6 py-3">
         <img src="{{ $org->logoUrl() ?? asset('images/openwehr-logo.svg') }}" alt="" class="h-12 w-auto brightness-0 invert">

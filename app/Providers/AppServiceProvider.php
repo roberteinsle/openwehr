@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Models\Contact;
 use App\Models\User;
 use App\Services\ActivityRecorder;
+use App\Services\AlarmRegistry;
 use App\Services\AnnualReportRegistry;
 use App\Services\BadgeRegistry;
 use App\Services\CredentialRegistry;
@@ -28,12 +29,15 @@ use App\Services\VehicleBlockRegistry;
 use App\Services\VehicleBookingRegistry;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskStarting;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -63,10 +67,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ParentRegistry::class);
         $this->app->singleton(MonitorRegistry::class);
         $this->app->singleton(SearchRegistry::class);
+        $this->app->singleton(AlarmRegistry::class);
     }
 
     public function boot(): void
     {
+        // DIVERA alarm webhook: per address (a real alarm burst) and per sender IP (wrong keys tried out)
+        RateLimiter::for('alarm', fn (Request $request) => [Limit::perMinute(30)->by('alarm|'.$request->route('key')), Limit::perMinute(60)->by('alarm-ip|'.$request->ip())]);
+
         // The header search finds Ansprechpartner (core, everyone sees /ansprechpartner)
         app(SearchRegistry::class)->register('kern.ansprechpartner', null, 'Ansprechpartner', fn (string $term) => Contact::query()
             ->where(fn ($q) => $q->where('name', 'ilike', SearchRegistry::like($term))->orWhere('role', 'ilike', SearchRegistry::like($term)))

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AlarmWebhookController;
 use App\Services\SystemStatus;
 use Illuminate\Support\Facades\Route;
 
@@ -12,3 +13,8 @@ Route::match(['GET', 'POST'], '/webhooks/backup/{token}', function (string $toke
 
     return response()->json(['ok' => true]);
 })->where('token', '[A-Za-z0-9]{20,80}')->middleware('throttle:20,1')->name('webhooks.backup');
+
+// DIVERA 24/7 sends every alarm here ("Webhook – POST application/json", Admin → DIVERA-Webhook);
+// the alarm appears on the Wachen-Monitor and goes on to the modules (AlarmRegistry)
+Route::post('/webhooks/alarm/{key}', AlarmWebhookController::class)
+    ->where('key', '[A-Za-z0-9]{20,80}')->middleware('throttle:alarm')->name('webhooks.alarm');

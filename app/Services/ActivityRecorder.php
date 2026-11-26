@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
+use App\Models\Alarm;
 use App\Models\EmailChangeRequest;
 use App\Models\Guardian;
 use App\Models\LoginToken;
@@ -50,7 +51,7 @@ class ActivityRecorder
         FeedToken::class, BookingCommentRevision::class, DefectEvent::class, EquipmentEvent::class, DiveraRequest::class,
         VerbandbuchEntry::class, VerbandbuchSignature::class, VerbandbuchAmendment::class, VerbandbuchAccessLog::class,
         AtemschutzReading::class, AtemschutzWarning::class, Exposure::class, ExposureEvent::class, ExposureDismissal::class, LicensePhoto::class, FahrzeugStatusEvent::class, FahrtenbuchRevision::class, WasserkarteStatusEvent::class,
-        KleiderkammerMovement::class, AnmeldungRegistration::class,
+        KleiderkammerMovement::class, AnmeldungRegistration::class, Alarm::class,
     ];
 
     /** Changes of only these fields are bookkeeping, not worth an entry */
