@@ -104,7 +104,7 @@ class FahrzeugbuchungServiceProvider extends ServiceProvider
                 // Only what has not started yet; running ones are on the tiles
                 'upcoming' => $board['bookings']->filter(fn ($b) => $b->starts_at->isFuture())->values(),
                 // Next bookings listed under each vehicle; a quarter field has room for the tiles only
-                'perVehicle' => ['full' => 4, 'half' => 3, 'third' => 3, 'quarter' => 0][$options['size']] ?? 0,
+                'perVehicle' => ['full' => 4, 'half' => 3, 'third' => 2, 'quarter' => 0][$options['size']] ?? 0,
                 'size' => $options['size'],
             ]);
         }, 'Welches Fahrzeug frei, bald gebucht oder unterwegs ist, darunter die nächsten Buchungen je Fahrzeug.', 30);

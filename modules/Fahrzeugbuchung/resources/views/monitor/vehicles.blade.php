@@ -33,22 +33,35 @@
         @if($perVehicle > 0)
             <div class="min-h-0 overflow-hidden">
                 <p class="text-sm font-semibold uppercase tracking-wide text-white/60">Nächste Buchungen</p>
-                <div class="mt-1 space-y-2">
+                <div class="mt-2 divide-y divide-white/10 rounded-lg border border-white/10">
                     @foreach($vehicles as $item)
-                        @php($own = $upcoming->where('vehicle_id', $item['vehicle']->id)->take($perVehicle))
-                        <div class="flex gap-3">
-                            <p class="w-28 shrink-0 truncate text-lg font-bold">{{ $item['vehicle']->displayName() }}:</p>
-                            <div class="min-w-0 flex-1">
+                        @php($all = $upcoming->where('vehicle_id', $item['vehicle']->id))
+                        @php($own = $all->take($perVehicle))
+                        <div class="flex gap-3 px-3 py-2">
+                            <p class="flex w-32 shrink-0 items-start gap-2 text-lg font-bold">
+                                <span class="mt-2 inline-block h-3 w-3 shrink-0 rounded-full" style="background-color: {{ $item['vehicle']->color }}"></span>
+                                <span class="min-w-0 truncate">{{ $item['vehicle']->displayName() }}</span>
+                            </p>
+                            <div class="min-w-0 flex-1 space-y-1.5">
                                 @forelse($own as $b)
                                     @php($start = $b->starts_at->setTimezone($tz))
                                     @php($end = $b->ends_at->setTimezone($tz))
-                                    <p class="flex gap-3 text-lg">
-                                        <span class="shrink-0 tabular-nums">{{ $weekdays[$start->dayOfWeek] }}, {{ $start->format('d.m.') }} {{ $start->format('H:i') }}–{{ $start->isSameDay($end) ? $end->format('H:i') : $end->isoFormat('D.M. HH:mm') }} Uhr</span>
-                                        <span class="min-w-0 truncate">@if($b->isPending())<span class="rounded bg-[#ffcc00] px-1.5 text-sm font-semibold text-black">Angefragt</span> @endif{{ $short($b->user?->name) }}@if($size === 'full' || $size === 'half')<span class="text-white/60"> · {{ $b->purpose }}</span>@endif</span>
-                                    </p>
+                                    @php($day = $start->isToday() ? 'Heute' : ($start->isTomorrow() ? 'Morgen' : $weekdays[$start->dayOfWeek].', '.$start->format('d.m.')))
+                                    <div class="min-w-0">
+                                        <p class="flex items-baseline justify-between gap-3 text-lg">
+                                            <span class="shrink-0 font-semibold tabular-nums">{{ $day }}, {{ $start->format('H:i') }}–{{ $start->isSameDay($end) ? $end->format('H:i') : $end->isoFormat('D.M. HH:mm') }}</span>
+                                            <span class="min-w-0 truncate text-right">@if($b->isPending())<span class="rounded bg-[#ffcc00] px-1.5 text-sm font-semibold text-black">Angefragt</span> @endif{{ $short($b->user?->name) }}</span>
+                                        </p>
+                                        @if(filled($b->purpose))
+                                            <p class="truncate text-base text-white/70">{{ $b->purpose }}</p>
+                                        @endif
+                                    </div>
                                 @empty
-                                    <p class="text-lg text-white/50">–</p>
+                                    <p class="text-lg text-white/50">keine Buchung</p>
                                 @endforelse
+                                @if($all->count() > $own->count())
+                                    <p class="text-sm text-white/60">+ {{ $all->count() - $own->count() }} weitere</p>
+                                @endif
                             </div>
                         </div>
                     @endforeach

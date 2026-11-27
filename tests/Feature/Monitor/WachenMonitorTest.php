@@ -189,7 +189,7 @@ test('the Kalender column lists the next 14 days with their Termine, weekends ma
         ->assertDontSee(now('Europe/Berlin')->addDays(14)->format('d.m.').'</span>', false)
         ->assertSeeInOrder([$tomorrow->format('d.m.'), $weekdays[$tomorrow->dayOfWeek], 'Übungsdienst', 'Jugendfeuerwehr'])
         ->assertSee('bg-white/20', false)
-        ->assertSeeInOrder(['Nächste Termine', 'Morgen, 19:00–21:00', 'Übungsdienst'])
+        ->assertSeeInOrder(['Nächste Termine', 'Morgen, 19:00–21:00', 'Übungsdienst', 'Jugendfeuerwehr</span>'])
         // A day with one Termin gives it the whole width of the row
         ->assertSee('repeat(1, minmax(0, 1fr))', false)
         ->assertDontSee('repeat(2, minmax(0, 1fr))', false);
@@ -210,8 +210,16 @@ test('the Fahrzeugbelegung lists the next bookings under each vehicle', function
     MonitorSettings::save(3, ['fahrzeugbuchung.belegung', 'kalender.tage', 'mitteilungen.aktuell'], []);
 
     Livewire::test(Board::class)
-        ->assertSeeInOrder(['Nächste Buchungen', 'MTW:', $start->format('d.m.').' 10:00–12:00 Uhr', 'Bernd B.', 'LF:', '–'])
-        ->assertDontSee('Bernd Blaulicht');
+        ->assertSeeInOrder(['Nächste Buchungen', 'MTW', $start->format('d.m.').', 10:00–12:00', 'Bernd B.', 'Einkauf', 'LF', 'keine Buchung'])
+        ->assertDontSee('Bernd Blaulicht')
+        ->assertDontSee('weitere');
+
+    // More than fit in a column are counted
+    foreach ([3, 4] as $days) {
+        $more = now('Europe/Berlin')->addDays($days)->setTime(10, 0);
+        Booking::factory()->create(['vehicle_id' => $mtw->id, 'starts_at' => $more->copy()->utc(), 'ends_at' => $more->copy()->addHour()->utc()]);
+    }
+    Livewire::test(Board::class)->assertSee('+ 1 weitere');
 });
 
 test('Mitteilungen show only those ticked for the monitor and meant for everyone, important first', function () {

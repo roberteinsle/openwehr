@@ -35,6 +35,9 @@
             @foreach($next as $e)
                 <p @class(['mt-1 truncate', 'text-lg' => $size === 'full' || $size === 'half'])>
                     <span class="font-semibold tabular-nums">{{ $when($e) }}</span> · {{ $e->title }}
+                    @foreach($e->groups as $group)
+                        <span class="ml-1 rounded px-1.5 py-0.5 text-sm font-bold" style="{{ $group->badgeStyle() }}">{{ $group->name }}</span>
+                    @endforeach
                 </p>
             @endforeach
         </div>
