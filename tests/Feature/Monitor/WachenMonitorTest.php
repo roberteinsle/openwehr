@@ -195,31 +195,23 @@ test('the Kalender column lists the next 14 days with their Termine, weekends ma
         ->assertDontSee('repeat(2, minmax(0, 1fr))', false);
 });
 
-test('the Fahrzeugbelegung lists the next bookings under each vehicle', function () {
+test('the Fahrzeugbelegung lists the next bookings in order of time: Datum, Uhrzeit, Name, Fahrzeug, Grund', function () {
     $mtw = Vehicle::factory()->create(['name' => 'MTW', 'short_name' => 'MTW', 'sort_order' => 1]);
-    Vehicle::factory()->create(['name' => 'LF', 'short_name' => 'LF', 'sort_order' => 2]);
-    $start = now('Europe/Berlin')->addDays(2)->setTime(10, 0);
-    Booking::factory()->create([
-        'vehicle_id' => $mtw->id,
-        'user_id' => User::factory()->create(['name' => 'Bernd Blaulicht'])->id,
-        'purpose' => 'Einkauf',
-        'starts_at' => $start->copy()->utc(),
-        'ends_at' => $start->copy()->addHours(2)->utc(),
-    ]);
+    $lf = Vehicle::factory()->create(['name' => 'LF', 'short_name' => 'LF', 'sort_order' => 2]);
+    $later = now('Europe/Berlin')->addDays(3)->setTime(10, 0);
+    $sooner = now('Europe/Berlin')->addDays(2)->setTime(18, 0);
+    Booking::factory()->create(['vehicle_id' => $mtw->id, 'user_id' => User::factory()->create(['name' => 'Bernd Blaulicht'])->id, 'purpose' => 'Einkauf',
+        'starts_at' => $later->copy()->utc(), 'ends_at' => $later->copy()->addHours(2)->utc()]);
+    Booking::factory()->create(['vehicle_id' => $lf->id, 'user_id' => User::factory()->create(['name' => 'Hanna Hydrant'])->id, 'purpose' => 'Maschinistenausbildung',
+        'starts_at' => $sooner->copy()->utc(), 'ends_at' => $sooner->copy()->addHours(2)->utc()]);
 
     MonitorSettings::save(3, ['fahrzeugbuchung.belegung', 'kalender.tage', 'mitteilungen.aktuell'], []);
 
     Livewire::test(Board::class)
-        ->assertSeeInOrder(['Nächste Buchungen', 'MTW', $start->format('d.m.').', 10:00–12:00', 'Bernd B.', 'Einkauf', 'LF', 'keine Buchung'])
-        ->assertDontSee('Bernd Blaulicht')
-        ->assertDontSee('weitere');
-
-    // More than fit in a column are counted
-    foreach ([3, 4] as $days) {
-        $more = now('Europe/Berlin')->addDays($days)->setTime(10, 0);
-        Booking::factory()->create(['vehicle_id' => $mtw->id, 'starts_at' => $more->copy()->utc(), 'ends_at' => $more->copy()->addHour()->utc()]);
-    }
-    Livewire::test(Board::class)->assertSee('+ 1 weitere');
+        ->assertSeeInOrder(['Nächste Buchungen',
+            $sooner->format('d.m.'), '18:00–20:00', 'Hanna H.', 'LF', 'Maschinistenausbildung',
+            $later->format('d.m.'), '10:00–12:00', 'Bernd B.', 'MTW', 'Einkauf'])
+        ->assertDontSee('Bernd Blaulicht');
 });
 
 test('Mitteilungen show only those ticked for the monitor and meant for everyone, important first', function () {

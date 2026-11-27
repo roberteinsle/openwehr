@@ -95,7 +95,7 @@ class FahrzeugbuchungServiceProvider extends ServiceProvider
         Livewire::component('decisions.decision-detail', DecisionDetail::class);
         Livewire::component('monitor.station-board', StationBoard::class);
 
-        // Field on the Wachen-Monitor (core): vehicle state and the next bookings per vehicle, names shortened
+        // Field on the Wachen-Monitor (core): vehicle state and the next bookings in order of time, names shortened
         app(MonitorRegistry::class)->register('fahrzeugbuchung.belegung', 'fahrzeugbuchung', 'Fahrzeugbelegung', function (array $options) {
             $board = VehicleBoard::data();
 
@@ -103,11 +103,11 @@ class FahrzeugbuchungServiceProvider extends ServiceProvider
                 'vehicles' => $board['vehicles'],
                 // Only what has not started yet; running ones are on the tiles
                 'upcoming' => $board['bookings']->filter(fn ($b) => $b->starts_at->isFuture())->values(),
-                // Next bookings listed under each vehicle; a quarter field has room for the tiles only
-                'perVehicle' => ['full' => 4, 'half' => 3, 'third' => 2, 'quarter' => 0][$options['size']] ?? 0,
+                // Rows of the next bookings, one per booking in order of time; a quarter field has room for the tiles only
+                'rows' => ['full' => 12, 'half' => 8, 'third' => 8, 'quarter' => 0][$options['size']] ?? 0,
                 'size' => $options['size'],
             ]);
-        }, 'Welches Fahrzeug frei, bald gebucht oder unterwegs ist, darunter die nächsten Buchungen je Fahrzeug.', 30);
+        }, 'Welches Fahrzeug frei, bald gebucht oder unterwegs ist, darunter die nächsten Buchungen nach Zeit.', 30);
 
         app(ModuleRegistry::class)->register(
             'fahrzeugbuchung',

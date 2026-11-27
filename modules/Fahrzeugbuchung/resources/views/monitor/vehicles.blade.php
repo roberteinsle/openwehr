@@ -1,4 +1,4 @@
-{{-- Wachen-Monitor: state of the vehicles, below it the next bookings of each vehicle --}}
+{{-- Wachen-Monitor: state of the vehicles, below it the next bookings in order of time --}}
 @php($short = fn ($name) => \Modules\Fahrzeugbuchung\src\Livewire\Monitor\StationBoard::shortName($name))
 @php($tz = 'Europe/Berlin')
 @php($columns = max(1, min($vehicles->count(), ['full' => 4, 'half' => 3, 'third' => 2, 'quarter' => 3][$size] ?? 3)))
@@ -30,42 +30,32 @@
             @endforeach
         </div>
 
-        @if($perVehicle > 0)
+        @if($rows > 0)
             <div class="min-h-0 overflow-hidden">
                 <p class="text-sm font-semibold uppercase tracking-wide text-white/60">Nächste Buchungen</p>
-                <div class="mt-2 divide-y divide-white/10 rounded-lg border border-white/10">
-                    @foreach($vehicles as $item)
-                        @php($all = $upcoming->where('vehicle_id', $item['vehicle']->id))
-                        @php($own = $all->take($perVehicle))
-                        <div class="flex gap-3 px-3 py-2">
-                            <p class="flex w-32 shrink-0 items-start gap-2 text-lg font-bold">
-                                <span class="mt-2 inline-block h-3 w-3 shrink-0 rounded-full" style="background-color: {{ $item['vehicle']->color }}"></span>
-                                <span class="min-w-0 truncate">{{ $item['vehicle']->displayName() }}</span>
-                            </p>
-                            <div class="min-w-0 flex-1 space-y-1.5">
-                                @forelse($own as $b)
-                                    @php($start = $b->starts_at->setTimezone($tz))
-                                    @php($end = $b->ends_at->setTimezone($tz))
-                                    @php($day = $start->isToday() ? 'Heute' : ($start->isTomorrow() ? 'Morgen' : $weekdays[$start->dayOfWeek].', '.$start->format('d.m.')))
-                                    <div class="min-w-0">
-                                        <p class="flex items-baseline justify-between gap-3 text-lg">
-                                            <span class="shrink-0 font-semibold tabular-nums">{{ $day }}, {{ $start->format('H:i') }}–{{ $start->isSameDay($end) ? $end->format('H:i') : $end->isoFormat('D.M. HH:mm') }}</span>
-                                            <span class="min-w-0 truncate text-right">@if($b->isPending())<span class="rounded bg-[#ffcc00] px-1.5 text-sm font-semibold text-black">Angefragt</span> @endif{{ $short($b->user?->name) }}</span>
-                                        </p>
-                                        @if(filled($b->purpose))
-                                            <p class="truncate text-base text-white/70">{{ $b->purpose }}</p>
-                                        @endif
-                                    </div>
-                                @empty
-                                    <p class="text-lg text-white/50">keine Buchung</p>
-                                @endforelse
-                                @if($all->count() > $own->count())
-                                    <p class="text-sm text-white/60">+ {{ $all->count() - $own->count() }} weitere</p>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                @if($upcoming->isEmpty())
+                    <p class="mt-2 text-lg text-white/50">Keine Buchungen.</p>
+                @else
+                    {{-- One row per booking, in order of time: Datum, Uhrzeit, Name, Fahrzeug, Grund --}}
+                    <table class="mt-2 w-full table-fixed text-lg">
+                        <colgroup>
+                            <col style="width: 7rem"><col style="width: 7.5rem"><col style="width: 7rem"><col style="width: 8rem"><col>
+                        </colgroup>
+                        <tbody class="divide-y divide-white/10">
+                            @foreach($upcoming->take($rows) as $b)
+                                @php($start = $b->starts_at->setTimezone($tz))
+                                @php($end = $b->ends_at->setTimezone($tz))
+                                <tr>
+                                    <td class="truncate py-1 pr-2 font-semibold tabular-nums">{{ $start->isToday() ? 'Heute' : ($start->isTomorrow() ? 'Morgen' : $weekdays[$start->dayOfWeek].' '.$start->format('d.m.')) }}</td>
+                                    <td class="truncate py-1 pr-2 tabular-nums">{{ $start->format('H:i') }}–{{ $start->isSameDay($end) ? $end->format('H:i') : $end->isoFormat('D.M. HH:mm') }}</td>
+                                    <td class="truncate py-1 pr-2">{{ $short($b->user?->name) }}</td>
+                                    <td class="truncate py-1 pr-2 font-semibold"><span class="mr-1 inline-block h-3 w-3 rounded-full align-middle" style="background-color: {{ $b->vehicle->color }}"></span>{{ $b->vehicle->displayName() }}</td>
+                                    <td class="truncate py-1 text-white/70">@if($b->isPending())<span class="rounded bg-[#ffcc00] px-1.5 text-sm font-semibold text-black">Angefragt</span> @endif{{ $b->purpose }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
             </div>
         @endif
     @endif
