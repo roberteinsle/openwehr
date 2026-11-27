@@ -189,7 +189,10 @@ test('the Kalender column lists the next 14 days with their Termine, weekends ma
         ->assertDontSee(now('Europe/Berlin')->addDays(14)->format('d.m.').'</span>', false)
         ->assertSeeInOrder([$tomorrow->format('d.m.'), $weekdays[$tomorrow->dayOfWeek], 'Übungsdienst', 'Jugendfeuerwehr'])
         ->assertSee('bg-white/20', false)
-        ->assertSeeInOrder(['Nächste Termine', 'Morgen, 19:00–21:00', 'Übungsdienst']);
+        ->assertSeeInOrder(['Nächste Termine', 'Morgen, 19:00–21:00', 'Übungsdienst'])
+        // A day with one Termin gives it the whole width of the row
+        ->assertSee('repeat(1, minmax(0, 1fr))', false)
+        ->assertDontSee('repeat(2, minmax(0, 1fr))', false);
 });
 
 test('the Fahrzeugbelegung lists the next bookings under each vehicle', function () {
