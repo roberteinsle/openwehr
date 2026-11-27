@@ -76,6 +76,29 @@ test('by default three columns: Fahrzeugbelegung, Kalender and Mitteilungen', fu
         ->assertDontSee('Nächste Dienste je Abteilung');
 });
 
+test('a saved layout that still is the old four-field default moves to the three columns, changed ones stay', function () {
+    $migration = require database_path('migrations/2027_01_14_000000_switch_unchanged_monitor_layout_to_three_columns.php');
+
+    Setting::set(MonitorSettings::KEY, json_encode(['fields' => 4, 'panels' => ['uebungsdienste.abteilungen', 'fahrzeugbuchung.belegung', 'mitteilungen.aktuell', 'kalender.termine'], 'group_ids' => [$this->jf->id], 'refresh' => 15]));
+    $migration->up();
+    expect(MonitorSettings::get())->toMatchArray([
+        'fields' => 3,
+        'panels' => ['fahrzeugbuchung.belegung', 'kalender.tage', 'mitteilungen.aktuell', 'uebungsdienste.abteilungen'],
+        'group_ids' => [$this->jf->id],
+        'refresh' => 15,
+    ]);
+
+    // Really changed by an admin: stays
+    Setting::set(MonitorSettings::KEY, json_encode(['fields' => 4, 'panels' => ['mitteilungen.aktuell', 'fahrzeugbuchung.belegung', 'kalender.termine', null], 'group_ids' => [], 'refresh' => 1]));
+    $migration->up();
+    expect(MonitorSettings::get()['fields'])->toBe(4)
+        ->and(MonitorSettings::get()['panels'][0])->toBe('mitteilungen.aktuell');
+
+    MonitorSettings::save(2, ['kalender.termine', 'mitteilungen.aktuell'], []);
+    $migration->up();
+    expect(MonitorSettings::get()['fields'])->toBe(2);
+});
+
 test('without the Kalender the middle column shows the Dienste per Abteilung', function () {
     monitorModules(['kalender'], false);
 
