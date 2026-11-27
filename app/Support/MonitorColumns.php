@@ -12,10 +12,10 @@ use Illuminate\Support\Collection;
 final class MonitorColumns
 {
     /** Columns per field size; more Abteilungen than this are left out */
-    public const MAX = ['full' => 4, 'half' => 3, 'quarter' => 3];
+    public const MAX = ['full' => 4, 'half' => 3, 'third' => 2, 'quarter' => 3];
 
     /** Items per column and field size */
-    public const ITEMS = ['full' => 8, 'half' => 5, 'quarter' => 3];
+    public const ITEMS = ['full' => 8, 'half' => 5, 'third' => 6, 'quarter' => 3];
 
     /**
      * @template T

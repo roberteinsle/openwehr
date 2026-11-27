@@ -94,6 +94,9 @@ class KalenderServiceProvider extends ServiceProvider
         $monitor->register('kalender.abteilungen', 'kalender', 'Termine je Abteilung',
             fn (array $options) => KalenderMonitorPanel::groups($options),
             'Die nächsten Termine nebeneinander je Abteilung, z. B. Aktive, Jugendfeuerwehr und Musikzug.', 20);
+        $monitor->register('kalender.tage', 'kalender', 'Kalender',
+            fn (array $options) => KalenderMonitorPanel::days($options),
+            'Die nächsten 14 Tage Zeile für Zeile mit ihren Terminen, Wochenenden dunkler, darunter die nächsten Termine mit Uhrzeit.', 15);
         $monitor->register('kalender.termine', 'kalender', 'Nächste Termine',
             fn (array $options) => KalenderMonitorPanel::upcoming($options),
             'Die nächsten Termine aller Abteilungen als Liste.', 25);

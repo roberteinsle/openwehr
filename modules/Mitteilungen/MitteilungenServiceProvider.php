@@ -46,7 +46,7 @@ class MitteilungenServiceProvider extends ServiceProvider
 
         app(MonitorRegistry::class)->register('mitteilungen.aktuell', 'mitteilungen', 'Mitteilungen',
             fn (array $options) => MonitorPanel::render($options),
-            'Aktuelle Mitteilungen, bei denen „Auch auf dem Wachen-Monitor zeigen“ angehakt ist, wichtige zuerst. Nur Mitteilungen an alle Kameraden.', 40);
+            'Aktuelle Mitteilungen, bei denen „Auch auf dem Wachen-Monitor zeigen“ angehakt ist: erst die an alle, dann je Abteilung, wichtige zuerst. Nie Mitteilungen an Funktionen.', 40);
 
         app(ModuleRegistry::class)->register(
             'mitteilungen',

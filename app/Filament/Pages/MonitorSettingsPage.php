@@ -44,6 +44,7 @@ class MonitorSettingsPage extends Page implements HasForms
     private const PLACES = [
         1 => ['ganzer Bildschirm'],
         2 => ['links', 'rechts'],
+        3 => ['links', 'Mitte', 'rechts'],
         4 => ['links oben', 'rechts oben', 'links unten', 'rechts unten'],
     ];
 
@@ -88,10 +89,10 @@ class MonitorSettingsPage extends Page implements HasForms
                     ->schema([
                         Forms\Components\ToggleButtons::make('fields')
                             ->label('Anzahl Felder')
-                            ->options(['1' => '1 Feld', '2' => '2 Felder', '4' => '4 Felder'])
+                            ->options(['1' => '1 Feld', '2' => '2 Felder', '3' => '3 Spalten', '4' => '4 Felder'])
                             ->inline()
                             ->required()
-                            ->in(['1', '2', '4'])
+                            ->in(['1', '2', '3', '4'])
                             ->live(),
                         $panelSelect(0),
                         $panelSelect(1),
@@ -114,7 +115,7 @@ class MonitorSettingsPage extends Page implements HasForms
                             ->label('Abteilungen in den Übersichten')
                             ->multiple()
                             ->options(fn () => Group::orderBy('sort_order')->orderBy('name')->pluck('name', 'id'))
-                            ->helperText('Leer: alle Abteilungen, die etwas geplant haben. Nebeneinander passen bis zu drei (bei einem Feld vier).'),
+                            ->helperText('Leer: alle Abteilungen, die etwas geplant haben. Nebeneinander passen bis zu drei (bei einem Feld vier, bei drei Spalten zwei).'),
                     ])
                     ->columnSpanFull(),
             ])
@@ -139,7 +140,7 @@ class MonitorSettingsPage extends Page implements HasForms
 
     public function resetToDefaults(): void
     {
-        MonitorSettings::save(MonitorSettings::MAX_FIELDS, MonitorSettings::defaultPanels(), [], MonitorSettings::DEFAULT_REFRESH);
+        MonitorSettings::save(MonitorSettings::DEFAULT_FIELDS, MonitorSettings::defaultPanels(), [], MonitorSettings::DEFAULT_REFRESH);
         $this->mount();
 
         Notification::make()->title('Standard wiederhergestellt')->success()->send();

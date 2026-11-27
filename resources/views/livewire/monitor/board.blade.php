@@ -14,10 +14,11 @@
         </div>
     </div>
 
-    {{-- 1, 2 or 4 fields --}}
+    {{-- 1, 2, 3 (columns) or 4 fields --}}
     <div @class([
         'flex-1 min-h-0 grid gap-4 grid-cols-1',
-        'lg:grid-cols-2' => $count >= 2,
+        'lg:grid-cols-2' => $count === 2 || $count === 4,
+        'lg:grid-cols-3' => $count === 3,
         'lg:grid-rows-2' => $count === 4,
     ])>
         @foreach($fields as $field)

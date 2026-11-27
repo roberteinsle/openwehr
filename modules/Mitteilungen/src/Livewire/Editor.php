@@ -45,7 +45,7 @@ class Editor extends Component
     /** Lesebestätigung: every Kamerad confirms having read it */
     public bool $needsAck = false;
 
-    /** Also on the Wachen-Monitor in the station (only for Mitteilungen to everyone) */
+    /** Also on the Wachen-Monitor in the station (for everyone or Abteilungen, not for Funktionen) */
     public bool $onMonitor = false;
 
     /** New attachments */
@@ -124,8 +124,8 @@ class Editor extends Component
         $from = $from?->utc();
         $until = $until?->utc();
 
-        if ($this->onMonitor && ($this->groupIds !== [] || $this->functionIds !== [])) {
-            $this->addError('onMonitor', 'Auf den Wachen-Monitor kommen nur Mitteilungen an alle Kameraden – der Bildschirm hängt offen in der Wache.');
+        if ($this->onMonitor && $this->functionIds !== []) {
+            $this->addError('onMonitor', 'Mitteilungen an Funktionen kommen nicht auf den Wachen-Monitor – der Bildschirm hängt offen in der Wache.');
 
             return;
         }

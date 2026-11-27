@@ -4,6 +4,7 @@ use App\Filament\Pages\MonitorSettingsPage;
 use App\Http\Middleware\NoIndex;
 use App\Livewire\Monitor\Board;
 use App\Models\Group;
+use App\Models\MemberFunction;
 use App\Models\Module;
 use App\Models\Setting;
 use App\Models\User;
@@ -62,25 +63,24 @@ test('no key configured means admins only', function () {
 
 // ─── Default layout ───────────────────────────────────────────────────────
 
-test('by default four fields: Dienste per Abteilung, Fahrzeugbelegung, Mitteilungen and next Termine', function () {
+test('by default three columns: Fahrzeugbelegung, Kalender and Mitteilungen', function () {
     expect(MonitorSettings::get())->toMatchArray([
-        'fields' => 4,
-        'panels' => ['uebungsdienste.abteilungen', 'fahrzeugbuchung.belegung', 'mitteilungen.aktuell', 'kalender.termine'],
+        'fields' => 3,
+        'panels' => ['fahrzeugbuchung.belegung', 'kalender.tage', 'mitteilungen.aktuell', 'uebungsdienste.abteilungen'],
         'group_ids' => [],
     ]);
 
     Livewire::test(Board::class)
-        ->assertSee('Nächste Dienste je Abteilung')
-        ->assertSee('Fahrzeugbelegung')
-        ->assertSee('Mitteilungen')
-        ->assertSee('Nächste Termine');
+        ->assertSeeInOrder(['Fahrzeugbelegung', 'Kalender', 'Mitteilungen'])
+        ->assertSee('lg:grid-cols-3', false)
+        ->assertDontSee('Nächste Dienste je Abteilung');
 });
 
-test('without the Übungsdienstplaner the first field shows the Termine per Abteilung', function () {
-    monitorModules(['uebungsdienste'], false);
+test('without the Kalender the middle column shows the Dienste per Abteilung', function () {
+    monitorModules(['kalender'], false);
 
-    expect(MonitorSettings::get()['panels'][0])->toBe('kalender.abteilungen')
-        ->and(app(MonitorRegistry::class)->options())->not->toHaveKey('uebungsdienste.abteilungen');
+    expect(MonitorSettings::get()['panels'][1])->toBe('uebungsdienste.abteilungen')
+        ->and(app(MonitorRegistry::class)->options())->not->toHaveKey('kalender.tage');
 });
 
 test('a content whose module was switched off stays an empty field', function () {
@@ -149,12 +149,51 @@ test('the Termine per Abteilung leave out personal Termine', function () {
         ->assertDontSee('Führerschein vorzeigen');
 });
 
+test('the Kalender column lists the next 14 days with their Termine, weekends marked, and the next Termine', function () {
+    $tomorrow = now('Europe/Berlin')->addDay()->setTime(19, 0);
+    $event = Event::create(['title' => 'Übungsdienst', 'type' => 'uebung', 'starts_at' => $tomorrow->copy()->utc(), 'ends_at' => $tomorrow->copy()->addHours(2)->utc()]);
+    $event->groups()->attach($this->jf);
+    $later = now('Europe/Berlin')->addDays(20)->setTime(19, 0);
+    Event::create(['title' => 'Nach zwei Wochen', 'type' => 'sonstiges', 'starts_at' => $later->copy()->utc(), 'ends_at' => $later->copy()->addHour()->utc()]);
+
+    MonitorSettings::save(3, ['fahrzeugbuchung.belegung', 'kalender.tage', 'mitteilungen.aktuell'], []);
+
+    $weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    $last = now('Europe/Berlin')->addDays(13);
+    Livewire::test(Board::class)
+        ->assertSee(now('Europe/Berlin')->format('d.m.'))
+        ->assertSee($last->format('d.m.'))
+        ->assertDontSee(now('Europe/Berlin')->addDays(14)->format('d.m.').'</span>', false)
+        ->assertSeeInOrder([$tomorrow->format('d.m.'), $weekdays[$tomorrow->dayOfWeek], 'Übungsdienst', 'Jugendfeuerwehr'])
+        ->assertSee('bg-white/20', false)
+        ->assertSeeInOrder(['Nächste Termine', 'Morgen, 19:00–21:00', 'Übungsdienst']);
+});
+
+test('the Fahrzeugbelegung lists the next bookings under each vehicle', function () {
+    $mtw = Vehicle::factory()->create(['name' => 'MTW', 'short_name' => 'MTW', 'sort_order' => 1]);
+    Vehicle::factory()->create(['name' => 'LF', 'short_name' => 'LF', 'sort_order' => 2]);
+    $start = now('Europe/Berlin')->addDays(2)->setTime(10, 0);
+    Booking::factory()->create([
+        'vehicle_id' => $mtw->id,
+        'user_id' => User::factory()->create(['name' => 'Bernd Blaulicht'])->id,
+        'purpose' => 'Einkauf',
+        'starts_at' => $start->copy()->utc(),
+        'ends_at' => $start->copy()->addHours(2)->utc(),
+    ]);
+
+    MonitorSettings::save(3, ['fahrzeugbuchung.belegung', 'kalender.tage', 'mitteilungen.aktuell'], []);
+
+    Livewire::test(Board::class)
+        ->assertSeeInOrder(['Nächste Buchungen', 'MTW:', $start->format('d.m.').' 10:00–12:00 Uhr', 'Bernd B.', 'LF:', '–'])
+        ->assertDontSee('Bernd Blaulicht');
+});
+
 test('Mitteilungen show only those ticked for the monitor and meant for everyone, important first', function () {
     Announcement::create(['title' => 'Grillabend Samstag', 'body' => 'Bitte **Salate** mitbringen.', 'on_monitor' => true]);
     Announcement::create(['title' => 'Neue Alarmordnung', 'important' => true, 'on_monitor' => true]);
     Announcement::create(['title' => 'Nicht angehakt']);
     Announcement::create(['title' => 'Schon vorbei', 'visible_until' => now()->subMinute(), 'on_monitor' => true]);
-    Announcement::create(['title' => 'Nur für die Jugend', 'on_monitor' => true])->groups()->attach($this->jf);
+    Announcement::create(['title' => 'Nur für die Maschinisten', 'on_monitor' => true])->functions()->attach(MemberFunction::create(['name' => 'Maschinist']));
 
     MonitorSettings::save(1, ['mitteilungen.aktuell'], []);
 
@@ -163,10 +202,24 @@ test('Mitteilungen show only those ticked for the monitor and meant for everyone
         ->assertSee('Bitte Salate mitbringen.')
         ->assertDontSee('Nicht angehakt')
         ->assertDontSee('Schon vorbei')
-        ->assertDontSee('Nur für die Jugend');
+        ->assertDontSee('Nur für die Maschinisten');
 });
 
-test('the editor puts a Mitteilung for everyone on the monitor, but refuses one with an audience', function () {
+test('Mitteilungen for Abteilungen appear under their name, after the ones for everyone', function () {
+    Announcement::create(['title' => 'Elternfreigabe bis Freitag', 'on_monitor' => true])->groups()->attach($this->jf);
+    Announcement::create(['title' => 'Protokoll hängt aus', 'on_monitor' => true])->groups()->attach($this->aktive);
+    Announcement::create(['title' => 'Rauchen in der Umkleide untersagt', 'on_monitor' => true]);
+
+    MonitorSettings::save(3, ['fahrzeugbuchung.belegung', 'kalender.tage', 'mitteilungen.aktuell'], []);
+
+    Livewire::test(Board::class)->assertSeeInOrder([
+        'Alle:', 'Rauchen in der Umkleide untersagt',
+        'Aktive:', 'Protokoll hängt aus',
+        'Jugendfeuerwehr:', 'Elternfreigabe bis Freitag',
+    ]);
+});
+
+test('the editor puts a Mitteilung for everyone or an Abteilung on the monitor, but refuses one for Funktionen', function () {
     $redakteur = User::factory()->create();
     $redakteur->moduleAccess()->create(['module' => 'mitteilungen', 'role' => 'redakteur']);
 
@@ -177,11 +230,17 @@ test('the editor puts a Mitteilung for everyone on the monitor, but refuses one 
 
     Livewire::actingAs($redakteur)->test(EditorComponent::class)
         ->set('title', 'Nur Jugend')->set('onMonitor', true)->set('groupIds', [(string) $this->jf->id])->set('notify', 'none')
-        ->call('save')->assertHasErrors('onMonitor');
-    expect(Announcement::where('title', 'Nur Jugend')->exists())->toBeFalse();
+        ->call('save')->assertHasNoErrors();
+    expect(Announcement::where('title', 'Nur Jugend')->value('on_monitor'))->toBeTrue();
 
-    // The service never keeps the flag on a Mitteilung with an audience
-    $a = app(AnnouncementService::class)->save(null, ['title' => 'Direkt', 'on_monitor' => true], [$this->jf->id], $redakteur);
+    $maschinist = MemberFunction::create(['name' => 'Maschinist']);
+    Livewire::actingAs($redakteur)->test(EditorComponent::class)
+        ->set('title', 'Nur Maschinisten')->set('onMonitor', true)->set('functionIds', [(string) $maschinist->id])->set('notify', 'none')
+        ->call('save')->assertHasErrors('onMonitor');
+    expect(Announcement::where('title', 'Nur Maschinisten')->exists())->toBeFalse();
+
+    // The service never keeps the flag on a Mitteilung for Funktionen
+    $a = app(AnnouncementService::class)->save(null, ['title' => 'Direkt', 'on_monitor' => true], [], $redakteur, functionIds: [$maschinist->id]);
     expect($a->refresh()->on_monitor)->toBeFalse();
 });
 
@@ -268,7 +327,7 @@ test('unknown contents and field counts are refused', function () {
     $this->actingAs(User::factory()->admin()->create());
 
     Livewire::test(MonitorSettingsPage::class)
-        ->fillForm(['fields' => '3'])
+        ->fillForm(['fields' => '5'])
         ->call('save')
         ->assertHasFormErrors(['fields']);
 
@@ -287,7 +346,7 @@ test('defaults can be restored', function () {
 
     Livewire::test(MonitorSettingsPage::class)->call('resetToDefaults');
 
-    expect(MonitorSettings::get()['fields'])->toBe(4)
+    expect(MonitorSettings::get()['fields'])->toBe(3)
         ->and(MonitorSettings::get()['group_ids'])->toBe([])
-        ->and(MonitorSettings::get()['panels'][0])->toBe('uebungsdienste.abteilungen');
+        ->and(MonitorSettings::get()['panels'][0])->toBe('fahrzeugbuchung.belegung');
 });
