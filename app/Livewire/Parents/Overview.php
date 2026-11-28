@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Parents;
 
+use App\Models\Contact;
 use App\Services\ParentAccess;
 use App\Services\ParentRegistry;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,8 @@ class Overview extends Component
             'children' => $children,
             'child' => $child,
             'sections' => $child ? app(ParentRegistry::class)->for($child) : [],
+            // The Ansprechpartner the child sees (by its Abteilungen)
+            'contacts' => $child ? Contact::sections($child->groups()->pluck('groups.id')->map(fn ($id) => (int) $id)->all()) : collect(),
             'parentName' => $parents->name(),
             'guardianOnly' => $parents->guardianOnly(),
         ])->layout(Auth::guard('web')->check() ? 'components.layouts.app' : 'components.layouts.parent', ['title' => $child ? $child->name : 'Eltern-Bereich']);

@@ -22,6 +22,25 @@
         @empty
             <p class="rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-500">Hier gibt es für {{ $child->name }} gerade nichts zu tun.</p>
         @endforelse
+
+        @if($contacts->isNotEmpty())
+            <section class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm" data-parent-contacts>
+                <h2 class="mb-2 text-base font-semibold text-gray-900">Ansprechpartner</h2>
+                <div class="divide-y divide-gray-100">
+                    @foreach($contacts->flatMap(fn ($s) => $s['contacts']) as $c)
+                        <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ $c->role }}</p>
+                                <p class="font-semibold text-gray-900">{{ $c->name }}</p>
+                                @if($c->note)<p class="text-xs text-gray-500">{{ $c->note }}</p>@endif
+                                @if($c->email)<a href="mailto:{{ $c->email }}" class="text-sm text-fw-navy underline">{{ $c->email }}</a>@endif
+                            </div>
+                            @if($c->telUrl())<a href="{{ $c->telUrl() }}" class="rounded-xl bg-fw-navy px-4 py-2 text-sm font-semibold text-white">{{ $c->phone }}</a>@endif
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
     @else
         <div>
             <h1 class="text-xl font-bold text-gray-900">Eltern-Bereich</h1>

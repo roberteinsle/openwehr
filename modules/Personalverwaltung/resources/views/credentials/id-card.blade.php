@@ -9,13 +9,17 @@
     ['Geburtsort', $id['birth_place']],
     ['Ausstellende Behörde', $id['issuer']],
     ['Ausweisnummer', $id['number']],
-    ['Mitglied der Feuerwehr', $id['brigade']],
+    [($id['youth'] ?? false) ? 'Mitglied der Jugendfeuerwehr' : 'Mitglied der Feuerwehr', $id['brigade']],
     ['Gültig bis', $id['valid_until']?->format('m.Y'), $id['expired']],
 ])
 <div class="mx-auto w-full max-w-md">
-    <div class="@container relative aspect-[856/540] w-full overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/10" aria-label="Dienstausweis {{ $u->name }}">
-        {{-- Upper part in the red of the Wehr --}}
-        <div class="absolute inset-x-0 top-0 h-[69%] bg-gradient-to-br from-fw-red via-fw-red to-fw-red-dark"></div>
+    <div class="@container relative aspect-[856/540] w-full overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/10" aria-label="{{ ($id['youth'] ?? false) ? 'Jugendfeuerwehr-Dienstausweis' : 'Dienstausweis' }} {{ $u->name }}">
+        {{-- Upper part in the red of the Wehr; the Jugendfeuerwehr card in the colour of its Abteilung --}}
+        @if(($id['youth'] ?? false) && preg_match('/^#[0-9A-Fa-f]{6}$/', (string) $id['youth_color']))
+            <div class="absolute inset-x-0 top-0 h-[69%]" style="background: linear-gradient(135deg, {{ $id['youth_color'] }}, color-mix(in srgb, {{ $id['youth_color'] }} 75%, black))"></div>
+        @else
+            <div class="absolute inset-x-0 top-0 h-[69%] bg-gradient-to-br from-fw-red via-fw-red to-fw-red-dark"></div>
+        @endif
         <div class="absolute inset-x-0 top-[69%] h-[1.2%] bg-white"></div>
         {{-- Photo --}}
         <div class="absolute left-[5%] top-[8%] h-[55%] w-[24%] border-[0.8cqw] border-white bg-gray-200 shadow">
@@ -43,7 +47,7 @@
         <div class="absolute inset-x-0 bottom-0 flex h-[29.8%] items-center justify-between bg-gradient-to-r from-fw-navy to-[#2b3d6e] px-[5%] text-white">
             <img src="{{ $org->logoUrl() ?? asset('images/openwehr-logo.svg') }}" alt="" class="h-[55%] w-auto max-w-[35%] object-contain brightness-0 invert">
             <div class="text-right leading-none">
-                <p class="text-[6.4cqw] font-bold tracking-wide">FEUERWEHR</p>
+                <p class="{{ ($id['youth'] ?? false) ? 'text-[5cqw]' : 'text-[6.4cqw]' }} font-bold tracking-wide">{{ ($id['youth'] ?? false) ? 'JUGENDFEUERWEHR' : 'FEUERWEHR' }}</p>
                 <p class="mt-[0.8cqw] text-[4.6cqw] tracking-wide">DIENSTAUSWEIS</p>
             </div>
             <p class="absolute inset-x-0 bottom-[4%] text-center text-[1.9cqw] text-white/70">Digitale Ausfertigung · Echtheit per QR-Code prüfen</p>

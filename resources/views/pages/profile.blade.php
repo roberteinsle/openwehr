@@ -48,6 +48,24 @@
             </div>
             @endif
 
+            {{-- Kameraden with Erziehungsberechtigten (Jugendfeuerwehr): who is stored as their parents --}}
+            @php($guardians = auth()->user()->guardians()->orderBy('name')->get())
+            @if($guardians->isNotEmpty())
+            <div data-profile-guardians>
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Erziehungsberechtigte</p>
+                <ul class="mt-1 space-y-1.5">
+                    @foreach($guardians as $guardian)
+                    <li class="text-sm">
+                        <span class="font-semibold text-gray-900">{{ $guardian->name }}</span>
+                        @if($guardian->email)<br><a href="mailto:{{ $guardian->email }}" class="text-fw-navy underline">{{ $guardian->email }}</a>@endif
+                        @if($guardian->phone)<span class="text-gray-500">{{ $guardian->email ? ' · ' : '' }}{{ $guardian->phone }}</span>@endif
+                    </li>
+                    @endforeach
+                </ul>
+                <p class="mt-1 text-xs text-gray-500">Sie bekommen eine Kopie deiner Termine und können für dich zu- oder absagen. Ändern kann das die Jugendwartin oder der Jugendwart.</p>
+            </div>
+            @endif
+
             @if(auth()->user()->last_login_at)
             <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Letzter Login</p>

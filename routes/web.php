@@ -74,7 +74,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // The Bestand across modules: one search and scan field (barcode, QR, RFID, NFC) and the Ersatzbeschaffung
     Route::get('/bestand', fn () => view('pages.inventory'))->name('inventory');
     Route::get('/suche', fn () => view('pages.search'))->middleware('throttle:60,1')->name('search');
-    Route::get('/ansprechpartner', fn () => view('pages.contacts', ['sections' => Contact::sections()]))->name('contacts');
+    Route::get('/ansprechpartner', fn () => view('pages.contacts', ['sections' => Contact::sections(Contact::groupIdsFor(auth()->user()))]))->name('contacts');
 
     // Notifications (the bell): the list, and opening one marks it read and leads to where something is to do
     Route::get('/benachrichtigungen', fn () => view('pages.notifications.index'))->name('notifications.index');

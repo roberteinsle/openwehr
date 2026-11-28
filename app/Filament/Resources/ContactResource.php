@@ -50,6 +50,12 @@ class ContactResource extends Resource
                 ->createOptionUsing(fn (array $data) => ContactGroup::create($data + ['sort_order' => (int) ContactGroup::max('sort_order') + 1])->getKey())
                 ->helperText('Eigene Gruppe statt der Abteilung, z. B. „Extern“ für Leitstelle, Gemeinde, Kreisbrandmeister. Gruppen stehen nach den Ansprechpartnern der Wehr.'),
             Forms\Components\TextInput::make('note')->label('Hinweis')->placeholder('z. B. erreichbar abends')->maxLength(300),
+            Forms\Components\Select::make('visible_group_ids')->label('Sichtbar für')->multiple()
+                ->options(fn () => Group::orderBy('sort_order')->orderBy('name')->pluck('name', 'id'))
+                ->placeholder('Alle Kameraden')
+                ->rules(['nullable', 'array'])->nestedRecursiveRules(['integer', 'exists:groups,id'])
+                ->helperText('Leer: alle. Sonst nur Kameraden dieser Abteilungen – und die Eltern ihrer Kinder (z. B. Jugendwart nur für die Jugendfeuerwehr).')
+                ->columnSpanFull(),
         ])->columns(2);
     }
 
@@ -62,6 +68,9 @@ class ContactResource extends Resource
                 Tables\Columns\TextColumn::make('phone')->label('Telefon'),
                 Tables\Columns\TextColumn::make('group.name')->label('Abteilung'),
                 Tables\Columns\TextColumn::make('contactGroup.name')->label('Gruppe'),
+                Tables\Columns\TextColumn::make('visible_group_ids')->label('Sichtbar für')
+                    ->formatStateUsing(fn ($state, Contact $record) => $record->visible_group_ids ? Group::whereIn('id', $record->visible_group_ids)->orderBy('sort_order')->pluck('name')->implode(', ') : 'Alle')
+                    ->default('Alle'),
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')

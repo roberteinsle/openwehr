@@ -4,6 +4,8 @@ namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
 use App\Models\User;
+use App\Services\ParentAccess;
+use App\Services\ParentOnlyAccount;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -28,6 +30,26 @@ class EditUser extends EditRecord
                     $action->success();
                 }),
             UserResource::transferDeleteAction(Actions\Action::make('transfer_delete')),
+            // An account made only so a parent can sign in: becomes the Eltern-Login with the same address
+            Actions\Action::make('parent_only')
+                ->label('Nur Elternteil')
+                ->icon('heroicon-o-user-group')
+                ->color('gray')
+                ->visible(fn (User $record) => ParentOnlyAccount::candidate($record))
+                ->requiresConfirmation()
+                ->modalHeading('In Eltern-Zugang umwandeln?')
+                ->modalDescription(fn (User $record) => 'Die Adresse '.$record->email.' ist als Erziehungsberechtigte(r) bei '
+                    .ParentAccess::childrenOf((string) $record->email)->pluck('name')->implode(', ').' eingetragen. '
+                    .'Ist '.$record->name.' kein Mitglied der Wehr, wird das Kamerad-Konto entfernt: Die Anmeldung mit derselben Adresse führt dann in den Eltern-Bereich – ohne Dienstausweis, Stunden, Module und Kameradenlisten. Hängen Daten am Konto, bleibt es als „Ausgetreten“ ohne Adresse stehen.')
+                ->modalSubmitActionLabel('Umwandeln')
+                ->action(function (User $record) {
+                    $by = auth()->user();
+                    $deleted = app(ParentOnlyAccount::class)->convert($record, $by instanceof User ? $by : $record);
+                    Notification::make()->title('In Eltern-Zugang umgewandelt')
+                        ->body($deleted ? 'Das Kamerad-Konto ist entfernt.' : 'Das Konto bleibt als „Ausgetreten“ ohne Adresse stehen, weil Daten daran hängen.')
+                        ->success()->send();
+                    $this->redirect(UserResource::getUrl('index'));
+                }),
         ];
     }
 

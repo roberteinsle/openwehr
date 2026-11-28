@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Birthdays;
 use App\Services\DashboardRegistry;
 use App\Services\ModuleOverview;
+use App\Services\ParentAccess;
 use App\Support\MemberFields;
 use Livewire\Component;
 
@@ -83,6 +84,8 @@ class Home extends Component
             'modules' => $this->editing ? $modules : array_filter($modules, fn ($m) => ! $m['hidden']),
             'hiddenCount' => count(array_filter($modules, fn ($m) => $m['hidden'])),
             'locked' => (bool) $user->modules_locked,
+            // Kameraden who are parents too: the way into the Eltern-Bereich, with their children
+            'parentChildren' => app(ParentAccess::class)->children()->load('groups'),
         ]);
     }
 }

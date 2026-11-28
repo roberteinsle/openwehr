@@ -44,7 +44,7 @@ class Results extends Component
             ['title' => 'Startseite', 'detail' => 'Übersicht mit deinen Karten', 'url' => route('home'), 'show' => true],
             ['title' => 'Profil', 'detail' => 'Deine Daten, Personalakte, Benachrichtigungen und Feedback', 'url' => route('profile'), 'show' => true],
             ['title' => 'Benachrichtigungen', 'detail' => 'Alles aus der Glocke', 'url' => route('notifications.index'), 'show' => true],
-            ['title' => 'Ansprechpartner', 'detail' => 'Telefonliste der Wehr', 'url' => route('contacts'), 'show' => Contact::exists()],
+            ['title' => 'Ansprechpartner', 'detail' => 'Telefonliste der Wehr', 'url' => route('contacts'), 'show' => Contact::anyFor($user)],
             ['title' => 'Bestand', 'detail' => 'Fahrzeuge, Geräte, Kleidung und Schlüssel suchen oder scannen', 'url' => route('inventory'), 'show' => app(InventoryRegistry::class)->availableFor($user)],
             ['title' => 'Eltern-Bereich', 'detail' => 'Termine und Anmeldungen deiner Kinder', 'url' => route('parents.index'), 'show' => app(ParentAccess::class)->hasChildren()],
         ])->filter(fn ($p) => $p['show'] && $matches($p['title'], $p['detail']))

@@ -76,9 +76,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('alarm', fn (Request $request) => [Limit::perMinute(30)->by('alarm|'.$request->route('key')), Limit::perMinute(60)->by('alarm-ip|'.$request->ip())]);
 
         // The header search finds Ansprechpartner (core, everyone sees /ansprechpartner)
-        app(SearchRegistry::class)->register('kern.ansprechpartner', null, 'Ansprechpartner', fn (string $term) => Contact::query()
+        app(SearchRegistry::class)->register('kern.ansprechpartner', null, 'Ansprechpartner', fn (string $term, User $user) => Contact::query()
             ->where(fn ($q) => $q->where('name', 'ilike', SearchRegistry::like($term))->orWhere('role', 'ilike', SearchRegistry::like($term)))
-            ->orderBy('sort_order')->orderBy('name')->limit(SearchRegistry::LIMIT)->get()
+            ->orderBy('sort_order')->orderBy('name')->get()
+            ->filter(fn (Contact $c) => ($ids = Contact::groupIdsFor($user)) === null || $c->visibleFor($ids))->take(SearchRegistry::LIMIT)
             ->map(fn (Contact $c) => ['title' => $c->name, 'detail' => collect([$c->role, $c->phone])->filter()->implode(' · '), 'url' => route('contacts')]), 80);
 
         // Webhooks without session and CSRF (backup reports for the admin "Analyse")

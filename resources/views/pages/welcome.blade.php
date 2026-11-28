@@ -8,7 +8,7 @@
         ? ['Persönliche Daten eintragen', 'Anschrift, Geburtsdatum, Mobilnummer – nur die Personalverwaltung sieht sie.', route('personalverwaltung.own-data'), filled($u->street) || filled($u->phone) || filled($u->birth_date)] : null,
     $modules->isActive('fuehrerscheine') && $u->canUseModule('fuehrerscheine')
         ? ['Führerschein hinterlegen', 'Einmal fotografieren statt zur Kontrolle in die Wache kommen.', route('fuehrerscheine.index'), \Modules\Fuehrerscheine\src\Models\License::where('user_id', $u->id)->exists()] : null,
-    \App\Models\Contact::exists() ? ['Ansprechpartner ansehen', 'Wen du bei Fragen anrufst.', route('contacts'), null] : null,
+    \App\Models\Contact::anyFor(auth()->user()) ? ['Ansprechpartner ansehen', 'Wen du bei Fragen anrufst.', route('contacts'), null] : null,
 ]))
 <x-layouts.app title="Willkommen">
     <div class="mx-auto max-w-lg space-y-4">

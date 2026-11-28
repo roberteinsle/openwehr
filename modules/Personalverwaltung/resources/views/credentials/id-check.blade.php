@@ -4,7 +4,7 @@
     @if($id['birth_on_check'] && $id['birth_date'])<dt>Geburtsdatum</dt><dd>{{ $id['birth_date']->format('d.m.Y') }}</dd>@endif
     @if($id['birth_place'])<dt>Geburtsort</dt><dd>{{ $id['birth_place'] }}</dd>@endif
     @if($id['issuer'])<dt>Ausstellende Behörde</dt><dd>{{ $id['issuer'] }}</dd>@endif
-    <dt>Mitglied der Feuerwehr</dt><dd>{{ $id['brigade'] }}</dd>
+    <dt>{{ ($id['youth'] ?? false) ? 'Mitglied der Jugendfeuerwehr' : 'Mitglied der Feuerwehr' }}</dt><dd>{{ $id['brigade'] }}</dd>
     @if($id['user']->rank)<dt>Dienstgrad</dt><dd>{{ $id['user']->rank }}</dd>@endif
     @if($id['user']->groups->isNotEmpty())<dt>Abteilung</dt><dd>{{ $id['user']->groups->pluck('name')->implode(', ') }}</dd>@endif
     @if($id['number'])<dt>Ausweis-Nr.</dt><dd>{{ $id['number'] }}</dd>@endif

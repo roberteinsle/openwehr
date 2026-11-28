@@ -1029,8 +1029,13 @@ class PersonnelService
             return null;
         }
 
+        // Only in Jugendabteilungen: the Jugendfeuerwehr version of the card, in the colour of the Abteilung
+        $groups = $user->loadMissing('groups')->groups;
+        $youth = $groups->isNotEmpty() && $groups->every(fn ($g) => (bool) $g->is_youth) ? $groups->first() : null;
+
         return [
-            'user' => $user->loadMissing('groups'), 'number' => $profile?->id_card_number, 'valid_until' => $profile?->id_card_valid_until,
+            'youth' => $youth !== null, 'youth_color' => $youth?->color,
+            'user' => $user, 'number' => $profile?->id_card_number, 'valid_until' => $profile?->id_card_valid_until,
             'expired' => $profile?->id_card_valid_until?->lt(self::today()) ?? false,
             'birth_date' => $settings['birth_date'] && $settings['id_birth_date'] ? $user->birth_date : null, 'birth_on_check' => $settings['id_birth_on_check'],
             'birth_place' => $profile?->birth_place, 'issuer' => $settings['id_issuer'] ?: null,

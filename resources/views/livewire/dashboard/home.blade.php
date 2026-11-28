@@ -2,9 +2,26 @@
     {{-- Full-width cards from the modules on top, e.g. the notices --}}
     @foreach($topCards as $card){!! $card !!}@endforeach
 
-    {{-- Cards from the modules, e.g. the next event --}}
-    @if(count($cards) > 0)
+    {{-- Cards from the modules, e.g. the next event; first the Eltern-Bereich for Kameraden who are parents --}}
+    @if(count($cards) > 0 || $parentChildren->isNotEmpty())
         <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @if($parentChildren->isNotEmpty())
+                <a href="{{ route('parents.index') }}" class="block rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow" data-parent-card>
+                    <p class="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-fw-navy">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12 2a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM1 20a5 5 0 0 1 10 0M14 20a4.5 4.5 0 0 1 9 0"/></svg>
+                        Eltern-Bereich
+                    </p>
+                    <ul class="mt-2 space-y-1">
+                        @foreach($parentChildren as $child)
+                            <li class="flex flex-wrap items-center gap-2 text-sm">
+                                <span class="font-semibold text-gray-900">{{ $child->name }}</span>
+                                @foreach($child->groups as $group)<span class="rounded px-1.5 text-xs font-medium" style="{{ $group->badgeStyle() }}">{{ $group->name }}</span>@endforeach
+                            </li>
+                        @endforeach
+                    </ul>
+                    <p class="mt-2 text-xs text-gray-500">Termine, Rückmeldungen, Anmeldungen und Ausrüstung {{ $parentChildren->count() > 1 ? 'deiner Kinder' : 'deines Kindes' }}</p>
+                </a>
+            @endif
             @foreach($cards as $card){!! $card !!}@endforeach
         </section>
     @endif

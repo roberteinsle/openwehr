@@ -52,7 +52,7 @@
                 Bestand
             </a>
         @endif
-        @if(\App\Models\Contact::exists())
+        @if(\App\Models\Contact::anyFor(auth()->user()))
             <a href="{{ route('contacts') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request()->routeIs('contacts') ? 'bg-gray-50' : '' }}">
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fw-navy/10">
                     <svg class="h-4 w-4 text-fw-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.5 4.5a1 1 0 01-.5 1.21l-2.26 1.13a11.04 11.04 0 005.52 5.52l1.13-2.26a1 1 0 011.21-.5l4.5 1.5a1 1 0 01.68.95V19a2 2 0 01-2 2h-1C9.72 21 3 14.28 3 6V5z"/></svg>
