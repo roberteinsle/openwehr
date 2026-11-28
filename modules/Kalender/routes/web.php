@@ -3,6 +3,7 @@
 use App\Models\Contact;
 use App\Models\Group;
 use App\Models\Guardian;
+use App\Models\User;
 use App\Services\ModuleRegistry;
 use App\Services\OrganizationSettings;
 use App\Support\DisplayToken;
@@ -64,6 +65,20 @@ Route::prefix('kalender')->name('kalender.')
     ->middleware(['auth', 'active', 'module:kalender'])
     ->group(function () {
         Route::get('/', fn () => view('kalender::pages.index'))->name('index');
+
+        // Zusagen/Absagen right from the start page card (plain form, back to where it came from)
+        Route::post('/termine/{event}/antwort', function (Event $event, EventService $events) {
+            $status = (string) request()->input('status');
+            $user = auth()->user();
+            abort_unless($user instanceof User && in_array($status, ['yes', 'no', 'maybe'], true), 422);
+            try {
+                $events->respond($event, $user, $status);
+            } catch (ValidationException $e) {
+                return back()->with('kalender.rsvp_error', collect($e->errors())->flatten()->first());
+            }
+
+            return back();
+        })->whereNumber('event')->middleware('throttle:30,1')->name('respond');
 
         // Admins: the Terminarten (checked in the component)
         Route::get('/terminarten', fn () => view('kalender::pages.types'))->name('types');

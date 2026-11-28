@@ -43,13 +43,23 @@ class AlarmService
     /** Persons are off by default: the screen hangs openly in the station */
     public const DEFAULT_FIELDS = ['keyword', 'address', 'message', 'ric', 'vehicle', 'map'];
 
-    public const DEFAULTS = ['enabled' => false, 'show_minutes' => 60, 'osm' => true, 'fields' => self::DEFAULT_FIELDS];
+    /** Which vehicles the station screens show as "Im Einsatz" while an alarm runs (no booking is made) */
+    public const VEHICLE_MODES = [
+        'auto' => 'Die alarmierten Fahrzeuge – nennt DIVERA keine, alle',
+        'named' => 'Nur die alarmierten Fahrzeuge',
+        'off' => 'Keine',
+    ];
+
+    /** Minutes a vehicle counts as "Im Einsatz" after the alarm's last update when the alarm view is off */
+    public const VEHICLE_MINUTES = 60;
+
+    public const DEFAULTS = ['enabled' => false, 'show_minutes' => 60, 'osm' => true, 'fields' => self::DEFAULT_FIELDS, 'vehicles' => 'auto'];
 
     public function __construct(private readonly Geocoder $geocoder, private readonly AlarmRegistry $registry) {}
 
     // ─── settings ────────────────────────────────────────────────────────────
 
-    /** @return array{enabled: bool, show_minutes: int, osm: bool, fields: list<string>} */
+    /** @return array{enabled: bool, show_minutes: int, osm: bool, fields: list<string>, vehicles: string} */
     public static function settings(): array
     {
         $stored = json_decode((string) Setting::get(self::SETTINGS, ''), true);
@@ -62,20 +72,22 @@ class AlarmService
             'fields' => isset($stored['fields']) && is_array($stored['fields'])
                 ? array_values(array_intersect(array_keys(self::FIELDS), $stored['fields']))
                 : self::DEFAULT_FIELDS,
+            'vehicles' => array_key_exists((string) ($stored['vehicles'] ?? ''), self::VEHICLE_MODES) ? (string) $stored['vehicles'] : self::DEFAULTS['vehicles'],
         ];
     }
 
     /** @param  ?list<string>  $fields  what the alarm view shows (keys of FIELDS); null keeps the current choice */
-    public static function saveSettings(bool $enabled, int $showMinutes, bool $osm, ?array $fields = null): void
+    public static function saveSettings(bool $enabled, int $showMinutes, bool $osm, ?array $fields = null, ?string $vehicles = null): void
     {
-        if (! in_array($showMinutes, self::SHOW_MINUTES, true)) {
-            throw new \InvalidArgumentException('Unknown duration');
+        if (! in_array($showMinutes, self::SHOW_MINUTES, true) || ($vehicles !== null && ! array_key_exists($vehicles, self::VEHICLE_MODES))) {
+            throw new \InvalidArgumentException('Unknown setting');
         }
         $fields = $fields === null ? self::settings()['fields'] : array_values(array_intersect(array_keys(self::FIELDS), $fields));
+        $vehicles ??= self::settings()['vehicles'];
         if ($enabled && self::key() === null) {
             self::regenerateKey();
         }
-        Setting::set(self::SETTINGS, json_encode(['enabled' => $enabled, 'show_minutes' => $showMinutes, 'osm' => $osm, 'fields' => $fields]));
+        Setting::set(self::SETTINGS, json_encode(['enabled' => $enabled, 'show_minutes' => $showMinutes, 'osm' => $osm, 'fields' => $fields, 'vehicles' => $vehicles]));
     }
 
     public static function shows(string $field): bool
@@ -197,6 +209,42 @@ class AlarmService
         }
 
         return Alarm::whereNull('ended_at')->where('updated_at', '>=', now()->subMinutes($minutes))->latest('received_at')->latest('id')->get();
+    }
+
+    /**
+     * The vehicles "Im Einsatz" while alarms run, for the station screens (Fahrzeug-Monitor, Wachen-Monitor):
+     * null for none; all = every vehicle; otherwise the alarmed names from DIVERA. No booking is made.
+     *
+     * @return ?array{all: bool, names: list<string>, keyword: ?string}
+     */
+    public static function busyVehicles(): ?array
+    {
+        $settings = self::settings();
+        if ($settings['vehicles'] === 'off') {
+            return null;
+        }
+        $minutes = $settings['show_minutes'] > 0 ? $settings['show_minutes'] : self::VEHICLE_MINUTES;
+        $alarms = Alarm::whereNull('ended_at')->where('updated_at', '>=', now()->subMinutes($minutes))->latest('received_at')->get();
+        if ($alarms->isEmpty()) {
+            return null;
+        }
+        $names = $alarms->flatMap(fn (Alarm $a) => $a->vehicles ?? [])->unique()->values()->all();
+
+        return [
+            'all' => $names === [] && $settings['vehicles'] === 'auto',
+            'names' => $names,
+            'keyword' => $alarms->first()->keyword,
+        ];
+    }
+
+    /** Whether a vehicle is among the alarmed names: same name or short name, ignoring case, spaces and dashes */
+    public static function vehicleMatches(array $names, string ...$vehicleNames): bool
+    {
+        $fold = fn (?string $n) => preg_replace('/[\s\-\/]+/u', '', mb_strtolower((string) $n));
+        $own = array_filter(array_map($fold, $vehicleNames));
+
+        return collect($names)->map($fold)->filter()->contains(fn ($alarmed) => collect($own)->contains(fn ($o) => $o === $alarmed
+            || (mb_strlen($o) >= 3 && str_contains($alarmed, $o)) || (mb_strlen($alarmed) >= 3 && str_contains($o, $alarmed))));
     }
 
     /** Short fingerprint for the monitor's quick check: changes when an alarm comes, changes or ends */

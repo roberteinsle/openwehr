@@ -44,6 +44,7 @@ use Modules\Kalender\src\Services\IcsParser;
 use Modules\Kalender\src\Services\PollService;
 use Modules\Kalender\src\Services\SourceSync;
 use Modules\Kalender\src\Support\MonitorPanel as KalenderMonitorPanel;
+use Modules\Kalender\src\Support\Rsvp;
 use Modules\Kalender\src\Support\SearchSource as KalenderSearchSource;
 
 class KalenderServiceProvider extends ServiceProvider
@@ -110,7 +111,8 @@ class KalenderServiceProvider extends ServiceProvider
 
         // Eltern-Bereich: the child's Termine with the parents' Rückmeldung, and their Kalender-Abo
         app(ParentRegistry::class)->section('kalender', 'Termine', 'kalender.parent-events', order: 10,
-            visible: fn (User $child) => $child->canUseModule('kalender'));
+            visible: fn (User $child) => $child->canUseModule('kalender'),
+            badge: fn (User $child) => $child->canUseModule('kalender') && ($open = Rsvp::openCount($child)) > 0 ? $open.' '.($open === 1 ? 'Rückmeldung' : 'Rückmeldungen').' offen' : null);
 
         app(ModuleRegistry::class)->register(
             'kalender',
@@ -132,6 +134,13 @@ class KalenderServiceProvider extends ServiceProvider
                 'withAudience' => Event::showAudienceTo($user),
             ])->render() : null;
         }, everyone: true);
+
+        // Start page, on top: the Rückmeldungen of the coming 30 days – open ones to answer right there, the rest with their state
+        app(DashboardRegistry::class)->register('kalender', 'rsvp', function (User $user) {
+            $rows = Rsvp::forUser($user);
+
+            return $rows->isEmpty() ? null : view('kalender::cards.rsvp', ['rows' => $rows, 'open' => Rsvp::open($rows)->count()])->render();
+        }, DashboardRegistry::TOP);
 
         // Start page: Terminabfragen the Kamerad has not answered yet
         app(DashboardRegistry::class)->register('kalender', 'polls', function (User $user) {

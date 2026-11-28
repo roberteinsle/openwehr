@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Modules\Einsatzbericht\src\Models\Report;
 use Modules\Einsatzbericht\src\Services\DiveraWebhook;
+use Modules\Fahrzeugbuchung\src\Models\Booking;
+use Modules\Fahrzeugbuchung\src\Models\Vehicle;
+use Modules\Fahrzeugbuchung\src\Support\VehicleBoard;
 
 beforeEach(function () {
     config(['monitor.token' => 'geheimer-wachen-schluessel']);
@@ -215,4 +218,33 @@ test('an admin edits, triggers again and deletes an alarm', function () {
 
     Livewire::test(DiveraWebhookPage::class)->call('deleteAlarm', $alarm->id);
     expect(Alarm::count())->toBe(0);
+});
+
+test('during an alarm the alarmed vehicles are "Im Einsatz" on the station screens without a booking', function () {
+    Module::where('key', 'fahrzeugbuchung')->update(['is_active' => true]);
+    Cache::forget('modules_active_keys');
+    $hlf = Vehicle::factory()->create(['name' => 'HLF 20', 'short_name' => 'HLF']);
+    $mtw = Vehicle::factory()->create(['name' => 'MTW', 'short_name' => 'MTW']);
+
+    $this->postJson($this->url, [...$this->alarm, 'vehicle' => 'HLF-20'])->assertOk();
+
+    $states = VehicleBoard::data()['vehicles']->mapWithKeys(fn ($v) => [$v['vehicle']->id => $v['state']]);
+    expect($states[$hlf->id])->toBe('alarm')->and($states[$mtw->id])->toBe('free')
+        ->and(VehicleBoard::data()['counts']['busy'])->toBe(1)
+        ->and(Booking::count())->toBe(0);
+    $this->get('/fahrzeugbuchung/monitor/geheimer-wachen-schluessel')->assertOk()->assertSee('Im Einsatz')->assertSee('Alarm: B 3 – Brand Scheune');
+
+    // Without vehicles from DIVERA: all of them in "auto", none in "named"
+    Alarm::query()->delete();
+    $this->postJson($this->url, ['id' => 9, 'title' => 'F 1'])->assertOk();
+    expect(VehicleBoard::data()['counts']['busy'])->toBe(2);
+    AlarmService::saveSettings(true, 60, true, null, 'named');
+    expect(VehicleBoard::data()['counts']['busy'])->toBe(0);
+    AlarmService::saveSettings(true, 60, true, null, 'off');
+    expect(AlarmService::busyVehicles())->toBeNull();
+
+    // Ended: free again
+    AlarmService::saveSettings(true, 60, true, null, 'auto');
+    app(AlarmService::class)->end(Alarm::sole(), 'Test');
+    expect(VehicleBoard::data()['counts']['busy'])->toBe(0);
 });

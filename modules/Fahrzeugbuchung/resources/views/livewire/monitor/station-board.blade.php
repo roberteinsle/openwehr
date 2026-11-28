@@ -43,18 +43,22 @@
             'bg-[#3fcf12] text-black' => $item['state'] === 'free',
             'bg-[#ffcc00] text-black' => $item['state'] === 'soon',
             'bg-[#ed1c1c] text-white' => $item['state'] === 'busy',
+            'bg-[#ed1c1c] text-white ring-4 ring-white' => $item['state'] === 'alarm',
         ])>
             <div class="flex items-start justify-between gap-2">
                 <p class="text-3xl font-bold leading-tight">{{ $item['vehicle']->displayName() }}</p>
                 <span class="w-4 h-4 mt-2 rounded-full ring-2 ring-white/70 shrink-0" style="background-color: {{ $item['vehicle']->color }}"></span>
             </div>
             <p class="text-xl font-semibold uppercase tracking-wide">
-                @if($item['state'] === 'busy') Unterwegs bis {{ $item['current']->ends_at->setTimezone($tz)->isSameDay(now()->setTimezone($tz)) ? $item['current']->ends_at->setTimezone($tz)->format('H:i') : $item['current']->ends_at->setTimezone($tz)->isoFormat('dd. D.M., HH:mm') }}
+                @if($item['state'] === 'alarm') Im Einsatz
+                @elseif($item['state'] === 'busy') Unterwegs bis {{ $item['current']->ends_at->setTimezone($tz)->isSameDay(now()->setTimezone($tz)) ? $item['current']->ends_at->setTimezone($tz)->format('H:i') : $item['current']->ends_at->setTimezone($tz)->isoFormat('dd. D.M., HH:mm') }}
                 @elseif($item['state'] === 'soon') Ab {{ $item['next']->starts_at->setTimezone($tz)->format('H:i') }} gebucht
                 @else Frei
                 @endif
             </p>
-            @if($booking)
+            @if($item['state'] === 'alarm')
+            <p class="mt-auto text-lg font-semibold truncate">Alarm: {{ $item['alarm'] }}</p>
+            @elseif($booking)
             <div class="mt-auto text-lg leading-snug">
                 <p class="{{ $item['state'] === 'free' ? 'text-black/70 text-base' : '' }}">
                     @if($item['state'] === 'free')

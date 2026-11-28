@@ -14,16 +14,19 @@
                     'rounded-xl px-4 py-2 min-w-0 text-center',
                     'bg-[#3fcf12] text-black' => $item['state'] === 'free',
                     'bg-[#ffcc00] text-black' => $item['state'] === 'soon',
-                    'bg-[#ed1c1c] text-white' => $item['state'] === 'busy',
+                    'bg-[#ed1c1c] text-white' => in_array($item['state'], ['busy', 'alarm'], true),
                 ])>
                     <p class="truncate text-2xl font-bold leading-tight">{{ $item['vehicle']->displayName() }}</p>
                     <p class="text-base font-semibold">
-                        @if($item['state'] === 'busy') gebucht bis {{ $item['current']->ends_at->setTimezone($tz)->isSameDay(now()->setTimezone($tz)) ? $item['current']->ends_at->setTimezone($tz)->format('H:i') : $item['current']->ends_at->setTimezone($tz)->isoFormat('dd. D.M., HH:mm') }}
+                        @if($item['state'] === 'alarm') im Einsatz
+                        @elseif($item['state'] === 'busy') gebucht bis {{ $item['current']->ends_at->setTimezone($tz)->isSameDay(now()->setTimezone($tz)) ? $item['current']->ends_at->setTimezone($tz)->format('H:i') : $item['current']->ends_at->setTimezone($tz)->isoFormat('dd. D.M., HH:mm') }}
                         @elseif($item['state'] === 'soon') ab {{ $item['next']->starts_at->setTimezone($tz)->format('H:i') }} gebucht
                         @else frei
                         @endif
                     </p>
-                    @if($booking && $item['state'] !== 'free' && $size !== 'quarter')
+                    @if($item['state'] === 'alarm' && $size !== 'quarter')
+                        <p class="truncate text-sm">Alarm: {{ $item['alarm'] }}</p>
+                    @elseif($booking && $item['state'] !== 'free' && $size !== 'quarter')
                         <p class="truncate text-sm">{{ $booking->purpose }} · {{ $short($booking->user?->name) }}</p>
                     @endif
                 </div>

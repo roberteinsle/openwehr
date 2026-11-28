@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserModulePreference;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Modules\Anmeldungen\src\Models\Registration as AnmeldungRegistration;
 use Modules\Atemschutz\src\Models\Reading as AtemschutzReading;
 use Modules\Atemschutz\src\Models\Warning as AtemschutzWarning;
@@ -102,7 +103,7 @@ class ActivityRecorder
             $this->paused = true;
             ActivityLog::create([
                 'created_at' => now(),
-                'user_id' => $userId ?? auth()->id(),
+                'user_id' => $userId ?? Auth::guard('web')->id(),
                 'impersonator_id' => app()->bound('session') ? session(Impersonation::SESSION_KEY) : null,
                 'event' => $event,
                 'subject_type' => $type,

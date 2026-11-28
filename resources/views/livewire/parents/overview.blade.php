@@ -11,6 +11,7 @@
             <div class="min-w-0">
                 <h1 class="text-xl font-bold text-gray-900">{{ $child->name }}</h1>
                 <p class="text-sm text-gray-500">Eltern-Bereich{{ $parentName ? ' · angemeldet als '.$parentName : '' }}</p>
+                @foreach(app(\App\Services\ParentRegistry::class)->badges($child) as $todo)<span class="mt-1 inline-block rounded-full bg-fw-red px-2 py-0.5 text-xs font-semibold text-white">{{ $todo }}</span>@endforeach
             </div>
         </div>
 
@@ -51,6 +52,7 @@
                 <a href="{{ route('parents.child', $c) }}" class="flex items-center gap-3 p-4 hover:bg-gray-50" wire:key="c-{{ $c->id }}">
                     @if($guardianOnly)<span class="h-10 w-10 text-xs rounded-full bg-fw-grey-light text-fw-grey font-semibold inline-flex items-center justify-center shrink-0">{{ $c->initials() }}</span>@else<x-avatar :user="$c" size="h-10 w-10" text="text-xs" />@endif
                     <span class="font-medium text-gray-900">{{ $c->name }}</span>
+                    @foreach(app(\App\Services\ParentRegistry::class)->badges($c) as $todo)<span class="rounded-full bg-fw-red px-2 py-0.5 text-xs font-semibold text-white">{{ $todo }}</span>@endforeach
                     <svg class="ml-auto h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </a>
             @endforeach

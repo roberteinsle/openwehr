@@ -64,6 +64,7 @@ class DiveraWebhookPage extends Page implements HasForms
             'show_minutes' => (string) $settings['show_minutes'],
             'osm' => $settings['osm'],
             'fields' => $settings['fields'],
+            'vehicles' => $settings['vehicles'],
         ]);
         $this->getSchema('testForm')->fill(['keyword' => 'B 2 – Brand Gebäude', 'message' => 'Rauchentwicklung aus Kellerfenster', 'address' => 'Hauptstraße 1, Musterstadt',
             'ric' => 'Löschzug Musterstadt', 'vehicle' => 'HLF 20, DLK 23/12', 'priority' => true, 'via_url' => false]);
@@ -90,6 +91,13 @@ class DiveraWebhookPage extends Page implements HasForms
                         Forms\Components\Toggle::make('osm')
                             ->label('Adresse ohne Koordinaten über OpenStreetMap suchen')
                             ->helperText('Nur, wenn DIVERA keine Koordinaten schickt und kein Google-Schlüssel (Einstellungen → Dienste) hinterlegt ist. Die Einsatzadresse geht dann an den Suchdienst Nominatim der OpenStreetMap Foundation.'),
+                        Forms\Components\Select::make('vehicles')
+                            ->label('Fahrzeuge bei Alarm als „Im Einsatz“ zeigen')
+                            ->options(AlarmService::VEHICLE_MODES)
+                            ->in(array_keys(AlarmService::VEHICLE_MODES))
+                            ->required()
+                            ->selectablePlaceholder(false)
+                            ->helperText('Auf dem Fahrzeug-Monitor und im Feld „Fahrzeugbelegung“ des Wachen-Monitors, solange der Alarm läuft. Es wird nichts gebucht. Zugeordnet nach Name oder Kurzname des Fahrzeugs.'),
                         Forms\Components\CheckboxList::make('fields')
                             ->label('Auf dem Alarm-Monitor zeigen')
                             ->options(AlarmService::FIELDS)
@@ -207,7 +215,7 @@ class DiveraWebhookPage extends Page implements HasForms
     public function save(): void
     {
         $data = $this->getSchema('form')->getState();
-        AlarmService::saveSettings((bool) $data['enabled'], (int) $data['show_minutes'], (bool) $data['osm'], array_values((array) ($data['fields'] ?? [])));
+        AlarmService::saveSettings((bool) $data['enabled'], (int) $data['show_minutes'], (bool) $data['osm'], array_values((array) ($data['fields'] ?? [])), (string) $data['vehicles']);
 
         Notification::make()->title('DIVERA-Webhook gespeichert')->success()->send();
     }

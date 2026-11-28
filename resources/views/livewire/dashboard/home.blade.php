@@ -16,6 +16,7 @@
                             <li class="flex flex-wrap items-center gap-2 text-sm">
                                 <span class="font-semibold text-gray-900">{{ $child->name }}</span>
                                 @foreach($child->groups as $group)<span class="rounded px-1.5 text-xs font-medium" style="{{ $group->badgeStyle() }}">{{ $group->name }}</span>@endforeach
+                                @foreach(app(\App\Services\ParentRegistry::class)->badges($child) as $todo)<span class="rounded-full bg-fw-red px-2 py-0.5 text-xs font-semibold text-white">{{ $todo }}</span>@endforeach
                             </li>
                         @endforeach
                     </ul>
